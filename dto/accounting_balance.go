@@ -17,7 +17,7 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-// The DTO (Data Transfer Object) package contains data objects that are passed
+// Package DTO (Data Transfer Object) contains data objects that are passed
 // between the handler layer and the service request. It helps serialize the JSON request
 // into objects used in the chaincode as well as perform some basic validation
 // on the input format and logic.

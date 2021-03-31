@@ -1,4 +1,10 @@
 # Akachain Gringotts
+
+[![Go Reference](https://pkg.go.dev/badge/github.com/Akachain/gringotts.svg)](https://pkg.go.dev/github.com/Akachain/gringotts)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+[![Go Report Card](https://goreportcard.com/badge/github.com/Akachain/gringotts)](https://goreportcard.com/report/github.com/Akachain/gringotts)
+
 *Gringotts is going to be THE only known bank of the private token world and it is maintained primarily by the akachain team. Wizards, witches and even muggles keep their tokens and other valuables in digital wallets that are protected by strong security measures.*
 
 Joke aside, gringotts provides a core smart contract package to build a private token management system on Hyperledger Fabric. Basically, it helps you to issue any arbitrary tokens, manage their life cycles and exchange among themselves. It is nice. 
