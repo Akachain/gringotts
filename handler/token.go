@@ -48,7 +48,7 @@ func (t *TokenHandler) Transfer(ctx contractapi.TransactionContextInterface, tra
 		return helper.RespError(errorcode.InvalidParam)
 	}
 
-	return t.tokenService.Transfer(ctx, transferDto)
+	return t.tokenService.Transfer(ctx, transferDto.FromWalletId, transferDto.ToWalletId, transferDto.Amount)
 }
 
 // Mint generate new token for wallet.
@@ -61,7 +61,7 @@ func (t *TokenHandler) Mint(ctx contractapi.TransactionContextInterface, mintDto
 		return helper.RespError(errorcode.InvalidParam)
 	}
 
-	return t.tokenService.Mint(ctx, mintDto)
+	return t.tokenService.Mint(ctx, mintDto.WalletId, mintDto.Amount)
 }
 
 // Burn to burn token existed in the system.
@@ -74,7 +74,7 @@ func (t *TokenHandler) Burn(ctx contractapi.TransactionContextInterface, burnDto
 		return helper.RespError(errorcode.InvalidParam)
 	}
 
-	return t.tokenService.Burn(ctx, burnDto)
+	return t.tokenService.Burn(ctx, burnDto.WalletId, burnDto.Amount)
 }
 
 // CreateTokenType to create new token type.
@@ -87,5 +87,5 @@ func (t *TokenHandler) CreateTokenType(ctx contractapi.TransactionContextInterfa
 		return "", helper.RespError(errorcode.InvalidParam)
 	}
 
-	return t.tokenService.CreateType(ctx, tokenTypeDto)
+	return t.tokenService.CreateType(ctx, tokenTypeDto.Name, tokenTypeDto.Rate)
 }

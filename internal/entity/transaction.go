@@ -52,5 +52,6 @@ func NewTransaction(ctx ...contractapi.TransactionContextInterface) *Transaction
 			UpdatedAt:    helper.TimestampISO(txTime.Seconds),
 			BlockChainId: ctx[0].GetStub().GetTxID(),
 		},
+		Status: transaction.Pending,
 	}
 }

@@ -21,6 +21,7 @@ package base
 
 import (
 	"github.com/Akachain/gringotts/errorcode"
+	"github.com/Akachain/gringotts/glossary"
 	"github.com/Akachain/gringotts/glossary/doc"
 	"github.com/Akachain/gringotts/helper"
 	"github.com/Akachain/gringotts/helper/glogger"
@@ -82,6 +83,18 @@ func (b *Base) GetWallet(ctx contractapi.TransactionContextInterface, walletId s
 	if err = mapstructure.Decode(walletData, &wallet); err != nil {
 		glogger.GetInstance().Errorf(ctx, "Base - Decode wallet failed with error (%v)", err)
 		return nil, helper.RespError(errorcode.BizUnableMapDecode)
+	}
+	return wallet, nil
+}
+
+func (b *Base) GetActiveWallet(ctx contractapi.TransactionContextInterface, walletId string) (*entity.Wallet, error) {
+	wallet, err := b.GetWallet(ctx, walletId)
+	if err != nil {
+		return nil, err
+	}
+
+	if wallet.Status != glossary.Active {
+		return nil, helper.RespError(errorcode.InvalidWalletInActive)
 	}
 	return wallet, nil
 }
@@ -148,4 +161,19 @@ func (b *Base) SubBalance(ctx contractapi.TransactionContextInterface, walletId 
 		return helper.RespError(errorcode.BizUnableUpdateWallet)
 	}
 	return nil
+}
+
+func (b *Base) GetEnrollment(ctx contractapi.TransactionContextInterface, tokenId string) (*entity.Enrollment, error) {
+	enrollmentData, err := b.Repo.Get(ctx, doc.Enrollments, helper.EnrollmentKey(tokenId))
+	if err != nil {
+		glogger.GetInstance().Errorf(ctx, "Base - Get enrollment failed with error (%v)", err)
+		return nil, helper.RespError(errorcode.BizUnableGetEnrollment)
+	}
+
+	enrollment := new(entity.Enrollment)
+	if err = mapstructure.Decode(enrollmentData, &enrollment); err != nil {
+		glogger.GetInstance().Errorf(ctx, "Base - Decode enrollment failed with error (%v)", err)
+		return nil, helper.RespError(errorcode.BizUnableMapDecode)
+	}
+	return enrollment, nil
 }

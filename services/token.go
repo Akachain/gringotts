@@ -20,7 +20,6 @@
 package services
 
 import (
-	"github.com/Akachain/gringotts/dto"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
 
@@ -28,14 +27,20 @@ type Token interface {
 	// Transfer to transfer token between wallet.
 	// But state balance of wallet not update at the time.
 	// It will be update when accounting job start
-	Transfer(ctx contractapi.TransactionContextInterface, transferDto dto.TransferToken) error
+	Transfer(ctx contractapi.TransactionContextInterface, fromWalletId, toWalletId string, amount float64) error
 
 	// Mint to init token in the system
-	Mint(ctx contractapi.TransactionContextInterface, mintDto dto.MintToken) error
+	Mint(ctx contractapi.TransactionContextInterface, walletId string, amount float64) error
 
 	// Burn to delete token in the system
-	Burn(ctx contractapi.TransactionContextInterface, burnDto dto.BurnToken) error
+	Burn(ctx contractapi.TransactionContextInterface, walletId string, amount float64) error
 
 	//CreateType to create new token type in the system.
-	CreateType(ctx contractapi.TransactionContextInterface, tokenType dto.CreateTokenType) (string, error)
+	CreateType(ctx contractapi.TransactionContextInterface, name string, rate float64) (string, error)
+
+	//Swap to swap between token type.
+	Swap(ctx contractapi.TransactionContextInterface, fromWalletId, toWalletId string, amount float64) error
+
+	//Issue to issue new token type from stable token.
+	Issue(ctx contractapi.TransactionContextInterface, tokenId, fromWalletId, toWalletId string, amount float64) error
 }

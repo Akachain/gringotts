@@ -27,4 +27,6 @@ const (
 	Transfer      = "Transfer"
 	Mint          = "Mint"
 	Burn          = "Burn"
+	Swap          = "Swap"
+	Issue         = "Issue"
 )

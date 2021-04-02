@@ -38,3 +38,8 @@ func TokenKey(tokenId string) []string {
 func HealthCheckKey(id string) []string {
 	return []string{id}
 }
+
+// EnrollmentKey return list key of enrollment will be compose in couch db key
+func EnrollmentKey(tokenId string) []string {
+	return []string{tokenId}
+}
