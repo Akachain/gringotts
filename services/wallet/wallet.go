@@ -28,6 +28,7 @@ import (
 	"github.com/Akachain/gringotts/internal/entity"
 	"github.com/Akachain/gringotts/services/base"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
+	"strings"
 )
 
 type walletService struct {
@@ -104,5 +105,40 @@ func (w *walletService) BalanceOf(ctx contractapi.TransactionContextInterface, w
 
 func (w *walletService) EnrollToken(ctx contractapi.TransactionContextInterface, tokenId string, fromWalletId []string, toWalletId []string) error {
 	glogger.GetInstance().Info(ctx, "-----------Wallet Service - EnrollToken-----------")
+	isExisted, err := w.Repo.IsExist(ctx, doc.Enrollments, helper.EnrollmentKey(tokenId))
+	if err != nil {
+		glogger.GetInstance().Errorf(ctx, "Wallet Service - Check exit enrollment failed with err (%v)", err)
+		return helper.RespError(errorcode.BizUnableCreateEnrollment)
+	}
+
+	if isExisted {
+		enrollment, err := w.GetEnrollment(ctx, tokenId)
+		if err != nil {
+			glogger.GetInstance().Errorf(ctx, "Wallet Service - Get enrollment failed with err (%v)", err)
+			return err
+		}
+		if len(fromWalletId) > 0 {
+			enrollment.FromWalletId = enrollment.FromWalletId + "," + strings.Join(fromWalletId, ",")
+		}
+		if len(toWalletId) > 0 {
+			enrollment.ToWalletId = enrollment.ToWalletId + "," + strings.Join(toWalletId, ",")
+		}
+		if err := w.Repo.Update(ctx, enrollment, doc.Enrollments, helper.EnrollmentKey(tokenId)); err != nil {
+			glogger.GetInstance().Errorf(ctx, "Wallet Service - Update enrollment failed with err (%v)", err)
+			return helper.RespError(errorcode.BizUnableCreateEnrollment)
+		}
+	} else {
+		enrollmentEntity := entity.NewEnrollment(ctx)
+		if len(fromWalletId) > 0 {
+			enrollmentEntity.FromWalletId = strings.Join(fromWalletId, ",")
+		}
+		if len(toWalletId) > 0 {
+			enrollmentEntity.ToWalletId = strings.Join(toWalletId, ",")
+		}
+		if err := w.Repo.Create(ctx, enrollmentEntity, doc.Enrollments, helper.EnrollmentKey(tokenId)); err != nil {
+			glogger.GetInstance().Errorf(ctx, "Wallet Service - Create enrollment failed with err (%v)", err)
+			return helper.RespError(errorcode.BizUnableCreateEnrollment)
+		}
+	}
 	return nil
 }

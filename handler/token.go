@@ -89,3 +89,29 @@ func (t *TokenHandler) CreateTokenType(ctx contractapi.TransactionContextInterfa
 
 	return t.tokenService.CreateType(ctx, tokenTypeDto.Name, tokenTypeDto.Rate)
 }
+
+// Swap to swap between different token type.
+func (t *TokenHandler) Swap(ctx contractapi.TransactionContextInterface, swapDto dto.SwapToken) error {
+	glogger.GetInstance().Info(ctx, "-----------Token Handler - Swap-----------")
+
+	// checking dto validate
+	if err := swapDto.IsValid(); err != nil {
+		glogger.GetInstance().Errorf(ctx, "TokenHandler - Swap Input invalidate %v", err)
+		return helper.RespError(errorcode.InvalidParam)
+	}
+
+	return t.tokenService.Swap(ctx, swapDto.FromWalletId, swapDto.ToWalletId, swapDto.Amount)
+}
+
+// Issue to issue new token type form stable token.
+func (t *TokenHandler) Issue(ctx contractapi.TransactionContextInterface, issueDto dto.IssueToken) error {
+	glogger.GetInstance().Info(ctx, "-----------Token Handler - Swap-----------")
+
+	// checking dto validate
+	if err := issueDto.IsValid(); err != nil {
+		glogger.GetInstance().Errorf(ctx, "TokenHandler - Issue Input invalidate %v", err)
+		return helper.RespError(errorcode.InvalidParam)
+	}
+
+	return t.tokenService.Issue(ctx, issueDto.TokenId, issueDto.FromWalletId, issueDto.ToWalletId, issueDto.Amount)
+}

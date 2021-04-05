@@ -102,6 +102,21 @@ func (b *baseToken) CalculateBalance(ctx contractapi.TransactionContextInterface
 	return b.accountingHandler.CalculateBalance(ctx, accountingDto)
 }
 
+func (b *baseToken) Swap(ctx contractapi.TransactionContextInterface, swapDto dto.SwapToken) error {
+	glogger.GetInstance().Info(ctx, "------------Swap ChainCode------------")
+	return b.tokenHandler.Swap(ctx, swapDto)
+}
+
+func (b *baseToken) Issue(ctx contractapi.TransactionContextInterface, issueDto dto.IssueToken) error {
+	glogger.GetInstance().Info(ctx, "------------Issue ChainCode------------")
+	return b.tokenHandler.Issue(ctx, issueDto)
+}
+
+func (b *baseToken) EnrollToken(ctx contractapi.TransactionContextInterface, enrollmentDto dto.Enrollment) error {
+	glogger.GetInstance().Info(ctx, "------------EnrollToken ChainCode------------")
+	return b.walletHandler.EnrollToken(ctx, enrollmentDto)
+}
+
 // Get resource of base token
 func (b *baseToken) GetTokenHandler() *handler.TokenHandler {
 	return b.tokenHandler

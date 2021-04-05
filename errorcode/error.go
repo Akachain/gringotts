@@ -58,6 +58,7 @@ const (
 	BizUnableTransferDiffType ErrorCode = "316"
 	BizUnableGetEnrollment    ErrorCode = "317"
 	BizIssueNotPermission     ErrorCode = "318"
+	BizUnableCreateEnrollment ErrorCode = "319"
 )
 
 var mapErrorCode = map[ErrorCode]string{
@@ -84,6 +85,7 @@ var mapErrorCode = map[ErrorCode]string{
 	BizUnableTransferDiffType: "Unable to transfer token between wallet have different token type",
 	BizUnableGetEnrollment:    "Unable to get enrollment on blockchain",
 	BizIssueNotPermission:     "From/To wallet do not have permission to issue new token",
+	BizUnableCreateEnrollment: "Unable to create/update wallet enrollment",
 }
 
 func (e ErrorCode) Message() string {

@@ -58,6 +58,15 @@ type BasicToken interface {
 	// CalculateBalance update balance of wallet. Accounting job will call this
 	CalculateBalance(ctx contractapi.TransactionContextInterface, accountingDto dto.AccountingBalance) error
 
+	// Swap to swap between token type. Example from Stable token to X token
+	Swap(ctx contractapi.TransactionContextInterface, swapDto dto.SwapToken) error
+
+	// Issue to issue new token from stable token
+	Issue(ctx contractapi.TransactionContextInterface, issueDto dto.IssueToken) error
+
+	// EnrollToken to register wallet policy use to issue new token
+	EnrollToken(ctx contractapi.TransactionContextInterface, enrollmentDto dto.Enrollment) error
+
 	// GetTokenHandler return token handler of base token
 	GetTokenHandler() *handler.TokenHandler
 

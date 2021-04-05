@@ -21,23 +21,20 @@ package dto
 
 import "github.com/pkg/errors"
 
-type IssueToken struct {
-	TokenId      string  `json:"tokenId"`
-	FromWalletId string  `json:"fromWalletId"`
-	ToWalletId   string  `json:"toWalletId"`
-	Amount       float64 `json:"amount"`
+type Enrollment struct {
+	TokenId      string   `json:"tokenId"`
+	FromWalletId []string `json:"fromWalletId"`
+	ToWalletId   []string `json:"toWalletId"`
 }
 
-func (i IssueToken) IsValid() error {
-	if i.TokenId == "" {
+func (e Enrollment) IsValid() error {
+	if e.TokenId == "" {
 		return errors.New("Token Id is empty")
 	}
-	if i.FromWalletId == "" || i.ToWalletId == "" {
-		return errors.New("From/To wallet id is empty")
+
+	if len(e.FromWalletId) <= 0 {
+		return errors.New("From wallet id is empty")
 	}
 
-	if i.Amount <= 0 {
-		return errors.New("the issue amount is a negative/zero number")
-	}
 	return nil
 }
