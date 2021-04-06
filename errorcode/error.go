@@ -59,6 +59,7 @@ const (
 	BizUnableGetEnrollment    ErrorCode = "317"
 	BizIssueNotPermission     ErrorCode = "318"
 	BizUnableCreateEnrollment ErrorCode = "319"
+	BizUnableUpdateTX         ErrorCode = "320"
 )
 
 var mapErrorCode = map[ErrorCode]string{
@@ -86,6 +87,7 @@ var mapErrorCode = map[ErrorCode]string{
 	BizUnableGetEnrollment:    "Unable to get enrollment on blockchain",
 	BizIssueNotPermission:     "From/To wallet do not have permission to issue new token",
 	BizUnableCreateEnrollment: "Unable to create/update wallet enrollment",
+	BizUnableUpdateTX:         "Unable to update transaction on blockchain",
 }
 
 func (e ErrorCode) Message() string {
