@@ -30,9 +30,9 @@ import (
 // the conversion rate to the base unit, and status (active/inactive)
 // the status is checked only when we create a new wallet.
 type Token struct {
-	Name   string          `mapstructure:"name" json:"name"`
-	Rate   float64         `mapstructure:"rate" json:"rate"`
-	Status glossary.Status `mapstructure:"status" json:"status"`
+	Name   string
+	Rate   float64
+	Status glossary.Status
 	Base   `mapstructure:",squash"`
 }
 

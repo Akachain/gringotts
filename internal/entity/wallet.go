@@ -28,9 +28,9 @@ import (
 
 // A wallet only contains 1 type of token and its balance.
 type Wallet struct {
-	TokenId  string          `mapstructure:"tokenId" json:"tokenId"`
-	Status   glossary.Status `mapstructure:"status" json:"status"`
-	Balances string          `mapstructure:"balances" json:"balances"`
+	TokenId  string
+	Status   glossary.Status
+	Balances string
 	Base     `mapstructure:",squash"`
 }
 

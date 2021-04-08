@@ -31,12 +31,12 @@ import (
 // The SpenderWallet is an additional field in case later on we want this is compatible
 // with ERC20
 type Transaction struct {
-	SpenderWallet string             `mapstructure:"actorWallet" json:"actorWallet"`
-	FromWallet    string             `mapstructure:"fromWallet" json:"fromWallet"`
-	ToWallet      string             `mapstructure:"toWallet" json:"toWallet"`
-	Amount        string             `mapstructure:"amount" json:"amount"`
-	TxType        transaction.Type   `mapstructure:"txType" json:"txType"`
-	Status        transaction.Status `mapstructure:"status" json:"status"`
+	SpenderWallet string
+	FromWallet    string
+	ToWallet      string
+	Amount        string
+	TxType        transaction.Type
+	Status        transaction.Status
 	Base          `mapstructure:",squash"`
 }
 

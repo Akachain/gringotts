@@ -25,17 +25,17 @@ package entity
 // contain.
 type Base struct {
 	// The document id in state database
-	Id string `mapstructure:"id" json:"id"`
+	Id string
 
 	// This is the Fabric transaction id where this entity is created.
 	// Fabric allows us to search for specific block if we know the block number
 	// or the transaction id in that block. This is very helpful if later we want
 	// to query this block to check the Read/Write set for more details
-	BlockChainId string `mapstructure:"blockChainId" json:"blockChainId"`
+	BlockChainId string
 
 	// Timestamp of the transaction that created this entity
-	CreatedAt string `mapstructure:"createdAt" json:"createdAt"`
+	CreatedAt string
 
 	// Timestamp of the last transaction that updated this entity
-	UpdatedAt string `mapstructure:"updatedAt" json:"updatedAt"`
+	UpdatedAt string
 }

@@ -21,7 +21,7 @@
 package base
 
 import (
-	"github.com/Akachain/akc-go-sdk/util"
+	"github.com/Akachain/akc-go-sdk-v2/util"
 	"github.com/Akachain/gringotts/glossary"
 	"github.com/hyperledger/fabric-chaincode-go/shim"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"

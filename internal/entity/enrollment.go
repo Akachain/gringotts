@@ -26,9 +26,9 @@ import (
 )
 
 type Enrollment struct {
-	TokenId      string `mapstructure:"tokenId" json:"tokenId"`
-	FromWalletId string `mapstructure:"fromWallet" json:"fromWallet"`
-	ToWalletId   string `mapstructure:"toWallet" json:"toWallet"`
+	TokenId      string
+	FromWalletId string
+	ToWalletId   string
 	Base         `mapstructure:",squash"`
 }
 

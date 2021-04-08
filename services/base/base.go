@@ -45,7 +45,7 @@ func NewBase() *Base {
 func (b *Base) GetTransaction(ctx contractapi.TransactionContextInterface, txId string) (*entity.Transaction, error) {
 	txData, err := b.Repo.Get(ctx, doc.Transactions, helper.TransactionKey(txId))
 	if err != nil {
-		glogger.GetInstance().Errorf(ctx, "Base - Get transaction failed with error (%v)", err)
+		glogger.GetInstance().Errorf(ctx, "Base - Get transaction (%s) failed with error (%v)", txId, err)
 		return nil, helper.RespError(errorcode.BizUnableGetTx)
 	}
 
@@ -60,13 +60,13 @@ func (b *Base) GetTransaction(ctx contractapi.TransactionContextInterface, txId 
 func (b *Base) GetTokenType(ctx contractapi.TransactionContextInterface, tokenId string) (*entity.Token, error) {
 	tokenData, err := b.Repo.Get(ctx, doc.Tokens, helper.TokenKey(tokenId))
 	if err != nil {
-		glogger.GetInstance().Errorf(ctx, "Base - Get wallet failed with error (%v)", err)
+		glogger.GetInstance().Errorf(ctx, "Base - Get token type failed with error (%v)", err)
 		return nil, helper.RespError(errorcode.BizUnableGetTokenType)
 	}
 
 	token := new(entity.Token)
 	if err = mapstructure.Decode(tokenData, &token); err != nil {
-		glogger.GetInstance().Errorf(ctx, "Base - Decode wallet failed with error (%v)", err)
+		glogger.GetInstance().Errorf(ctx, "Base - Decode token type failed with error (%v)", err)
 		return nil, helper.RespError(errorcode.BizUnableMapDecode)
 	}
 	return token, nil

@@ -84,7 +84,7 @@ func (a *accountingService) CalculateBalance(ctx contractapi.TransactionContextI
 	glogger.GetInstance().Infof(ctx, "CalculateBalance - List transaction: (%s)", strings.Join(accountingDto.TxId, ","))
 	// map temp balance
 	mapCurrentBalance := make(map[string]string, len(accountingDto.TxId)*2)
-	lstTx := make([]*entity.Transaction, len(accountingDto.TxId))
+	lstTx := make([]*entity.Transaction, 0, len(accountingDto.TxId))
 
 	for _, id := range accountingDto.TxId {
 		tx, err := a.GetTransaction(ctx, id)
@@ -131,8 +131,7 @@ func (a *accountingService) CalculateBalance(ctx contractapi.TransactionContextI
 func (a *accountingService) txHandler(ctx contractapi.TransactionContextInterface, tx *entity.Transaction,
 	mapCurrentBalance map[string]string) (transaction.Step, error) {
 	switch tx.TxType {
-	case transaction.Transfer:
-	case transaction.Swap:
+	case transaction.Transfer, transaction.Swap:
 		if tx.FromWallet == glossary.SystemWallet || tx.ToWallet == glossary.SystemWallet {
 			glogger.GetInstance().Errorf(ctx, "TxHandler - Transfer - Transaction (%s) has from/to wallet Id is system type", tx.Id)
 			tx.Status = transaction.Rejected

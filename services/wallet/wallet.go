@@ -55,6 +55,7 @@ func (w *walletService) Create(ctx contractapi.TransactionContextInterface, toke
 
 	walletEntity := entity.NewWallet(ctx)
 	walletEntity.Status = status
+	walletEntity.TokenId = tokenId
 	if err := w.Repo.Create(ctx, walletEntity, doc.Wallets, helper.WalletKey(walletEntity.Id)); err != nil {
 		glogger.GetInstance().Errorf(ctx, "Create - Create wallet failed with error (%v)", err)
 		return "", helper.RespError(errorcode.BizUnableCreateWallet)
