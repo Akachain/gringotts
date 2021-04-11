@@ -20,28 +20,26 @@
 package entity
 
 import (
-	"github.com/Akachain/gringotts/glossary"
 	"github.com/Akachain/gringotts/glossary/doc"
 	"github.com/Akachain/gringotts/helper"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
 
-// A wallet only contains 1 type of token and its balance.
-type Wallet struct {
-	TokenId  string
-	Status   glossary.Status
-	Balances string
-	Base     `mapstructure:",squash"`
+type Enrollment struct {
+	TokenId      string
+	FromWalletId string
+	ToWalletId   string
+	Base         `mapstructure:",squash"`
 }
 
-func NewWallet(ctx ...contractapi.TransactionContextInterface) *Wallet {
+func NewEnrollment(ctx ...contractapi.TransactionContextInterface) *Enrollment {
 	if len(ctx) <= 0 {
-		return &Wallet{}
+		return &Enrollment{}
 	}
 	txTime, _ := ctx[0].GetStub().GetTxTimestamp()
-	return &Wallet{
+	return &Enrollment{
 		Base: Base{
-			Id:           helper.GenerateID(doc.Wallets, ctx[0].GetStub().GetTxID()),
+			Id:           helper.GenerateID(doc.Enrollments, ctx[0].GetStub().GetTxID()),
 			CreatedAt:    helper.TimestampISO(txTime.Seconds),
 			UpdatedAt:    helper.TimestampISO(txTime.Seconds),
 			BlockChainId: ctx[0].GetStub().GetTxID(),

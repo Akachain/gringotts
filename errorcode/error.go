@@ -33,9 +33,10 @@ const (
 	Succeed ErrorCode = "0"
 
 	// validate error code
-	InvalidArg     ErrorCode = "100"
-	InvalidParam   ErrorCode = "101"
-	ValidationFail ErrorCode = "102"
+	InvalidArg            ErrorCode = "100"
+	InvalidParam          ErrorCode = "101"
+	ValidationFail        ErrorCode = "102"
+	InvalidWalletInActive ErrorCode = "103"
 
 	// Business error code
 	BizUnableParse            ErrorCode = "300"
@@ -54,12 +55,18 @@ const (
 	BizUnableGetAllowance     ErrorCode = "313"
 	BizAllowanceNotEnough     ErrorCode = "314"
 	BizUnableUpdateAllowance  ErrorCode = "315"
+	BizUnableTransferDiffType ErrorCode = "316"
+	BizUnableGetEnrollment    ErrorCode = "317"
+	BizIssueNotPermission     ErrorCode = "318"
+	BizUnableCreateEnrollment ErrorCode = "319"
+	BizUnableUpdateTX         ErrorCode = "320"
 )
 
 var mapErrorCode = map[ErrorCode]string{
 	Succeed:                   "Invoke transaction succeed",
 	InvalidArg:                "Incorrect number of arguments",
 	InvalidParam:              "Parameter input invalidate",
+	InvalidWalletInActive:     "Wallet has status inactive",
 	BizUnableParse:            "Unable to parse argument",
 	BizUnableCreateTX:         "Unable to create transaction on blockchain",
 	BizUnableCreateWallet:     "Unable to create wallet on blockchain",
@@ -76,6 +83,11 @@ var mapErrorCode = map[ErrorCode]string{
 	BizUnableGetAllowance:     "Unable to get allowance of spender wallet on blockchain",
 	BizAllowanceNotEnough:     "Transfer amount greater than allowance of spender",
 	BizUnableUpdateAllowance:  "Unable update allowance of spender wallet on blockchain",
+	BizUnableTransferDiffType: "Unable to transfer token between wallet have different token type",
+	BizUnableGetEnrollment:    "Unable to get enrollment on blockchain",
+	BizIssueNotPermission:     "From/To wallet do not have permission to issue new token",
+	BizUnableCreateEnrollment: "Unable to create/update wallet enrollment",
+	BizUnableUpdateTX:         "Unable to update transaction on blockchain",
 }
 
 func (e ErrorCode) Message() string {

@@ -21,10 +21,11 @@
 package base
 
 import (
-	"github.com/Akachain/akc-go-sdk/util"
+	"github.com/Akachain/akc-go-sdk-v2/util"
 	"github.com/Akachain/gringotts/glossary"
 	"github.com/hyperledger/fabric-chaincode-go/shim"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
+	"github.com/pkg/errors"
 )
 
 type repo struct {
@@ -49,4 +50,20 @@ func (r *repo) Update(ctx contractapi.TransactionContextInterface, entity interf
 
 func (r *repo) Get(ctx contractapi.TransactionContextInterface, tableModel string, keys []string) (interface{}, error) {
 	return util.Getdatabyrowkeys(ctx.GetStub(), keys, tableModel)
+}
+
+func (r *repo) IsExist(ctx contractapi.TransactionContextInterface, docPrefix string, keys []string) (bool, error) {
+	stub := ctx.GetStub()
+	compositeKey, err := stub.CreateCompositeKey(docPrefix, keys)
+	if err != nil {
+		return false, errors.WithMessage(err, "IsExist - Create composite key fail")
+	}
+
+	var bytes []byte
+	bytes, err = stub.GetState(compositeKey)
+	if err != nil {
+		return false, errors.WithMessage(err, "IsExist - Get document fail")
+	}
+
+	return bytes != nil, nil
 }

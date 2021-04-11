@@ -20,147 +20,219 @@
 package basic
 
 import (
+	"encoding/json"
+	"github.com/Akachain/akc-go-sdk-v2/mock"
 	"github.com/Akachain/gringotts/dto"
+	"github.com/Akachain/gringotts/glossary"
+	"github.com/Akachain/gringotts/glossary/doc"
 	"github.com/Akachain/gringotts/helper"
-	"github.com/Akachain/gringotts/smartcontract"
-	"github.com/golang/protobuf/ptypes/timestamp"
+	"github.com/Akachain/gringotts/internal/entity"
 	"github.com/hyperledger/fabric-chaincode-go/shimtest"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
-	"gotest.tools/assert"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
+	"strings"
 	"testing"
-	"time"
 )
 
-func setupMock() (*contractapi.TransactionContext, smartcontract.BasicToken) {
-	ts := new(timestamp.Timestamp)
-	ts.Seconds = time.Now().Unix()
+func setupMock() *mock.MockStubExtend {
+	// Initialize MockStubExtend
+	chaincodeName := "TMP"
 	sc := NewBaseToken()
 	chaincode, _ := contractapi.NewChaincode(sc)
-	stub := shimtest.NewMockStub("TMP", chaincode)
-	stub.TxTimestamp = ts
-	stub.TxID = helper.GenerateID("Test", "asd")
+	stub := mock.NewMockStubExtend(shimtest.NewMockStub(chaincodeName, chaincode), chaincode, ".")
 
-	txContext := new(contractapi.TransactionContext)
-	txContext.SetStub(stub)
-
-	return txContext, sc
+	// Create a new database, Drop old database
+	db, _ := mock.NewCouchDBHandler(false, chaincodeName)
+	stub.SetCouchDBConfiguration(db)
+	return stub
 }
 
-func TestTokenBaseSC_Transfer(t *testing.T) {
-	ctx, sc := setupMock()
-
-	// create from wallet
-	walletFrom := dto.CreateWallet{
-		TokenId: "We123ea",
-		Status:  "A",
-	}
-	walletFromId, err := sc.CreateWallet(ctx, walletFrom)
-	assert.NilError(t, err, "Fail to create from wallet")
-
-	walletTo := dto.CreateWallet{
-		TokenId: "We123ea",
-		Status:  "A",
-	}
-	walletToId, err := sc.CreateWallet(ctx, walletTo)
-	assert.NilError(t, err, "Fail to create to wallet")
-
-	transferDto := dto.TransferToken{
-		FromWalletId: walletFromId,
-		ToWalletId:   walletToId,
-		Amount:       100,
-	}
-	err = sc.Transfer(ctx, transferDto)
-	assert.NilError(t, err, "Fail to create to transfer token")
+type BaseSCTestSuite struct {
+	suite.Suite
+	walletFromId string
+	walletToId   string
+	tokenId      string
+	stub         *mock.MockStubExtend
 }
 
-func TestTokenBaseSC_CreateWallet(t *testing.T) {
-	ctx, sc := setupMock()
+func (suite *BaseSCTestSuite) SetupTest() {
+	suite.stub = setupMock()
 
-	walletFrom := dto.CreateWallet{
-		TokenId: "We123ea",
-		Status:  "A",
-	}
-	walletId, err := sc.CreateWallet(ctx, walletFrom)
-	assert.NilError(t, err, "Fail to create wallet")
-
-	balance, err := sc.GetBalance(ctx, dto.Balance{WalletId: walletId})
-	assert.NilError(t, err, "Fail to get balance of wallet")
-	assert.Equal(t, balance, "0")
-}
-
-func TestTokenBaseSC_UpdateWallet(t *testing.T) {
-	ctx, sc := setupMock()
-
-	walletFrom := dto.CreateWallet{
-		TokenId: "We123ea",
-		Status:  "A",
-	}
-	walletId, err := sc.CreateWallet(ctx, walletFrom)
-	assert.NilError(t, err, "Fail to create wallet")
-
-	balance, err := sc.GetBalance(ctx, dto.Balance{WalletId: walletId})
-	assert.NilError(t, err, "Fail to get balance of wallet")
-	assert.Equal(t, balance, "0")
-
-	err = sc.UpdateWallet(ctx, dto.UpdateWallet{
-		WalletId: walletId,
-		Status:   "I",
-	})
-	assert.NilError(t, err, "Fail to update status of wallet")
-}
-
-func TestTokenBaseSC_Mint(t *testing.T) {
-	ctx, sc := setupMock()
-
-	walletFrom := dto.CreateWallet{
-		TokenId: "We123ea",
-		Status:  "A",
-	}
-	walletId, err := sc.CreateWallet(ctx, walletFrom)
-	assert.NilError(t, err, "Fail to create wallet")
-
-	balance, err := sc.GetBalance(ctx, dto.Balance{WalletId: walletId})
-	assert.NilError(t, err, "Fail to get balance of wallet")
-	assert.Equal(t, balance, "0")
-
-	err = sc.Mint(ctx, dto.MintToken{
-		WalletId: walletId,
-		Amount:   321,
-	})
-	assert.NilError(t, err, "Fail to mint token for wallet")
-}
-
-func TestTokenBaseSC_Burn(t *testing.T) {
-	ctx, sc := setupMock()
-
-	// create wallet
-	walletFrom := dto.CreateWallet{
-		TokenId: "We123ea",
-		Status:  "A",
-	}
-	walletId, err := sc.CreateWallet(ctx, walletFrom)
-	assert.NilError(t, err, "Fail to create wallet")
-
-	balance, err := sc.GetBalance(ctx, dto.Balance{WalletId: walletId})
-	assert.NilError(t, err, "Fail to get balance of wallet")
-	assert.Equal(t, balance, "0")
-
-	// burn token
-	err = sc.Burn(ctx, dto.BurnToken{
-		WalletId: walletId,
-		Amount:   100,
-	})
-	assert.NilError(t, err, "Fail to mint token for wallet")
-}
-
-func TestTokenBaseSC_CreateTokenType(t *testing.T) {
-	ctx, sc := setupMock()
-
-	tokenId, err := sc.CreateTokenType(ctx, dto.CreateTokenType{
+	// create token type
+	stableToken := dto.CreateTokenType{
 		Name: "Stable",
 		Rate: 0.123,
-	})
-	assert.NilError(t, err, "Fail to create token type")
-	t.Log(tokenId)
-	assert.Check(t, tokenId != "", "Token Id return empty")
+	}
+	paramByte, _ := json.Marshal(stableToken)
+	suite.tokenId = mock.MockInvokeTransaction(suite.T(), suite.stub, [][]byte{[]byte("CreateTokenType"), paramByte})
+	suite.T().Log(suite.tokenId)
+	assert.NotEmpty(suite.T(), suite.tokenId, "Create Token Type return empty")
+
+	// create wallet
+	wallet := dto.CreateWallet{
+		TokenId: suite.tokenId,
+		Status:  "A",
+	}
+	walletByte, _ := json.Marshal(wallet)
+
+	suite.walletFromId = mock.MockInvokeTransaction(suite.T(), suite.stub, [][]byte{[]byte("CreateWallet"), walletByte})
+	assert.NotEmpty(suite.T(), suite.walletFromId, "Create from wallet return empty")
+
+	suite.walletToId = mock.MockInvokeTransaction(suite.T(), suite.stub, [][]byte{[]byte("CreateWallet"), walletByte})
+	assert.NotEmpty(suite.T(), suite.walletToId, "Create to wallet return empty")
+
+	// mint balance for From wallet
+	mintDto := dto.MintToken{
+		WalletId: suite.walletFromId,
+		Amount:   100000,
+	}
+	mintByte, _ := json.Marshal(mintDto)
+	mintRes := mock.MockInvokeTransaction(suite.T(), suite.stub, [][]byte{[]byte("Mint"), mintByte})
+	assert.Empty(suite.T(), mintRes, "Mint invoke return err")
+
+	// accounting balance
+	suite.accountingBalance()
+}
+
+func (suite *BaseSCTestSuite) TestTokenBaseSC_CreateWallet() {
+	walletFrom := dto.CreateWallet{
+		TokenId: suite.tokenId,
+		Status:  "A",
+	}
+	walletByte, _ := json.Marshal(walletFrom)
+
+	walletId := mock.MockInvokeTransaction(suite.T(), suite.stub, [][]byte{[]byte("CreateWallet"), walletByte})
+	suite.T().Log(walletId)
+	assert.NotEmpty(suite.T(), walletId, "Create wallet return empty")
+
+	// Check if the created data exist in the ledger
+	compositeKey, _ := suite.stub.CreateCompositeKey(doc.Wallets, helper.WalletKey(walletId))
+	state, err := suite.stub.GetState(compositeKey)
+	assert.Nilf(suite.T(), err, "Get wallet failed", err)
+
+	walletEntity := new(entity.Wallet)
+	err = json.Unmarshal(state, &walletEntity)
+	assert.Nilf(suite.T(), err, "Parse wallet failed", err)
+	assert.Equal(suite.T(), walletId, walletEntity.Id)
+	assert.Equal(suite.T(), suite.tokenId, walletEntity.TokenId)
+	assert.Equal(suite.T(), glossary.Active, walletEntity.Status)
+}
+
+func (suite *BaseSCTestSuite) TestTokenBaseSC_Transfer() {
+	transferDto := dto.TransferToken{
+		FromWalletId: suite.walletFromId,
+		ToWalletId:   suite.walletToId,
+		Amount:       100,
+	}
+	paramByte, _ := json.Marshal(transferDto)
+	transferRes := mock.MockInvokeTransaction(suite.T(), suite.stub, [][]byte{[]byte("Transfer"), paramByte})
+	suite.T().Log(transferRes)
+	assert.Emptyf(suite.T(), transferRes, "Create wallet return error", transferRes)
+
+	// accounting balance
+	suite.accountingBalance()
+
+	// get check balance
+	balanceOfFromWallet := suite.getBalance(suite.walletFromId)
+	suite.T().Log(balanceOfFromWallet)
+	assert.NotEmptyf(suite.T(), balanceOfFromWallet, "Get balance of From wallet return empty", balanceOfFromWallet)
+	assert.Equal(suite.T(), "9990000000000", balanceOfFromWallet, "Sub balance of From wallet failed")
+
+	balanceOfToWallet := suite.getBalance(suite.walletToId)
+	suite.T().Log(balanceOfToWallet)
+	assert.NotEmptyf(suite.T(), balanceOfToWallet, "Get balance of To wallet return error", balanceOfToWallet)
+	assert.Equal(suite.T(), "10000000000", balanceOfToWallet, "Sub balance of To wallet failed")
+}
+
+func (suite *BaseSCTestSuite) TestTokenBaseSC_UpdateWallet() {
+	updateWalletDto := dto.UpdateWallet{
+		WalletId: suite.walletFromId,
+		Status:   glossary.InActive,
+	}
+	paramByte, _ := json.Marshal(updateWalletDto)
+	updateRes := mock.MockInvokeTransaction(suite.T(), suite.stub, [][]byte{[]byte("UpdateWallet"), paramByte})
+	suite.T().Log(updateRes)
+	assert.Emptyf(suite.T(), updateRes, "Update wallet return error", updateRes)
+}
+
+func (suite *BaseSCTestSuite) TestTokenBaseSC_Mint() {
+	mintDto := dto.MintToken{
+		WalletId: suite.walletToId,
+		Amount:   200,
+	}
+	paramByte, _ := json.Marshal(mintDto)
+	mintRes := mock.MockInvokeTransaction(suite.T(), suite.stub, [][]byte{[]byte("Mint"), paramByte})
+	suite.T().Log(mintRes)
+	assert.Emptyf(suite.T(), mintRes, "Mint token return error", mintRes)
+
+	// accounting balance
+	suite.accountingBalance()
+
+	// checking balance
+	balanceRes := suite.getBalance(suite.walletToId)
+	assert.NotEmpty(suite.T(), balanceRes, "Get balance wallet return empty")
+	assert.Equal(suite.T(), "20000000000", balanceRes, "Balance mint not enough")
+}
+
+func (suite *BaseSCTestSuite) TestTokenBaseSC_Burn() {
+	burnDto := dto.BurnToken{
+		WalletId: suite.walletFromId,
+		Amount:   1000,
+	}
+	paramByte, _ := json.Marshal(burnDto)
+	burnRes := mock.MockInvokeTransaction(suite.T(), suite.stub, [][]byte{[]byte("Burn"), paramByte})
+	suite.T().Log(burnRes)
+	assert.Emptyf(suite.T(), burnRes, "Burn token return error", burnRes)
+
+	// accounting balance
+	suite.accountingBalance()
+
+	// checking balance
+	balanceRes := suite.getBalance(suite.walletFromId)
+	assert.NotEmpty(suite.T(), balanceRes, "Get balance wallet return empty")
+	assert.Equal(suite.T(), "9900000000000", balanceRes, "Balance mint not enough")
+}
+
+func (suite *BaseSCTestSuite) TestTokenBaseSC_CreateTokenType() {
+	tokenTypeDto := dto.CreateTokenType{
+		Name: "Test Token",
+		Rate: 0.99,
+	}
+	paramByte, _ := json.Marshal(tokenTypeDto)
+	createTokenRes := mock.MockInvokeTransaction(suite.T(), suite.stub, [][]byte{[]byte("CreateTokenType"), paramByte})
+	suite.T().Log(createTokenRes)
+	assert.NotEmptyf(suite.T(), createTokenRes, "Burn token return error", createTokenRes)
+}
+
+func TestBaseSCTestSuite(t *testing.T) {
+	suite.Run(t, new(BaseSCTestSuite))
+}
+
+func (suite *BaseSCTestSuite) accountingBalance() {
+	lstTx := mock.MockInvokeTransaction(suite.T(), suite.stub, [][]byte{[]byte("GetAccountingTx")})
+	suite.T().Log(lstTx)
+
+	lstTx = strings.ReplaceAll(lstTx, "[", "")
+	lstTx = strings.ReplaceAll(lstTx, "]", "")
+	lstTx = strings.ReplaceAll(lstTx, "\"", "")
+	suite.T().Log(lstTx)
+	// accounting
+	accountingDto := dto.AccountingBalance{
+		TxId: strings.Split(lstTx, ","),
+	}
+	paramByte, _ := json.Marshal(accountingDto)
+	accountingRes := mock.MockInvokeTransaction(suite.T(), suite.stub, [][]byte{[]byte("CalculateBalance"), paramByte})
+	assert.Empty(suite.T(), accountingRes, "CalculateBalance invoke return err")
+}
+
+func (suite *BaseSCTestSuite) getBalance(walletId string) string {
+	balanceDto := dto.Balance{
+		WalletId: walletId,
+	}
+	paramByte, _ := json.Marshal(balanceDto)
+	balanceOf := mock.MockInvokeTransaction(suite.T(), suite.stub, [][]byte{[]byte("GetBalance"), paramByte})
+	suite.T().Log(balanceOf)
+
+	return balanceOf
 }

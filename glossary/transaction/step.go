@@ -17,34 +17,12 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package entity
+package transaction
 
-import (
-	"github.com/Akachain/gringotts/glossary"
-	"github.com/Akachain/gringotts/glossary/doc"
-	"github.com/Akachain/gringotts/helper"
-	"github.com/hyperledger/fabric-contract-api-go/contractapi"
+type Step int
+
+const (
+	Validation Step = iota
+	SubFromWallet
+	AddToWallet
 )
-
-// A wallet only contains 1 type of token and its balance.
-type Wallet struct {
-	TokenId  string
-	Status   glossary.Status
-	Balances string
-	Base     `mapstructure:",squash"`
-}
-
-func NewWallet(ctx ...contractapi.TransactionContextInterface) *Wallet {
-	if len(ctx) <= 0 {
-		return &Wallet{}
-	}
-	txTime, _ := ctx[0].GetStub().GetTxTimestamp()
-	return &Wallet{
-		Base: Base{
-			Id:           helper.GenerateID(doc.Wallets, ctx[0].GetStub().GetTxID()),
-			CreatedAt:    helper.TimestampISO(txTime.Seconds),
-			UpdatedAt:    helper.TimestampISO(txTime.Seconds),
-			BlockChainId: ctx[0].GetStub().GetTxID(),
-		},
-	}
-}

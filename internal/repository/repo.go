@@ -35,6 +35,5 @@ type Repo interface {
 	Update(ctx contractapi.TransactionContextInterface, entity interface{}, docPrefix string, keys []string) error
 	Get(ctx contractapi.TransactionContextInterface, docPrefix string, keys []string) (interface{}, error)
 	GetQueryStringWithPagination(ctx contractapi.TransactionContextInterface, queryString string) (shim.StateQueryIteratorInterface, error)
-	//Delete(ctx contractapi.TransactionContextInterface, entity interface{}) (string, error)
-	//GetAll(ctx contractapi.TransactionContextInterface) []interface{}
+	IsExist(ctx contractapi.TransactionContextInterface, docPrefix string, keys []string) (bool, error)
 }

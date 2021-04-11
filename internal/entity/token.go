@@ -19,14 +19,35 @@
 
 package entity
 
-import "github.com/Akachain/gringotts/glossary"
+import (
+	"github.com/Akachain/gringotts/glossary"
+	"github.com/Akachain/gringotts/glossary/doc"
+	"github.com/Akachain/gringotts/helper"
+	"github.com/hyperledger/fabric-contract-api-go/contractapi"
+)
 
 // A Token structure will have the name of the token type,
 // the conversion rate to the base unit, and status (active/inactive)
 // the status is checked only when we create a new wallet.
 type Token struct {
-	Name   string          `mapstructure:"name" json:"name"`
-	Rate   float64         `mapstructure:"rate" json:"rate"`
-	Status glossary.Status `mapstructure:"status" json:"status"`
+	Name   string
+	Rate   float64
+	Status glossary.Status
 	Base   `mapstructure:",squash"`
+}
+
+func NewToken(ctx ...contractapi.TransactionContextInterface) *Token {
+	if len(ctx) <= 0 {
+		return &Token{}
+	}
+	txTime, _ := ctx[0].GetStub().GetTxTimestamp()
+	return &Token{
+		Base: Base{
+			Id:           helper.GenerateID(doc.Tokens, ctx[0].GetStub().GetTxID()),
+			CreatedAt:    helper.TimestampISO(txTime.Seconds),
+			UpdatedAt:    helper.TimestampISO(txTime.Seconds),
+			BlockChainId: ctx[0].GetStub().GetTxID(),
+		},
+		Status: glossary.Active,
+	}
 }

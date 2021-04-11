@@ -48,7 +48,7 @@ func (t *TokenHandler) Transfer(ctx contractapi.TransactionContextInterface, tra
 		return helper.RespError(errorcode.InvalidParam)
 	}
 
-	return t.tokenService.Transfer(ctx, transferDto)
+	return t.tokenService.Transfer(ctx, transferDto.FromWalletId, transferDto.ToWalletId, transferDto.Amount)
 }
 
 // Mint generate new token for wallet.
@@ -61,7 +61,7 @@ func (t *TokenHandler) Mint(ctx contractapi.TransactionContextInterface, mintDto
 		return helper.RespError(errorcode.InvalidParam)
 	}
 
-	return t.tokenService.Mint(ctx, mintDto)
+	return t.tokenService.Mint(ctx, mintDto.WalletId, mintDto.Amount)
 }
 
 // Burn to burn token existed in the system.
@@ -74,7 +74,7 @@ func (t *TokenHandler) Burn(ctx contractapi.TransactionContextInterface, burnDto
 		return helper.RespError(errorcode.InvalidParam)
 	}
 
-	return t.tokenService.Burn(ctx, burnDto)
+	return t.tokenService.Burn(ctx, burnDto.WalletId, burnDto.Amount)
 }
 
 // CreateTokenType to create new token type.
@@ -87,5 +87,31 @@ func (t *TokenHandler) CreateTokenType(ctx contractapi.TransactionContextInterfa
 		return "", helper.RespError(errorcode.InvalidParam)
 	}
 
-	return t.tokenService.CreateType(ctx, tokenTypeDto)
+	return t.tokenService.CreateType(ctx, tokenTypeDto.Name, tokenTypeDto.Rate)
+}
+
+// Swap to swap between different token type.
+func (t *TokenHandler) Swap(ctx contractapi.TransactionContextInterface, swapDto dto.SwapToken) error {
+	glogger.GetInstance().Info(ctx, "-----------Token Handler - Swap-----------")
+
+	// checking dto validate
+	if err := swapDto.IsValid(); err != nil {
+		glogger.GetInstance().Errorf(ctx, "TokenHandler - Swap Input invalidate %v", err)
+		return helper.RespError(errorcode.InvalidParam)
+	}
+
+	return t.tokenService.Swap(ctx, swapDto.FromWalletId, swapDto.ToWalletId, swapDto.Amount)
+}
+
+// Issue to issue new token type form stable token.
+func (t *TokenHandler) Issue(ctx contractapi.TransactionContextInterface, issueDto dto.IssueToken) error {
+	glogger.GetInstance().Info(ctx, "-----------Token Handler - Swap-----------")
+
+	// checking dto validate
+	if err := issueDto.IsValid(); err != nil {
+		glogger.GetInstance().Errorf(ctx, "TokenHandler - Issue Input invalidate %v", err)
+		return helper.RespError(errorcode.InvalidParam)
+	}
+
+	return t.tokenService.Issue(ctx, issueDto.TokenId, issueDto.FromWalletId, issueDto.ToWalletId, issueDto.Amount)
 }

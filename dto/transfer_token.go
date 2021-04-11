@@ -27,7 +27,6 @@ import (
 	"github.com/Akachain/gringotts/internal/entity"
 	"github.com/Akachain/gringotts/pkg/unit"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
-	"math/big"
 )
 
 type TransferToken struct {
@@ -60,10 +59,8 @@ func (t TransferToken) IsValid() error {
 		return errors.New("From/To wallet id is empty")
 	}
 
-	balanceUnit := new(unit.BalanceUnit)
-	balanceUnit.SetFloatUnit(t.Amount)
-	if balanceUnit.Cmp(big.NewInt(0)) < 0 {
-		return errors.New("the transfer amount is a negative number")
+	if t.Amount <= 0 {
+		return errors.New("the transfer amount is a negative/zero number")
 	}
 	return nil
 }

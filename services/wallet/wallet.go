@@ -20,14 +20,15 @@
 package wallet
 
 import (
-	"github.com/Akachain/gringotts/dto"
 	"github.com/Akachain/gringotts/errorcode"
 	"github.com/Akachain/gringotts/glossary"
 	"github.com/Akachain/gringotts/glossary/doc"
 	"github.com/Akachain/gringotts/helper"
 	"github.com/Akachain/gringotts/helper/glogger"
+	"github.com/Akachain/gringotts/internal/entity"
 	"github.com/Akachain/gringotts/services/base"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
+	"strings"
 )
 
 type walletService struct {
@@ -38,11 +39,11 @@ func NewWalletService() *walletService {
 	return &walletService{base.NewBase()}
 }
 
-func (w *walletService) Create(ctx contractapi.TransactionContextInterface, createWalletDto dto.CreateWallet) (string, error) {
+func (w *walletService) Create(ctx contractapi.TransactionContextInterface, tokenId string, status glossary.Status) (string, error) {
 	glogger.GetInstance().Info(ctx, "-----------Wallet Service - Create-----------")
 
 	// validate with token type id
-	token, err := w.GetTokenType(ctx, createWalletDto.TokenId)
+	token, err := w.GetTokenType(ctx, tokenId)
 	if err != nil {
 		glogger.GetInstance().Errorf(ctx, "Create - Get token type failed with error (%v)", err)
 		return "", err
@@ -52,7 +53,9 @@ func (w *walletService) Create(ctx contractapi.TransactionContextInterface, crea
 		return "", helper.RespError(errorcode.InvalidParam)
 	}
 
-	walletEntity := createWalletDto.ToEntity(ctx)
+	walletEntity := entity.NewWallet(ctx)
+	walletEntity.Status = status
+	walletEntity.TokenId = tokenId
 	if err := w.Repo.Create(ctx, walletEntity, doc.Wallets, helper.WalletKey(walletEntity.Id)); err != nil {
 		glogger.GetInstance().Errorf(ctx, "Create - Create wallet failed with error (%v)", err)
 		return "", helper.RespError(errorcode.BizUnableCreateWallet)
@@ -62,11 +65,11 @@ func (w *walletService) Create(ctx contractapi.TransactionContextInterface, crea
 	return walletEntity.Id, nil
 }
 
-func (w *walletService) Update(ctx contractapi.TransactionContextInterface, updateWalletDto dto.UpdateWallet) error {
+func (w *walletService) Update(ctx contractapi.TransactionContextInterface, walletId string, status glossary.Status) error {
 	glogger.GetInstance().Info(ctx, "-----------Wallet Service - Update-----------")
 	txTime, _ := ctx.GetStub().GetTxTimestamp()
 
-	wallet, err := w.GetWallet(ctx, updateWalletDto.WalletId)
+	wallet, err := w.GetWallet(ctx, walletId)
 	if err != nil {
 		glogger.GetInstance().Errorf(ctx, "Update - Get wallet failed with error (%v)", err)
 		return helper.RespError(errorcode.BizUnableGetWallet)
@@ -76,7 +79,7 @@ func (w *walletService) Update(ctx contractapi.TransactionContextInterface, upda
 		return helper.RespError(errorcode.InvalidParam)
 	}
 
-	wallet.Status = updateWalletDto.Status
+	wallet.Status = status
 	wallet.UpdatedAt = helper.TimestampISO(txTime.Seconds)
 
 	if err := w.Repo.Update(ctx, wallet, doc.Wallets, helper.WalletKey(wallet.Id)); err != nil {
@@ -88,10 +91,10 @@ func (w *walletService) Update(ctx contractapi.TransactionContextInterface, upda
 	return nil
 }
 
-func (w *walletService) BalanceOf(ctx contractapi.TransactionContextInterface, balanceDto dto.Balance) (string, error) {
+func (w *walletService) BalanceOf(ctx contractapi.TransactionContextInterface, walletId string) (string, error) {
 	glogger.GetInstance().Info(ctx, "-----------Wallet Service - BalanceOf-----------")
 
-	wallet, err := w.GetWallet(ctx, balanceDto.WalletId)
+	wallet, err := w.GetWallet(ctx, walletId)
 	if err != nil {
 		glogger.GetInstance().Errorf(ctx, "BalanceOf - Get wallet failed with error (%v)", err)
 		return "-1", helper.RespError(errorcode.BizUnableGetWallet)
@@ -99,4 +102,44 @@ func (w *walletService) BalanceOf(ctx contractapi.TransactionContextInterface, b
 	glogger.GetInstance().Infof(ctx, "-----------Wallet Service - BalanceOf wallet: (%s)-----------", wallet.Balances)
 
 	return wallet.Balances, nil
+}
+
+func (w *walletService) EnrollToken(ctx contractapi.TransactionContextInterface, tokenId string, fromWalletId []string, toWalletId []string) error {
+	glogger.GetInstance().Info(ctx, "-----------Wallet Service - EnrollToken-----------")
+	isExisted, err := w.Repo.IsExist(ctx, doc.Enrollments, helper.EnrollmentKey(tokenId))
+	if err != nil {
+		glogger.GetInstance().Errorf(ctx, "Wallet Service - Check exit enrollment failed with err (%v)", err)
+		return helper.RespError(errorcode.BizUnableCreateEnrollment)
+	}
+
+	if isExisted {
+		enrollment, err := w.GetEnrollment(ctx, tokenId)
+		if err != nil {
+			glogger.GetInstance().Errorf(ctx, "Wallet Service - Get enrollment failed with err (%v)", err)
+			return err
+		}
+		if len(fromWalletId) > 0 {
+			enrollment.FromWalletId = enrollment.FromWalletId + "," + strings.Join(fromWalletId, ",")
+		}
+		if len(toWalletId) > 0 {
+			enrollment.ToWalletId = enrollment.ToWalletId + "," + strings.Join(toWalletId, ",")
+		}
+		if err := w.Repo.Update(ctx, enrollment, doc.Enrollments, helper.EnrollmentKey(tokenId)); err != nil {
+			glogger.GetInstance().Errorf(ctx, "Wallet Service - Update enrollment failed with err (%v)", err)
+			return helper.RespError(errorcode.BizUnableCreateEnrollment)
+		}
+	} else {
+		enrollmentEntity := entity.NewEnrollment(ctx)
+		if len(fromWalletId) > 0 {
+			enrollmentEntity.FromWalletId = strings.Join(fromWalletId, ",")
+		}
+		if len(toWalletId) > 0 {
+			enrollmentEntity.ToWalletId = strings.Join(toWalletId, ",")
+		}
+		if err := w.Repo.Create(ctx, enrollmentEntity, doc.Enrollments, helper.EnrollmentKey(tokenId)); err != nil {
+			glogger.GetInstance().Errorf(ctx, "Wallet Service - Create enrollment failed with err (%v)", err)
+			return helper.RespError(errorcode.BizUnableCreateEnrollment)
+		}
+	}
+	return nil
 }

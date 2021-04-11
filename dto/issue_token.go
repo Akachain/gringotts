@@ -17,34 +17,27 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package entity
+package dto
 
-import (
-	"github.com/Akachain/gringotts/glossary"
-	"github.com/Akachain/gringotts/glossary/doc"
-	"github.com/Akachain/gringotts/helper"
-	"github.com/hyperledger/fabric-contract-api-go/contractapi"
-)
+import "github.com/pkg/errors"
 
-// A wallet only contains 1 type of token and its balance.
-type Wallet struct {
-	TokenId  string
-	Status   glossary.Status
-	Balances string
-	Base     `mapstructure:",squash"`
+type IssueToken struct {
+	TokenId      string  `json:"tokenId"`
+	FromWalletId string  `json:"fromWalletId"`
+	ToWalletId   string  `json:"toWalletId"`
+	Amount       float64 `json:"amount"`
 }
 
-func NewWallet(ctx ...contractapi.TransactionContextInterface) *Wallet {
-	if len(ctx) <= 0 {
-		return &Wallet{}
+func (i IssueToken) IsValid() error {
+	if i.TokenId == "" {
+		return errors.New("Token Id is empty")
 	}
-	txTime, _ := ctx[0].GetStub().GetTxTimestamp()
-	return &Wallet{
-		Base: Base{
-			Id:           helper.GenerateID(doc.Wallets, ctx[0].GetStub().GetTxID()),
-			CreatedAt:    helper.TimestampISO(txTime.Seconds),
-			UpdatedAt:    helper.TimestampISO(txTime.Seconds),
-			BlockChainId: ctx[0].GetStub().GetTxID(),
-		},
+	if i.FromWalletId == "" || i.ToWalletId == "" {
+		return errors.New("From/To wallet id is empty")
 	}
+
+	if i.Amount <= 0 {
+		return errors.New("the issue amount is a negative/zero number")
+	}
+	return nil
 }
