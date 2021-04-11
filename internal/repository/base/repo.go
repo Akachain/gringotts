@@ -41,7 +41,7 @@ func (r *repo) GetQueryStringWithPagination(ctx contractapi.TransactionContextIn
 }
 
 func (r *repo) Create(ctx contractapi.TransactionContextInterface, entity interface{}, tableModel string, keys []string) error {
-	return util.Createdata(ctx.GetStub(), tableModel, keys, entity)
+	return util.CreateData(ctx.GetStub(), tableModel, keys, entity)
 }
 
 func (r *repo) Update(ctx contractapi.TransactionContextInterface, entity interface{}, tableModel string, keys []string) error {
@@ -49,7 +49,7 @@ func (r *repo) Update(ctx contractapi.TransactionContextInterface, entity interf
 }
 
 func (r *repo) Get(ctx contractapi.TransactionContextInterface, tableModel string, keys []string) (interface{}, error) {
-	return util.Getdatabyrowkeys(ctx.GetStub(), keys, tableModel)
+	return util.GetDataByRowKeys(ctx.GetStub(), keys, tableModel)
 }
 
 func (r *repo) IsExist(ctx contractapi.TransactionContextInterface, docPrefix string, keys []string) (bool, error) {
