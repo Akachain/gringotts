@@ -21,7 +21,6 @@ package smartcontract
 
 import (
 	"github.com/Akachain/gringotts/dto"
-	"github.com/Akachain/gringotts/handler"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
 
@@ -66,10 +65,4 @@ type BasicToken interface {
 
 	// EnrollToken to register wallet policy use to issue new token
 	EnrollToken(ctx contractapi.TransactionContextInterface, enrollmentDto dto.Enrollment) error
-
-	// GetTokenHandler return token handler of base token
-	GetTokenHandler() *handler.TokenHandler
-
-	// GetWalletHandler return wallet handler of base token
-	GetWalletHandler() *handler.WalletHandler
 }

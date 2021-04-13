@@ -116,19 +116,3 @@ func (b *baseToken) EnrollToken(ctx contractapi.TransactionContextInterface, enr
 	glogger.GetInstance().Info(ctx, "------------EnrollToken ChainCode------------")
 	return b.walletHandler.EnrollToken(ctx, enrollmentDto)
 }
-
-// Get resource of base token
-func (b *baseToken) GetTokenHandler() *handler.TokenHandler {
-	return b.tokenHandler
-}
-
-// Get resource of base wallet
-func (b *baseToken) GetWalletHandler() *handler.WalletHandler {
-	return b.walletHandler
-}
-
-// GetIgnoredFunctions returns a list of function names for functions that should not
-// be included in the produced metadata or accessible by invoking/querying the chaincode.
-func (b *baseToken) GetIgnoredFunctions() []string {
-	return []string{"GetTokenHandler", "GetWalletHandler"}
-}
