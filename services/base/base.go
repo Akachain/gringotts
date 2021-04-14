@@ -20,14 +20,14 @@
 package base
 
 import (
+	"github.com/Akachain/gringotts/entity"
 	"github.com/Akachain/gringotts/errorcode"
 	"github.com/Akachain/gringotts/glossary"
 	"github.com/Akachain/gringotts/glossary/doc"
 	"github.com/Akachain/gringotts/helper"
 	"github.com/Akachain/gringotts/helper/glogger"
-	"github.com/Akachain/gringotts/internal/entity"
-	"github.com/Akachain/gringotts/internal/repository"
-	"github.com/Akachain/gringotts/internal/repository/base"
+	"github.com/Akachain/gringotts/repository"
+	"github.com/Akachain/gringotts/repository/base"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 	"github.com/mitchellh/mapstructure"
 )

@@ -20,11 +20,11 @@
 package health_check
 
 import (
+	"github.com/Akachain/gringotts/entity"
 	"github.com/Akachain/gringotts/errorcode"
 	"github.com/Akachain/gringotts/glossary/doc"
 	"github.com/Akachain/gringotts/helper"
 	"github.com/Akachain/gringotts/helper/glogger"
-	"github.com/Akachain/gringotts/internal/entity"
 	"github.com/Akachain/gringotts/services/base"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )

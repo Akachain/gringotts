@@ -21,10 +21,10 @@ package dto
 
 import (
 	"errors"
+	"github.com/Akachain/gringotts/entity"
 	"github.com/Akachain/gringotts/glossary/doc"
 	"github.com/Akachain/gringotts/glossary/transaction"
 	"github.com/Akachain/gringotts/helper"
-	"github.com/Akachain/gringotts/internal/entity"
 	"github.com/Akachain/gringotts/pkg/unit"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
