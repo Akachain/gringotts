@@ -87,7 +87,7 @@ func (t *TokenHandler) CreateTokenType(ctx contractapi.TransactionContextInterfa
 		return "", helper.RespError(errorcode.InvalidParam)
 	}
 
-	return t.tokenService.CreateType(ctx, tokenTypeDto.Name, tokenTypeDto.Rate)
+	return t.tokenService.CreateType(ctx, tokenTypeDto.Name, tokenTypeDto.TickerToken, tokenTypeDto.Rate)
 }
 
 // Swap to swap between different token type.

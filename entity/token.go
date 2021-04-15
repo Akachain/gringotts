@@ -30,10 +30,11 @@ import (
 // the conversion rate to the base unit, and status (active/inactive)
 // the status is checked only when we create a new wallet.
 type Token struct {
-	Name   string
-	Rate   float64
-	Status glossary.Status
-	Base   `mapstructure:",squash"`
+	Name        string
+	Rate        float64
+	Status      glossary.Status
+	TickerToken string
+	Base        `mapstructure:",squash"`
 }
 
 func NewToken(ctx ...contractapi.TransactionContextInterface) *Token {

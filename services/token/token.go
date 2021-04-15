@@ -134,11 +134,12 @@ func (t *tokenService) Burn(ctx contractapi.TransactionContextInterface, walletI
 	return nil
 }
 
-func (t *tokenService) CreateType(ctx contractapi.TransactionContextInterface, name string, rate float64) (string, error) {
+func (t *tokenService) CreateType(ctx contractapi.TransactionContextInterface, name string, tickerToken string, rate float64) (string, error) {
 	glogger.GetInstance().Info(ctx, "-----------Token Service - CreateType-----------")
 
 	tokenEntity := entity.NewToken(ctx)
 	tokenEntity.Name = name
+	tokenEntity.TickerToken = tickerToken
 	tokenEntity.Rate = rate
 	if err := t.Repo.Create(ctx, tokenEntity, doc.Tokens, helper.TokenKey(tokenEntity.Id)); err != nil {
 		glogger.GetInstance().Errorf(ctx, "CreateType - Create token type failed with error (%v)", err)

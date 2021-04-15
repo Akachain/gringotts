@@ -36,7 +36,7 @@ type Token interface {
 	Burn(ctx contractapi.TransactionContextInterface, walletId string, amount float64) error
 
 	//CreateType to create new token type in the system.
-	CreateType(ctx contractapi.TransactionContextInterface, name string, rate float64) (string, error)
+	CreateType(ctx contractapi.TransactionContextInterface, name string, tickerToken string, rate float64) (string, error)
 
 	//Swap to swap between token type.
 	Swap(ctx contractapi.TransactionContextInterface, fromWalletId, toWalletId string, amount float64) error

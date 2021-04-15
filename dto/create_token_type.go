@@ -29,8 +29,9 @@ import (
 )
 
 type CreateTokenType struct {
-	Name string  `json:"name"`
-	Rate float64 `json:"rate"`
+	Name        string  `json:"name"`
+	TickerToken string  `json:"tickerToken"`
+	Rate        float64 `json:"rate"`
 }
 
 func (c CreateTokenType) ToEntity(ctx contractapi.TransactionContextInterface) *entity.Token {
@@ -38,6 +39,7 @@ func (c CreateTokenType) ToEntity(ctx contractapi.TransactionContextInterface) *
 	tokenEntity := new(entity.Token)
 	tokenEntity.Id = helper.GenerateID(doc.Tokens, ctx.GetStub().GetTxID())
 	tokenEntity.Name = c.Name
+	tokenEntity.TickerToken = c.TickerToken
 	tokenEntity.Rate = c.Rate
 	tokenEntity.Status = glossary.Active
 	tokenEntity.CreatedAt = helper.TimestampISO(txTime.Seconds)
@@ -47,8 +49,8 @@ func (c CreateTokenType) ToEntity(ctx contractapi.TransactionContextInterface) *
 }
 
 func (c CreateTokenType) IsValid() error {
-	if c.Name == "" {
-		return errors.New("name of token is empty")
+	if c.Name == "" || c.TickerToken == "" {
+		return errors.New("name/ticker of token is empty")
 	}
 	if c.Rate < 0 {
 		return errors.New("rate of token must be greater than zero")
