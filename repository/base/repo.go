@@ -67,3 +67,7 @@ func (r *repo) IsExist(ctx contractapi.TransactionContextInterface, docPrefix st
 
 	return bytes != nil, nil
 }
+
+func (r *repo) GetQueryString(ctx contractapi.TransactionContextInterface, queryString string) (shim.StateQueryIteratorInterface, error) {
+	return ctx.GetStub().GetQueryResult(queryString)
+}
