@@ -118,10 +118,10 @@ func (w *walletService) EnrollToken(ctx contractapi.TransactionContextInterface,
 			glogger.GetInstance().Errorf(ctx, "Wallet Service - Get enrollment failed with err (%v)", err)
 			return err
 		}
-		if len(fromWalletId) > 0 {
+		if len(fromWalletId) > 0 && !helper.ArrayContains(fromWalletId, "") {
 			enrollment.FromWalletId = enrollment.FromWalletId + "," + strings.Join(fromWalletId, ",")
 		}
-		if len(toWalletId) > 0 {
+		if len(toWalletId) > 0 && !helper.ArrayContains(toWalletId, "") {
 			enrollment.ToWalletId = enrollment.ToWalletId + "," + strings.Join(toWalletId, ",")
 		}
 		if err := w.Repo.Update(ctx, enrollment, doc.Enrollments, helper.EnrollmentKey(tokenId)); err != nil {
@@ -130,10 +130,10 @@ func (w *walletService) EnrollToken(ctx contractapi.TransactionContextInterface,
 		}
 	} else {
 		enrollmentEntity := entity.NewEnrollment(ctx)
-		if len(fromWalletId) > 0 {
+		if len(fromWalletId) > 0 && !helper.ArrayContains(fromWalletId, "") {
 			enrollmentEntity.FromWalletId = strings.Join(fromWalletId, ",")
 		}
-		if len(toWalletId) > 0 {
+		if len(toWalletId) > 0 && !helper.ArrayContains(toWalletId, "") {
 			enrollmentEntity.ToWalletId = strings.Join(toWalletId, ",")
 		}
 		if err := w.Repo.Create(ctx, enrollmentEntity, doc.Enrollments, helper.EnrollmentKey(tokenId)); err != nil {

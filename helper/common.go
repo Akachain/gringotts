@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"github.com/Akachain/gringotts/glossary"
 	"golang.org/x/crypto/sha3"
+	"sort"
 )
 
 // GenerateID return id of docs base on document prefix name and Fabric transaction ID
@@ -33,4 +34,10 @@ func GenerateID(docPrefix string, txID string) string {
 	shaString := fmt.Sprintf("%x", h.Sum(nil))
 
 	return shaString[len(shaString)-glossary.IdLength:]
+}
+
+// ArrayContains return true if array contain search string, otherwise return fail
+func ArrayContains(s []string, searchString string) bool {
+	i := sort.SearchStrings(s, searchString)
+	return i < len(s) && s[i] == searchString
 }
