@@ -17,34 +17,20 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package helper
+package services
 
-// WalletKey return list key of wallet will be compose in couch db key
-func WalletKey(walletId string) []string {
-	return []string{walletId}
-}
+import "github.com/hyperledger/fabric-contract-api-go/contractapi"
 
-// TransactionKey return list key of transaction will be compose in couch db key
-func TransactionKey(txId string) []string {
-	return []string{txId}
-}
+type NFT interface {
+	// Mint generate new NFT token
+	Mint(ctx contractapi.TransactionContextInterface, gs1Number string, ownerWalletId string, metaData string) (string, error)
 
-// TokenKey return list key of token will be compose in couch db key
-func TokenKey(tokenId string) []string {
-	return []string{tokenId}
-}
+	// OwnerOf return owner wallet id of nft token
+	OwnerOf(ctx contractapi.TransactionContextInterface, nftTokenId string) (string, error)
 
-// HealthCheckKey return list key of health check will be compose in couch db key
-func HealthCheckKey(id string) []string {
-	return []string{id}
-}
+	// BalanceOf return number nft of wallet address
+	BalanceOf(ctx contractapi.TransactionContextInterface, ownerWalletId string) (int, error)
 
-// EnrollmentKey return list key of enrollment will be compose in couch db key
-func EnrollmentKey(tokenId string) []string {
-	return []string{tokenId}
-}
-
-// NFTKey return list key of NFT will be compose in couch db key
-func NFTKey(nftId string) []string {
-	return []string{nftId}
+	// TransferFrom to transfer nft token from owner to other wallet
+	TransferFrom(ctx contractapi.TransactionContextInterface, ownerWalletId string, toWalletId string, nftTokenId string) error
 }

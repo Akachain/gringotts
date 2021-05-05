@@ -17,34 +17,18 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package helper
+package dto
 
-// WalletKey return list key of wallet will be compose in couch db key
-func WalletKey(walletId string) []string {
-	return []string{walletId}
+import "github.com/pkg/errors"
+
+type OwnerNFT struct {
+	NFTTokenId string `json:"nftTokenId"`
 }
 
-// TransactionKey return list key of transaction will be compose in couch db key
-func TransactionKey(txId string) []string {
-	return []string{txId}
-}
+func (o OwnerNFT) IsValid() error {
+	if o.NFTTokenId == "" {
+		return errors.New("NFT token id is invalid")
+	}
 
-// TokenKey return list key of token will be compose in couch db key
-func TokenKey(tokenId string) []string {
-	return []string{tokenId}
-}
-
-// HealthCheckKey return list key of health check will be compose in couch db key
-func HealthCheckKey(id string) []string {
-	return []string{id}
-}
-
-// EnrollmentKey return list key of enrollment will be compose in couch db key
-func EnrollmentKey(tokenId string) []string {
-	return []string{tokenId}
-}
-
-// NFTKey return list key of NFT will be compose in couch db key
-func NFTKey(nftId string) []string {
-	return []string{nftId}
+	return nil
 }

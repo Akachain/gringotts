@@ -28,4 +28,5 @@ const (
 	Tokens       = "Tokens"
 	HealthCheck  = "HealthCheck"
 	Enrollments  = "Enrollments"
+	NFT          = "NFT"
 )

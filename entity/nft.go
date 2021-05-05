@@ -17,34 +17,33 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package helper
+package entity
 
-// WalletKey return list key of wallet will be compose in couch db key
-func WalletKey(walletId string) []string {
-	return []string{walletId}
+import (
+	"github.com/Akachain/gringotts/glossary/doc"
+	"github.com/Akachain/gringotts/helper"
+	"github.com/hyperledger/fabric-contract-api-go/contractapi"
+)
+
+type NFT struct {
+	NFTId     string
+	GS1Number string
+	MetaData  string
+	OwnerId   string
+	Base      `mapstructure:",squash"`
 }
 
-// TransactionKey return list key of transaction will be compose in couch db key
-func TransactionKey(txId string) []string {
-	return []string{txId}
-}
-
-// TokenKey return list key of token will be compose in couch db key
-func TokenKey(tokenId string) []string {
-	return []string{tokenId}
-}
-
-// HealthCheckKey return list key of health check will be compose in couch db key
-func HealthCheckKey(id string) []string {
-	return []string{id}
-}
-
-// EnrollmentKey return list key of enrollment will be compose in couch db key
-func EnrollmentKey(tokenId string) []string {
-	return []string{tokenId}
-}
-
-// NFTKey return list key of NFT will be compose in couch db key
-func NFTKey(nftId string) []string {
-	return []string{nftId}
+func NewNFT(ctx ...contractapi.TransactionContextInterface) *NFT {
+	if len(ctx) <= 0 {
+		return &NFT{}
+	}
+	txTime, _ := ctx[0].GetStub().GetTxTimestamp()
+	return &NFT{
+		Base: Base{
+			Id:           helper.GenerateID(doc.NFT, ctx[0].GetStub().GetTxID()),
+			CreatedAt:    helper.TimestampISO(txTime.Seconds),
+			UpdatedAt:    helper.TimestampISO(txTime.Seconds),
+			BlockChainId: ctx[0].GetStub().GetTxID(),
+		},
+	}
 }

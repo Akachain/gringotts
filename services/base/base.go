@@ -177,3 +177,19 @@ func (b *Base) GetEnrollment(ctx contractapi.TransactionContextInterface, tokenI
 	}
 	return enrollment, nil
 }
+
+func (b *Base) GetNFT(ctx contractapi.TransactionContextInterface, nftTokenId string) (*entity.NFT, error) {
+	nftData, err := b.Repo.Get(ctx, doc.NFT, helper.NFTKey(nftTokenId))
+	if err != nil {
+		glogger.GetInstance().Errorf(ctx, "GetNFT - Get NFT failed with error (%v)", err)
+		return nil, helper.RespError(errorcode.BizUnableGetNFT)
+	}
+
+	nftToken := new(entity.NFT)
+	if err = mapstructure.Decode(nftData, &nftToken); err != nil {
+		glogger.GetInstance().Errorf(ctx, "GetNFT - Decode NFT token failed with error (%v)", err)
+		return nil, helper.RespError(errorcode.BizUnableMapDecode)
+	}
+
+	return nftToken, nil
+}

@@ -17,34 +17,25 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package helper
+package smartcontract
 
-// WalletKey return list key of wallet will be compose in couch db key
-func WalletKey(walletId string) []string {
-	return []string{walletId}
-}
+import (
+	"github.com/Akachain/gringotts/dto"
+	"github.com/hyperledger/fabric-contract-api-go/contractapi"
+)
 
-// TransactionKey return list key of transaction will be compose in couch db key
-func TransactionKey(txId string) []string {
-	return []string{txId}
-}
+type Erc721 interface {
+	contractapi.ContractInterface
 
-// TokenKey return list key of token will be compose in couch db key
-func TokenKey(tokenId string) []string {
-	return []string{tokenId}
-}
+	// Mint to generate new NFT with GS1 number
+	Mint(ctx contractapi.TransactionContextInterface, mintNFT dto.MintNFT) (string, error)
 
-// HealthCheckKey return list key of health check will be compose in couch db key
-func HealthCheckKey(id string) []string {
-	return []string{id}
-}
+	// OwnerOf to find the owner of an NFT
+	OwnerOf(ctx contractapi.TransactionContextInterface, ownerNFT dto.OwnerNFT) (string, error)
 
-// EnrollmentKey return list key of enrollment will be compose in couch db key
-func EnrollmentKey(tokenId string) []string {
-	return []string{tokenId}
-}
+	// BalanceOf to count all NFTs assigned to an owner
+	BalanceOf(ctx contractapi.TransactionContextInterface, balanceOfNFT dto.BalanceOfNFT) (int, error)
 
-// NFTKey return list key of NFT will be compose in couch db key
-func NFTKey(nftId string) []string {
-	return []string{nftId}
+	// TransferFrom to transfers the ownership of an NFT from one wallet to another wallet
+	TransferFrom(ctx contractapi.TransactionContextInterface, transferNFT dto.TransferNFT) error
 }

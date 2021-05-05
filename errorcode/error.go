@@ -60,6 +60,9 @@ const (
 	BizIssueNotPermission     ErrorCode = "318"
 	BizUnableCreateEnrollment ErrorCode = "319"
 	BizUnableUpdateTX         ErrorCode = "320"
+	BizUnableCreateNFT        ErrorCode = "321"
+	BizUnableGetNFT           ErrorCode = "322"
+	BizUnableUpdateNFT        ErrorCode = "323"
 )
 
 var mapErrorCode = map[ErrorCode]string{
@@ -88,6 +91,9 @@ var mapErrorCode = map[ErrorCode]string{
 	BizIssueNotPermission:     "From/To wallet do not have permission to issue new token",
 	BizUnableCreateEnrollment: "Unable to create/update wallet enrollment",
 	BizUnableUpdateTX:         "Unable to update transaction on blockchain",
+	BizUnableCreateNFT:        "Unable to create new NFT token on blockchain",
+	BizUnableGetNFT:           "Unable to get NFT token on blockchain",
+	BizUnableUpdateNFT:        "Unable to update NFT token on blockchain",
 }
 
 func (e ErrorCode) Message() string {

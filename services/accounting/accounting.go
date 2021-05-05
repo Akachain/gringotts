@@ -131,7 +131,7 @@ func (a *accountingService) CalculateBalance(ctx contractapi.TransactionContextI
 func (a *accountingService) txHandler(ctx contractapi.TransactionContextInterface, tx *entity.Transaction,
 	mapCurrentBalance map[string]string) (transaction.Step, error) {
 	switch tx.TxType {
-	case transaction.Transfer, transaction.Swap:
+	case transaction.Transfer, transaction.Swap, transaction.Issue:
 		if tx.FromWallet == glossary.SystemWallet || tx.ToWallet == glossary.SystemWallet {
 			glogger.GetInstance().Errorf(ctx, "TxHandler - Transfer - Transaction (%s) has from/to wallet Id is system type", tx.Id)
 			tx.Status = transaction.Rejected
@@ -179,7 +179,7 @@ func (a *accountingService) txHandler(ctx contractapi.TransactionContextInterfac
 		tx.Status = transaction.Confirmed
 		break
 	default:
-		glogger.GetInstance().Errorf(ctx, "TxHandler - Transaction (%s) has type (%s) not support", tx.Id, tx.TxType)
+		glogger.GetInstance().Errorf(ctx, "TxHandler - Transaction (%s) has type (%s) not support", tx.Id, string(tx.TxType))
 		tx.Status = transaction.Rejected
 	}
 
