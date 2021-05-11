@@ -22,9 +22,10 @@ package dto
 import "github.com/pkg/errors"
 
 type TransferNFT struct {
-	OwnerWalletId string `json:"ownerWalletId"`
-	ToWalletId    string `json:"toWalletId"`
-	NFTTokenId    string `json:"nftTokenId"`
+	OwnerWalletId string  `json:"ownerWalletId"`
+	ToWalletId    string  `json:"toWalletId"`
+	NFTTokenId    string  `json:"nftTokenId"`
+	Price         float64 `json:"price"`
 }
 
 func (t TransferNFT) IsValid() error {

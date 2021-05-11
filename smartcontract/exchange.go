@@ -24,17 +24,9 @@ import (
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
 
-type Erc721 interface {
+type Exchange interface {
+	BasicToken
+	Erc721
 
-	// MintNft to generate new NFT with GS1 number
-	MintNft(ctx contractapi.TransactionContextInterface, mintNFT dto.MintNFT) (string, error)
-
-	// OwnerOf to find the owner of an NFT
-	OwnerOf(ctx contractapi.TransactionContextInterface, ownerNFT dto.OwnerNFT) (string, error)
-
-	// BalanceOf to count all NFTs assigned to an owner
-	BalanceOf(ctx contractapi.TransactionContextInterface, balanceOfNFT dto.BalanceOfNFT) (int, error)
-
-	// TransferFrom to transfers the ownership of an NFT from one wallet to another wallet
-	TransferFrom(ctx contractapi.TransactionContextInterface, transferNFT dto.TransferNFT) error
+	TransferNft(ctx contractapi.TransactionContextInterface, transferNft dto.TransferNFT) error
 }

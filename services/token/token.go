@@ -43,12 +43,12 @@ func NewTokenService() *tokenService {
 	}
 }
 
-func (t *tokenService) Transfer(ctx contractapi.TransactionContextInterface, fromWalletId, toWalletId string, amount float64) error {
+func (t *tokenService) Transfer(ctx contractapi.TransactionContextInterface, fromWalletId, toWalletId string, amount float64) (string, error) {
 	glogger.GetInstance().Info(ctx, "-----------Token Service - Transfer-----------")
 
 	if err := t.validateTransfer(ctx, fromWalletId, toWalletId, amount); err != nil {
 		glogger.GetInstance().Errorf(ctx, "Transfer - Validation transfer failed with error (%v)", err)
-		return err
+		return "", err
 	}
 
 	// convert amount to base unit
@@ -64,11 +64,11 @@ func (t *tokenService) Transfer(ctx contractapi.TransactionContextInterface, fro
 
 	if err := t.Repo.Create(ctx, txEntity, doc.Transactions, helper.TransactionKey(txEntity.Id)); err != nil {
 		glogger.GetInstance().Errorf(ctx, "Transfer - Create transfer transaction failed with error (%v)", err)
-		return helper.RespError(errorcode.BizUnableCreateTX)
+		return "", helper.RespError(errorcode.BizUnableCreateTX)
 	}
 	glogger.GetInstance().Infof(ctx, "-----------Token Service - Transfer succeed (%s)-----------", txEntity.Id)
 
-	return nil
+	return txEntity.Id, nil
 }
 
 func (t *tokenService) Mint(ctx contractapi.TransactionContextInterface, walletId string, amount float64) error {

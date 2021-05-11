@@ -17,24 +17,35 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package smartcontract
+package entity
 
 import (
-	"github.com/Akachain/gringotts/dto"
+	"github.com/Akachain/gringotts/glossary/doc"
+	"github.com/Akachain/gringotts/glossary/transaction"
+	"github.com/Akachain/gringotts/helper"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
 
-type Erc721 interface {
+type Exchange struct {
+	OwnerWalletId string
+	ToWalletId    string
+	NftTokenId    string
+	Price         float64
+	Status        transaction.Status
+	Base          `mapstructure:",squash"`
+}
 
-	// MintNft to generate new NFT with GS1 number
-	MintNft(ctx contractapi.TransactionContextInterface, mintNFT dto.MintNFT) (string, error)
-
-	// OwnerOf to find the owner of an NFT
-	OwnerOf(ctx contractapi.TransactionContextInterface, ownerNFT dto.OwnerNFT) (string, error)
-
-	// BalanceOf to count all NFTs assigned to an owner
-	BalanceOf(ctx contractapi.TransactionContextInterface, balanceOfNFT dto.BalanceOfNFT) (int, error)
-
-	// TransferFrom to transfers the ownership of an NFT from one wallet to another wallet
-	TransferFrom(ctx contractapi.TransactionContextInterface, transferNFT dto.TransferNFT) error
+func NewExchange(ctx ...contractapi.TransactionContextInterface) *Exchange {
+	if len(ctx) <= 0 {
+		return &Exchange{}
+	}
+	txTime, _ := ctx[0].GetStub().GetTxTimestamp()
+	return &Exchange{
+		Base: Base{
+			Id:           helper.GenerateID(doc.Exchange, ctx[0].GetStub().GetTxID()),
+			CreatedAt:    helper.TimestampISO(txTime.Seconds),
+			UpdatedAt:    helper.TimestampISO(txTime.Seconds),
+			BlockChainId: ctx[0].GetStub().GetTxID(),
+		},
+	}
 }

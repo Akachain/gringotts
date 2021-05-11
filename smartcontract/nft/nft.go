@@ -28,7 +28,6 @@ import (
 )
 
 type nft struct {
-	contractapi.Contract
 	nftHandler handler.NftHandler
 }
 
@@ -38,7 +37,7 @@ func NewNFT() smartcontract.Erc721 {
 	}
 }
 
-func (n *nft) Mint(ctx contractapi.TransactionContextInterface, mintNFT dto.MintNFT) (string, error) {
+func (n *nft) MintNft(ctx contractapi.TransactionContextInterface, mintNFT dto.MintNFT) (string, error) {
 	glogger.GetInstance().Info(ctx, "------------Mint NFT SmartContract------------")
 	return n.nftHandler.Mint(ctx, mintNFT)
 }

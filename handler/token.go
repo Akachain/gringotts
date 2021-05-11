@@ -48,7 +48,11 @@ func (t *TokenHandler) Transfer(ctx contractapi.TransactionContextInterface, tra
 		return helper.RespError(errorcode.InvalidParam)
 	}
 
-	return t.tokenService.Transfer(ctx, transferDto.FromWalletId, transferDto.ToWalletId, transferDto.Amount)
+	if _, err := t.tokenService.Transfer(ctx, transferDto.FromWalletId, transferDto.ToWalletId, transferDto.Amount); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Mint generate new token for wallet.

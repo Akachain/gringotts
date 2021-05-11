@@ -17,24 +17,31 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package smartcontract
+package exchange
 
 import (
 	"github.com/Akachain/gringotts/dto"
+	"github.com/Akachain/gringotts/handler"
+	"github.com/Akachain/gringotts/smartcontract"
+	"github.com/Akachain/gringotts/smartcontract/basic"
+	"github.com/Akachain/gringotts/smartcontract/nft"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
 
-type Erc721 interface {
+type exchange struct {
+	smartcontract.BasicToken
+	smartcontract.Erc721
+	handler.ExchangeHandler
+}
 
-	// MintNft to generate new NFT with GS1 number
-	MintNft(ctx contractapi.TransactionContextInterface, mintNFT dto.MintNFT) (string, error)
+func NewExchange() smartcontract.Exchange {
+	return &exchange{
+		basic.NewBaseToken(),
+		nft.NewNFT(),
+		handler.NewExchangeHandler(),
+	}
+}
 
-	// OwnerOf to find the owner of an NFT
-	OwnerOf(ctx contractapi.TransactionContextInterface, ownerNFT dto.OwnerNFT) (string, error)
-
-	// BalanceOf to count all NFTs assigned to an owner
-	BalanceOf(ctx contractapi.TransactionContextInterface, balanceOfNFT dto.BalanceOfNFT) (int, error)
-
-	// TransferFrom to transfers the ownership of an NFT from one wallet to another wallet
-	TransferFrom(ctx contractapi.TransactionContextInterface, transferNFT dto.TransferNFT) error
+func (e *exchange) TransferNft(ctx contractapi.TransactionContextInterface, transferNft dto.TransferNFT) error {
+	return e.ExchangeHandler.TransferNft(ctx, transferNft)
 }

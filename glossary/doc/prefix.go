@@ -29,4 +29,5 @@ const (
 	HealthCheck  = "HealthCheck"
 	Enrollments  = "Enrollments"
 	NFT          = "NFT"
+	Exchange     = "Exchange"
 )

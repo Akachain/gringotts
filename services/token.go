@@ -27,7 +27,7 @@ type Token interface {
 	// Transfer to transfer token between wallet.
 	// But state balance of wallet not update at the time.
 	// It will be update when accounting job start
-	Transfer(ctx contractapi.TransactionContextInterface, fromWalletId, toWalletId string, amount float64) error
+	Transfer(ctx contractapi.TransactionContextInterface, fromWalletId, toWalletId string, amount float64) (string, error)
 
 	// Mint to init token in the system
 	Mint(ctx contractapi.TransactionContextInterface, walletId string, amount float64) error

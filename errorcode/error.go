@@ -63,6 +63,7 @@ const (
 	BizUnableCreateNFT        ErrorCode = "321"
 	BizUnableGetNFT           ErrorCode = "322"
 	BizUnableUpdateNFT        ErrorCode = "323"
+	BizUnableCreateExchange   ErrorCode = "324"
 )
 
 var mapErrorCode = map[ErrorCode]string{
@@ -94,6 +95,7 @@ var mapErrorCode = map[ErrorCode]string{
 	BizUnableCreateNFT:        "Unable to create new NFT token on blockchain",
 	BizUnableGetNFT:           "Unable to get NFT token on blockchain",
 	BizUnableUpdateNFT:        "Unable to update NFT token on blockchain",
+	BizUnableCreateExchange:   "Unable to create new exchange nft record on blockchain",
 }
 
 func (e ErrorCode) Message() string {

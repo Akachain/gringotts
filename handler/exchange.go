@@ -17,24 +17,36 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package smartcontract
+package handler
 
 import (
 	"github.com/Akachain/gringotts/dto"
+	"github.com/Akachain/gringotts/errorcode"
+	"github.com/Akachain/gringotts/helper"
+	"github.com/Akachain/gringotts/helper/glogger"
+	"github.com/Akachain/gringotts/services"
+	"github.com/Akachain/gringotts/services/exchange"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
 
-type Erc721 interface {
+type ExchangeHandler struct {
+	exchangeService services.Exchange
+}
 
-	// MintNft to generate new NFT with GS1 number
-	MintNft(ctx contractapi.TransactionContextInterface, mintNFT dto.MintNFT) (string, error)
+func NewExchangeHandler() ExchangeHandler {
+	return ExchangeHandler{
+		exchangeService: exchange.NewExchangeService(),
+	}
+}
 
-	// OwnerOf to find the owner of an NFT
-	OwnerOf(ctx contractapi.TransactionContextInterface, ownerNFT dto.OwnerNFT) (string, error)
+func (e *ExchangeHandler) TransferNft(ctx contractapi.TransactionContextInterface, transferNft dto.TransferNFT) error {
+	glogger.GetInstance().Info(ctx, "-----------Exchange Handler - TransferNft-----------")
 
-	// BalanceOf to count all NFTs assigned to an owner
-	BalanceOf(ctx contractapi.TransactionContextInterface, balanceOfNFT dto.BalanceOfNFT) (int, error)
+	// checking dto validate
+	if err := transferNft.IsValid(); err != nil {
+		glogger.GetInstance().Errorf(ctx, "Exchange Handler - TransferNft Input invalidate %v", err)
+		return helper.RespError(errorcode.InvalidParam)
+	}
 
-	// TransferFrom to transfers the ownership of an NFT from one wallet to another wallet
-	TransferFrom(ctx contractapi.TransactionContextInterface, transferNFT dto.TransferNFT) error
+	return e.exchangeService.TransferNft(ctx, transferNft.OwnerWalletId, transferNft.ToWalletId, transferNft.NFTTokenId, transferNft.Price)
 }

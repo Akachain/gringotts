@@ -17,24 +17,10 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package smartcontract
+package services
 
-import (
-	"github.com/Akachain/gringotts/dto"
-	"github.com/hyperledger/fabric-contract-api-go/contractapi"
-)
+import "github.com/hyperledger/fabric-contract-api-go/contractapi"
 
-type Erc721 interface {
-
-	// MintNft to generate new NFT with GS1 number
-	MintNft(ctx contractapi.TransactionContextInterface, mintNFT dto.MintNFT) (string, error)
-
-	// OwnerOf to find the owner of an NFT
-	OwnerOf(ctx contractapi.TransactionContextInterface, ownerNFT dto.OwnerNFT) (string, error)
-
-	// BalanceOf to count all NFTs assigned to an owner
-	BalanceOf(ctx contractapi.TransactionContextInterface, balanceOfNFT dto.BalanceOfNFT) (int, error)
-
-	// TransferFrom to transfers the ownership of an NFT from one wallet to another wallet
-	TransferFrom(ctx contractapi.TransactionContextInterface, transferNFT dto.TransferNFT) error
+type Exchange interface {
+	TransferNft(ctx contractapi.TransactionContextInterface, ownerWalletId string, toWalletId string, nftToken string, price float64) error
 }

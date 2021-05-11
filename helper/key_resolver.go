@@ -48,3 +48,8 @@ func EnrollmentKey(tokenId string) []string {
 func NFTKey(nftId string) []string {
 	return []string{nftId}
 }
+
+// ExchangeKey return list key of exchange docs will be compose in couch db key
+func ExchangeKey(txId string) []string {
+	return []string{txId}
+}
