@@ -41,7 +41,7 @@ func NewNftService() services.NFT {
 }
 
 func (n *nftService) Mint(ctx contractapi.TransactionContextInterface, gs1Number string, ownerWalletId string, metaData string) (string, error) {
-	glogger.GetInstance().Info(ctx, "-----------NFT Service - Mint-----------")
+	glogger.GetInstance().Info(ctx, "-----------NftToken Service - Mint-----------")
 
 	if _, err := n.GetActiveWallet(ctx, ownerWalletId); err != nil {
 		glogger.GetInstance().Errorf(ctx, "Mint - Get owner wallet failed with error (%v)", err)
@@ -53,21 +53,21 @@ func (n *nftService) Mint(ctx contractapi.TransactionContextInterface, gs1Number
 	nftEntity.OwnerId = ownerWalletId
 	nftEntity.MetaData = metaData
 
-	if err := n.Repo.Create(ctx, nftEntity, doc.NFT, helper.NFTKey(nftEntity.Id)); err != nil {
-		glogger.GetInstance().Errorf(ctx, "NFT Service - Mint NFT failed with error (%v)", err)
+	if err := n.Repo.Create(ctx, nftEntity, doc.NftToken, helper.NFTKey(nftEntity.Id)); err != nil {
+		glogger.GetInstance().Errorf(ctx, "NftToken Service - Mint NftToken failed with error (%v)", err)
 		return "", helper.RespError(errorcode.BizUnableCreateNFT)
 	}
-	glogger.GetInstance().Infof(ctx, "-----------NFT Service - Transfer succeed (%s)-----------", nftEntity.Id)
+	glogger.GetInstance().Infof(ctx, "-----------NftToken Service - Transfer succeed (%s)-----------", nftEntity.Id)
 
 	return nftEntity.Id, nil
 }
 
 func (n *nftService) OwnerOf(ctx contractapi.TransactionContextInterface, nftTokenId string) (string, error) {
-	glogger.GetInstance().Info(ctx, "-----------NFT Service - OwnerOf-----------")
+	glogger.GetInstance().Info(ctx, "-----------NftToken Service - OwnerOf-----------")
 
 	nftToken, err := n.GetNFT(ctx, nftTokenId)
 	if err != nil {
-		glogger.GetInstance().Errorf(ctx, "OwnerOf - Get NFT failed with error (%v)", err)
+		glogger.GetInstance().Errorf(ctx, "OwnerOf - Get NftToken failed with error (%v)", err)
 		return "", err
 	}
 
@@ -75,12 +75,12 @@ func (n *nftService) OwnerOf(ctx contractapi.TransactionContextInterface, nftTok
 }
 
 func (n *nftService) BalanceOf(ctx contractapi.TransactionContextInterface, ownerWalletId string) (int, error) {
-	glogger.GetInstance().Info(ctx, "-----------NFT Service - BalanceOf-----------")
+	glogger.GetInstance().Info(ctx, "-----------NftToken Service - BalanceOf-----------")
 	return -1, nil
 }
 
 func (n *nftService) TransferFrom(ctx contractapi.TransactionContextInterface, ownerWalletId string, toWalletId string, nftTokenId string) error {
-	glogger.GetInstance().Info(ctx, "-----------NFT Service - TransferFrom-----------")
+	glogger.GetInstance().Info(ctx, "-----------NftToken Service - TransferFrom-----------")
 
 	if _, err := n.GetActiveWallet(ctx, ownerWalletId); err != nil {
 		glogger.GetInstance().Errorf(ctx, "TransferFrom - Get owner wallet failed with error (%v)", err)
@@ -94,13 +94,13 @@ func (n *nftService) TransferFrom(ctx contractapi.TransactionContextInterface, o
 
 	nftToken, err := n.GetNFT(ctx, nftTokenId)
 	if err != nil {
-		glogger.GetInstance().Errorf(ctx, "TransferFrom - Get NFT failed with error (%v)", err)
+		glogger.GetInstance().Errorf(ctx, "TransferFrom - Get NftToken failed with error (%v)", err)
 		return err
 	}
 
 	nftToken.OwnerId = toWalletId
-	if err := n.Repo.Update(ctx, nftToken, doc.NFT, helper.NFTKey(nftToken.Id)); err != nil {
-		glogger.GetInstance().Errorf(ctx, "TransferFrom - Update NFT failed with error (%v)", err)
+	if err := n.Repo.Update(ctx, nftToken, doc.NftToken, helper.NFTKey(nftToken.Id)); err != nil {
+		glogger.GetInstance().Errorf(ctx, "TransferFrom - Update NftToken failed with error (%v)", err)
 		return helper.RespError(errorcode.BizUnableUpdateNFT)
 	}
 

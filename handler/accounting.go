@@ -26,6 +26,7 @@ import (
 	"github.com/Akachain/gringotts/errorcode"
 	"github.com/Akachain/gringotts/helper"
 	"github.com/Akachain/gringotts/helper/glogger"
+	"github.com/Akachain/gringotts/pkg/ipc"
 	"github.com/Akachain/gringotts/services"
 	"github.com/Akachain/gringotts/services/accounting"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
@@ -35,9 +36,9 @@ type AccountingHandler struct {
 	accountingService services.Accounting
 }
 
-func NewAccountingHandler() AccountingHandler {
+func NewAccountingHandler(nftIpc ...ipc.Ipc) AccountingHandler {
 	return AccountingHandler{
-		accounting.NewAccountingService(),
+		accounting.NewAccountingService(nftIpc...),
 	}
 }
 

@@ -40,7 +40,7 @@ func NewNFT(ctx ...contractapi.TransactionContextInterface) *NFT {
 	txTime, _ := ctx[0].GetStub().GetTxTimestamp()
 	return &NFT{
 		Base: Base{
-			Id:           helper.GenerateID(doc.NFT, ctx[0].GetStub().GetTxID()),
+			Id:           helper.GenerateID(doc.NftToken, ctx[0].GetStub().GetTxID()),
 			CreatedAt:    helper.TimestampISO(txTime.Seconds),
 			UpdatedAt:    helper.TimestampISO(txTime.Seconds),
 			BlockChainId: ctx[0].GetStub().GetTxID(),

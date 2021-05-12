@@ -23,6 +23,7 @@ import (
 	"github.com/Akachain/gringotts/dto"
 	"github.com/Akachain/gringotts/handler"
 	"github.com/Akachain/gringotts/helper/glogger"
+	"github.com/Akachain/gringotts/pkg/ipc"
 	"github.com/Akachain/gringotts/smartcontract"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
@@ -35,12 +36,12 @@ type baseToken struct {
 	accountingHandler  handler.AccountingHandler
 }
 
-func NewBaseToken() smartcontract.BasicToken {
+func NewBaseToken(nftIpc ...ipc.Ipc) smartcontract.BasicToken {
 	return &baseToken{
 		tokenHandler:       handler.NewTokenHandler(),
 		walletHandler:      handler.NewWalletHandler(),
 		healthCheckHandler: handler.NewHealthCheckHandler(),
-		accountingHandler:  handler.NewAccountingHandler(),
+		accountingHandler:  handler.NewAccountingHandler(nftIpc...),
 	}
 }
 

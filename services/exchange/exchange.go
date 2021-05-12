@@ -62,7 +62,7 @@ func (e *exchangeService) TransferNft(ctx contractapi.TransactionContextInterfac
 	exchangeEntity.Status = transaction.Pending
 
 	if err := e.Repo.Create(ctx, exchangeEntity, doc.Exchange, helper.ExchangeKey(txId)); err != nil {
-		glogger.GetInstance().Errorf(ctx, "Exchange Service - Mint NFT failed with error (%v)", err)
+		glogger.GetInstance().Errorf(ctx, "Exchange Service - Mint NftToken failed with error (%v)", err)
 		return helper.RespError(errorcode.BizUnableCreateExchange)
 	}
 	glogger.GetInstance().Infof(ctx, "-----------Exchange Service - TransferNft succeed (%s)-----------", exchangeEntity.Id)

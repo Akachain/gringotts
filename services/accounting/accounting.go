@@ -29,6 +29,7 @@ import (
 	"github.com/Akachain/gringotts/glossary/transaction"
 	"github.com/Akachain/gringotts/helper"
 	"github.com/Akachain/gringotts/helper/glogger"
+	"github.com/Akachain/gringotts/pkg/ipc"
 	"github.com/Akachain/gringotts/pkg/query"
 	"github.com/Akachain/gringotts/services/base"
 	"github.com/davecgh/go-spew/spew"
@@ -39,10 +40,17 @@ import (
 
 type accountingService struct {
 	*base.Base
+	ipc.Ipc
 }
 
-func NewAccountingService() *accountingService {
-	return &accountingService{base.NewBase()}
+func NewAccountingService(nftIpc ...ipc.Ipc) *accountingService {
+	accountService := new(accountingService)
+	accountService.Base = base.NewBase()
+	if len(nftIpc) > 0 {
+		accountService.Ipc = nftIpc[0]
+	}
+
+	return accountService
 }
 
 func (a *accountingService) GetTx(ctx contractapi.TransactionContextInterface) ([]string, error) {

@@ -22,6 +22,7 @@ package exchange
 import (
 	"github.com/Akachain/gringotts/dto"
 	"github.com/Akachain/gringotts/handler"
+	srvExchange "github.com/Akachain/gringotts/services/exchange"
 	"github.com/Akachain/gringotts/smartcontract"
 	"github.com/Akachain/gringotts/smartcontract/basic"
 	"github.com/Akachain/gringotts/smartcontract/nft"
@@ -36,7 +37,7 @@ type exchange struct {
 
 func NewExchange() smartcontract.Exchange {
 	return &exchange{
-		basic.NewBaseToken(),
+		basic.NewBaseToken(srvExchange.NewNftIpc()),
 		nft.NewNFT(),
 		handler.NewExchangeHandler(),
 	}
