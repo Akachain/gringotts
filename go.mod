@@ -7,7 +7,6 @@ replace golang.org/x/sys => github.com/golang/sys v0.0.0-20210124154548-22da62e1
 require (
 	github.com/Akachain/akc-go-sdk-v2 v1.0.0
 	github.com/davecgh/go-spew v1.1.1
-	github.com/golang/protobuf v1.4.3 // indirect
 	github.com/hyperledger/fabric v2.1.1+incompatible
 	github.com/hyperledger/fabric-chaincode-go v0.0.0-20210319203922-6b661064d4d9
 	github.com/hyperledger/fabric-contract-api-go v1.1.1

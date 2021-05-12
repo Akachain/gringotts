@@ -39,3 +39,25 @@ func TestAddBalance(t *testing.T) {
 	assert.NilError(t, err, "Fail to add balance")
 	assert.Equal(t, add, "0")
 }
+
+func TestCompareFloatBalance(t *testing.T) {
+	res := CompareFloatBalance("100000000", 1)
+	assert.Equal(t, res, 0)
+
+	res = CompareFloatBalance("100000000", 2)
+	assert.Equal(t, res, -1)
+
+	res = CompareFloatBalance("1000000000", 1)
+	assert.Equal(t, res, 1)
+}
+
+func TestCompareStringBalance(t *testing.T) {
+	res := CompareStringBalance("100000000", "100000000")
+	assert.Equal(t, res, 0)
+
+	res = CompareStringBalance("100000000", "200000000")
+	assert.Equal(t, res, -1)
+
+	res = CompareStringBalance("1000000000", "100000000")
+	assert.Equal(t, res, 1)
+}

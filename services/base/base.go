@@ -144,7 +144,7 @@ func (b *Base) SubBalance(ctx contractapi.TransactionContextInterface, walletId 
 	}
 
 	// check balance insufficient
-	if helper.CompareStringBalance(wallet.Balances, amount) < 1 {
+	if helper.CompareStringBalance(wallet.Balances, amount) < 0 {
 		glogger.GetInstance().Error(ctx, "Base - Balance of wallet  insufficient")
 		return helper.RespError(errorcode.BizBalanceNotEnough)
 	}

@@ -82,6 +82,7 @@ func (a *accountingService) GetTx(ctx contractapi.TransactionContextInterface) (
 
 func (a *accountingService) CalculateBalance(ctx contractapi.TransactionContextInterface, accountingDto dto.AccountingBalance) error {
 	glogger.GetInstance().Infof(ctx, "CalculateBalance - List transaction: (%s)", strings.Join(accountingDto.TxId, ","))
+	txTime, _ := ctx.GetStub().GetTxTimestamp()
 	// map temp balance
 	mapCurrentBalance := make(map[string]string, len(accountingDto.TxId)*2)
 	lstTx := make([]*entity.Transaction, 0, len(accountingDto.TxId))
@@ -99,6 +100,9 @@ func (a *accountingService) CalculateBalance(ctx contractapi.TransactionContextI
 			glogger.GetInstance().Errorf(ctx, "CalculateBalance - Transaction (%s) has status (%s)", id, tx.Status)
 			continue
 		}
+
+		// update time when update transaction
+		tx.UpdatedAt = helper.TimestampISO(txTime.Seconds)
 
 		// check type of transaction
 		txHandleStep, err := a.txHandler(ctx, tx, mapCurrentBalance)

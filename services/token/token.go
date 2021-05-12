@@ -110,7 +110,7 @@ func (t *tokenService) Burn(ctx contractapi.TransactionContextInterface, walletI
 	}
 
 	// check balance enough to burn
-	if helper.CompareFloatBalance(wallet.Balances, amount) < 1 {
+	if helper.CompareFloatBalance(wallet.Balances, amount) < 0 {
 		glogger.GetInstance().Error(ctx, "Burn - Wallet balance is insufficient", err)
 		return helper.RespError(errorcode.BizBalanceNotEnough)
 	}
@@ -250,7 +250,7 @@ func (t *tokenService) validateTransfer(ctx contractapi.TransactionContextInterf
 	}
 
 	// check balance enough to transfer
-	if helper.CompareFloatBalance(walletFrom.Balances, amount) < 1 {
+	if helper.CompareFloatBalance(walletFrom.Balances, amount) < 0 {
 		glogger.GetInstance().Error(ctx, "ValidateTransfer - Balance of from wallet is insufficient")
 		return helper.RespError(errorcode.BizBalanceNotEnough)
 	}
@@ -267,7 +267,7 @@ func (t *tokenService) calculateAmountSwap(ctx contractapi.TransactionContextInt
 	amountUpdateUnit := unit.NewBalanceUnitFromFloat(amountUpdate)
 
 	// check balance enough to transfer
-	if helper.CompareStringBalance(walletFrom.Balances, amountUpdateUnit.String()) < 1 {
+	if helper.CompareStringBalance(walletFrom.Balances, amountUpdateUnit.String()) < 0 {
 		glogger.GetInstance().Error(ctx, "CalculateAmountSwap - Balance of from wallet is insufficient")
 		return "-1", helper.RespError(errorcode.BizBalanceNotEnough)
 	}
