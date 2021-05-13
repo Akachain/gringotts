@@ -37,6 +37,7 @@ type Transaction struct {
 	Amount        string
 	TxType        transaction.Type
 	Status        transaction.Status
+	Note          string
 	Base          `mapstructure:",squash"`
 }
 

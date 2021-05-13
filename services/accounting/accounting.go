@@ -109,17 +109,23 @@ func (a *accountingService) CalculateBalance(ctx contractapi.TransactionContextI
 		}
 
 		// check type of transaction
-		txHandleStep, err := a.txHandler(ctx, tx, mapCurrentBalance)
-		lstTx = append(lstTx, tx)
-		if err != nil {
+		if err = a.txHandler(ctx, tx, mapCurrentBalance); err != nil {
 			glogger.GetInstance().Errorf(ctx, "CalculateBalance - Handle transaction (%s) failed with error (%v)", id, err)
-			if txHandleStep != transaction.Validation {
-				if err := a.rollbackTxHandler(ctx, tx, mapCurrentBalance, txHandleStep); err != nil {
+		}
+
+		// check callback handler
+		if a.Ipc != nil && tx.Note == glossary.NftExchange {
+			if err := a.Ipc.TransactionCallback(ctx, tx.Id, tx.Status); err != nil {
+				glogger.GetInstance().Errorf(ctx, "CalculateBalance - Handle transaction exchange (%s) failed with error (%v)", id, err)
+				if err := a.rollbackTxHandler(ctx, tx, mapCurrentBalance, transaction.AddToWallet); err != nil {
 					glogger.GetInstance().Errorf(ctx, "CalculateBalance - Rollback handle transaction (%s) failed with error (%v)", id, err)
 				}
+				tx.Status = transaction.Rejected
 			}
-			continue
 		}
+
+		lstTx = append(lstTx, tx)
+
 	}
 
 	// Update transaction status
@@ -137,25 +143,28 @@ func (a *accountingService) CalculateBalance(ctx contractapi.TransactionContextI
 
 // txHandler to handle transaction and update calculate current balance of each wallet
 func (a *accountingService) txHandler(ctx contractapi.TransactionContextInterface, tx *entity.Transaction,
-	mapCurrentBalance map[string]string) (transaction.Step, error) {
+	mapCurrentBalance map[string]string) error {
 	switch tx.TxType {
 	case transaction.Transfer, transaction.Swap, transaction.Issue:
 		if tx.FromWallet == glossary.SystemWallet || tx.ToWallet == glossary.SystemWallet {
 			glogger.GetInstance().Errorf(ctx, "TxHandler - Transfer - Transaction (%s) has from/to wallet Id is system type", tx.Id)
 			tx.Status = transaction.Rejected
-			return transaction.Validation, errors.New("From/To wallet id invalidate")
+			return errors.New("From/To wallet id invalidate")
 		}
 
 		if err := a.subAmount(ctx, mapCurrentBalance, tx.FromWallet, tx.Amount); err != nil {
 			glogger.GetInstance().Errorf(ctx, "TxHandler - Transfer - Transaction (%s): Unable to sub temp amount of From wallet", tx.Id)
 			tx.Status = transaction.Rejected
-			return transaction.Validation, errors.WithMessage(err, "Sub balance of from wallet failed")
+			return errors.WithMessage(err, "Sub balance of from wallet failed")
 		}
 
 		if err := a.addAmount(ctx, mapCurrentBalance, tx.ToWallet, tx.Amount); err != nil {
 			glogger.GetInstance().Errorf(ctx, "TxHandler - Transfer - Transaction (%s): Unable to add temp amount of To wallet", tx.Id)
 			tx.Status = transaction.Rejected
-			return transaction.SubFromWallet, errors.WithMessage(err, "Add balance of to wallet failed")
+			if err := a.rollbackTxHandler(ctx, tx, mapCurrentBalance, transaction.SubFromWallet); err != nil {
+				glogger.GetInstance().Errorf(ctx, "TxHandler - Rollback handle transaction (%s) failed with error (%v)", tx.Id, err)
+			}
+			return errors.WithMessage(err, "Add balance of to wallet failed")
 		}
 
 		tx.Status = transaction.Confirmed
@@ -164,12 +173,12 @@ func (a *accountingService) txHandler(ctx contractapi.TransactionContextInterfac
 		if tx.FromWallet != glossary.SystemWallet {
 			glogger.GetInstance().Errorf(ctx, "TxHandler - Mint - Transaction (%s): has From wallet Id is not system type", tx.Id)
 			tx.Status = transaction.Rejected
-			return transaction.Validation, errors.New("From wallet id invalidate")
+			return errors.New("From wallet id invalidate")
 		}
 		if err := a.addAmount(ctx, mapCurrentBalance, tx.ToWallet, tx.Amount); err != nil {
 			glogger.GetInstance().Errorf(ctx, "TxHandler - Mint - Transaction (%s): add balance failed (%v)", tx.Id, err)
 			tx.Status = transaction.Rejected
-			return transaction.Validation, errors.New("Add balance of to wallet failed")
+			return errors.New("Add balance of to wallet failed")
 		}
 		tx.Status = transaction.Confirmed
 		break
@@ -177,12 +186,12 @@ func (a *accountingService) txHandler(ctx contractapi.TransactionContextInterfac
 		if tx.ToWallet != glossary.SystemWallet {
 			glogger.GetInstance().Errorf(ctx, "TxHandler - Burn - Transaction (%s): has To wallet Id is not system type", tx.Id)
 			tx.Status = transaction.Rejected
-			return transaction.Validation, errors.New("To wallet id invalidate")
+			return errors.New("To wallet id invalidate")
 		}
 		if err := a.subAmount(ctx, mapCurrentBalance, tx.FromWallet, tx.Amount); err != nil {
 			glogger.GetInstance().Errorf(ctx, "TxHandler - Burn - Transaction (%s) sub balance failed (%v)", tx.Id, err)
 			tx.Status = transaction.Rejected
-			return transaction.Validation, errors.New("Sub balance of from wallet failed")
+			return errors.New("Sub balance of from wallet failed")
 		}
 		tx.Status = transaction.Confirmed
 		break
@@ -191,7 +200,7 @@ func (a *accountingService) txHandler(ctx contractapi.TransactionContextInterfac
 		tx.Status = transaction.Rejected
 	}
 
-	return transaction.Validation, nil
+	return nil
 }
 
 // rollbackTxHandler to rollback balance of wallet that was updated
@@ -202,6 +211,21 @@ func (a *accountingService) rollbackTxHandler(ctx contractapi.TransactionContext
 		if err := a.addAmount(ctx, mapCurrentBalance, tx.FromWallet, tx.Amount); err != nil {
 			glogger.GetInstance().Errorf(ctx, "RollbackTxHandler - Add balance of wallet (%s) with transaction (%s) failed", tx.FromWallet, tx.Id)
 			return err
+		}
+	}
+
+	if step == transaction.AddToWallet {
+		glogger.GetInstance().Infof(ctx, "RollbackTxHandler - Rollback add to wallet with transaction (%s)", tx.Id)
+		if err := a.subAmount(ctx, mapCurrentBalance, tx.ToWallet, tx.Amount); err != nil {
+			glogger.GetInstance().Errorf(ctx, "RollbackTxHandler - Transaction (%s): Unable to sub temp amount of To wallet", tx.Id)
+			tx.Status = transaction.Rejected
+			return errors.WithMessage(err, "Sub balance of to wallet failed")
+		}
+
+		if err := a.addAmount(ctx, mapCurrentBalance, tx.FromWallet, tx.Amount); err != nil {
+			glogger.GetInstance().Errorf(ctx, "RollbackTxHandler - Transaction (%s): Unable to add temp amount of From wallet", tx.Id)
+			tx.Status = transaction.Rejected
+			return errors.WithMessage(err, "Add balance of from wallet failed")
 		}
 	}
 	return nil

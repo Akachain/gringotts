@@ -29,6 +29,9 @@ type Token interface {
 	// It will be update when accounting job start
 	Transfer(ctx contractapi.TransactionContextInterface, fromWalletId, toWalletId string, amount float64) (string, error)
 
+	// TransferWithNote same with Transfer function but add note in the transaction
+	TransferWithNote(ctx contractapi.TransactionContextInterface, fromWalletId, toWalletId string, amount float64, note string) (string, error)
+
 	// Mint to init token in the system
 	Mint(ctx contractapi.TransactionContextInterface, walletId string, amount float64) error
 

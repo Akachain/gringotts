@@ -22,6 +22,7 @@ package exchange
 import (
 	"github.com/Akachain/gringotts/entity"
 	"github.com/Akachain/gringotts/errorcode"
+	"github.com/Akachain/gringotts/glossary"
 	"github.com/Akachain/gringotts/glossary/doc"
 	"github.com/Akachain/gringotts/glossary/transaction"
 	"github.com/Akachain/gringotts/helper"
@@ -48,7 +49,7 @@ func (e *exchangeService) TransferNft(ctx contractapi.TransactionContextInterfac
 	glogger.GetInstance().Info(ctx, "-----------Exchange Service - TransferNft-----------")
 
 	// transfer token using buy nft token
-	txId, err := e.tokenService.Transfer(ctx, toWalletId, ownerWalletId, price)
+	txId, err := e.tokenService.TransferWithNote(ctx, toWalletId, ownerWalletId, price, glossary.NftExchange)
 	if err != nil {
 		glogger.GetInstance().Errorf(ctx, "Exchange Service - Call token transfer failed with err(%v)", err)
 		return err

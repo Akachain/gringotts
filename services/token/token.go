@@ -43,32 +43,14 @@ func NewTokenService() *tokenService {
 	}
 }
 
+func (t *tokenService) TransferWithNote(ctx contractapi.TransactionContextInterface, fromWalletId, toWalletId string, amount float64, note string) (string, error) {
+	glogger.GetInstance().Info(ctx, "-----------Token Service - TransferWithNote-----------")
+	return t.transferToken(ctx, fromWalletId, toWalletId, amount, note)
+}
+
 func (t *tokenService) Transfer(ctx contractapi.TransactionContextInterface, fromWalletId, toWalletId string, amount float64) (string, error) {
 	glogger.GetInstance().Info(ctx, "-----------Token Service - Transfer-----------")
-
-	if err := t.validateTransfer(ctx, fromWalletId, toWalletId, amount); err != nil {
-		glogger.GetInstance().Errorf(ctx, "Transfer - Validation transfer failed with error (%v)", err)
-		return "", err
-	}
-
-	// convert amount to base unit
-	amountUnit := unit.NewBalanceUnitFromFloat(amount)
-
-	// create new transfer transaction
-	txEntity := entity.NewTransaction(ctx)
-	txEntity.SpenderWallet = fromWalletId
-	txEntity.FromWallet = fromWalletId
-	txEntity.ToWallet = toWalletId
-	txEntity.TxType = transaction.Transfer
-	txEntity.Amount = amountUnit.String()
-
-	if err := t.Repo.Create(ctx, txEntity, doc.Transactions, helper.TransactionKey(txEntity.Id)); err != nil {
-		glogger.GetInstance().Errorf(ctx, "Transfer - Create transfer transaction failed with error (%v)", err)
-		return "", helper.RespError(errorcode.BizUnableCreateTX)
-	}
-	glogger.GetInstance().Infof(ctx, "-----------Token Service - Transfer succeed (%s)-----------", txEntity.Id)
-
-	return txEntity.Id, nil
+	return t.transferToken(ctx, fromWalletId, toWalletId, amount, "")
 }
 
 func (t *tokenService) Mint(ctx contractapi.TransactionContextInterface, walletId string, amount float64) error {
@@ -290,4 +272,31 @@ func (t *tokenService) validateWalletTransfer(ctx contractapi.TransactionContext
 		return nil, nil, err
 	}
 	return walletFrom, walletTo, err
+}
+
+func (t *tokenService) transferToken(ctx contractapi.TransactionContextInterface, fromWalletId, toWalletId string, amount float64, note string) (string, error) {
+	if err := t.validateTransfer(ctx, fromWalletId, toWalletId, amount); err != nil {
+		glogger.GetInstance().Errorf(ctx, "Transfer - Validation transfer failed with error (%v)", err)
+		return "", err
+	}
+
+	// convert amount to base unit
+	amountUnit := unit.NewBalanceUnitFromFloat(amount)
+
+	// create new transfer transaction
+	txEntity := entity.NewTransaction(ctx)
+	txEntity.SpenderWallet = fromWalletId
+	txEntity.FromWallet = fromWalletId
+	txEntity.ToWallet = toWalletId
+	txEntity.TxType = transaction.Transfer
+	txEntity.Amount = amountUnit.String()
+	txEntity.Note = note
+
+	if err := t.Repo.Create(ctx, txEntity, doc.Transactions, helper.TransactionKey(txEntity.Id)); err != nil {
+		glogger.GetInstance().Errorf(ctx, "Transfer - Create transfer transaction failed with error (%v)", err)
+		return "", helper.RespError(errorcode.BizUnableCreateTX)
+	}
+	glogger.GetInstance().Infof(ctx, "-----------Token Service - Transfer succeed (%s)-----------", txEntity.Id)
+
+	return txEntity.Id, nil
 }

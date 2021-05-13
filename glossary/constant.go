@@ -40,3 +40,6 @@ const AkcBase = 100000000
 // The numeral system where our bigInt string represents.
 // By default we use decimal (base 10)
 const StringUnitBase = 10
+
+// NftExchange work around to distinguish transfer token using for exchange nft
+const NftExchange = "NftExchange"
