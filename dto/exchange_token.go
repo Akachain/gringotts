@@ -17,17 +17,25 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package transaction
+package dto
 
-type Type string
+import "github.com/pkg/errors"
 
-const (
-	Deposit  Type = "Deposit"
-	Withdraw      = "Withdraw"
-	Transfer      = "Transfer"
-	Mint          = "Mint"
-	Burn          = "Burn"
-	Swap          = "Swap"
-	Issue         = "Issue"
-	Exchange      = "Exchange"
-)
+type ExchangeToken struct {
+	FromWalletFirstToken  string  `json:"fromWalletFirstToken"`
+	ToWalletFirstToken    string  `json:"toWalletFirstToken"`
+	FromWalletSecondToken string  `json:"fromWalletSecondToken"`
+	ToWalletSecondToken   string  `json:"toWalletSecondToken"`
+	Amount                float64 `json:"amount"`
+}
+
+func (e ExchangeToken) IsValid() error {
+	if e.FromWalletFirstToken == "" || e.FromWalletSecondToken == "" || e.ToWalletFirstToken == "" || e.ToWalletSecondToken == "" {
+		return errors.New("input is invalid")
+	}
+
+	if e.Amount <= 0 {
+		return errors.New("the exchange amount is a negative/zero number")
+	}
+	return nil
+}

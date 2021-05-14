@@ -86,6 +86,12 @@ func (b *baseToken) CreateTokenType(ctx contractapi.TransactionContextInterface,
 	return b.tokenHandler.CreateTokenType(ctx, createTokenTypeDto)
 }
 
+func (b *baseToken) Exchange(ctx contractapi.TransactionContextInterface, exchangeToken dto.ExchangeToken) error {
+	glogger.GetInstance().Info(ctx, "------------Exchange ChainCode------------")
+	return b.tokenHandler.Exchange(ctx, exchangeToken)
+}
+
+// API healthcheck
 func (b *baseToken) CreateHealthCheck(ctx contractapi.TransactionContextInterface, arg string) (string, error) {
 	glogger.GetInstance().Info(ctx, "------------CreateHealthCheck ChainCode------------")
 	return b.healthCheckHandler.CreateHealthCheck(ctx)

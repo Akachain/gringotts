@@ -115,3 +115,16 @@ func (t *TokenHandler) Issue(ctx contractapi.TransactionContextInterface, issueD
 
 	return t.tokenService.Issue(ctx, issueDto.TokenId, issueDto.FromWalletId, issueDto.ToWalletId, issueDto.Amount)
 }
+
+func (t *TokenHandler) Exchange(ctx contractapi.TransactionContextInterface, exchangeToken dto.ExchangeToken) error {
+	glogger.GetInstance().Info(ctx, "-----------Token Handler - Exchange-----------")
+
+	// checking dto validate
+	if err := exchangeToken.IsValid(); err != nil {
+		glogger.GetInstance().Errorf(ctx, "TokenHandler - Exchange Input invalidate %v", err)
+		return helper.RespError(errorcode.InvalidParam)
+	}
+
+	return t.tokenService.Exchange(ctx, exchangeToken.FromWalletFirstToken, exchangeToken.ToWalletFirstToken,
+		exchangeToken.FromWalletSecondToken, exchangeToken.ToWalletSecondToken, exchangeToken.Amount)
+}

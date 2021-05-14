@@ -43,4 +43,8 @@ type Token interface {
 
 	//Issue to issue new token type from stable token.
 	Issue(ctx contractapi.TransactionContextInterface, tokenId, fromWalletId, toWalletId string, amount float64) error
+
+	// Exchange to exchange token between two user have diff token type
+	Exchange(ctx contractapi.TransactionContextInterface, fromWalletFirstToken, toWalletFirstToken,
+		fromWalletSecondToken, toWalletSecondToken string, amount float64) error
 }

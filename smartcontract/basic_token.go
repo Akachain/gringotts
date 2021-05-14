@@ -65,4 +65,7 @@ type BasicToken interface {
 
 	// EnrollToken to register wallet policy use to issue new token
 	EnrollToken(ctx contractapi.TransactionContextInterface, enrollmentDto dto.Enrollment) error
+
+	// Exchange to exchange token between two user have diff token type
+	Exchange(ctx contractapi.TransactionContextInterface, exchangeToken dto.ExchangeToken) error
 }
