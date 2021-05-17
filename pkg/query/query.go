@@ -23,6 +23,8 @@
 // we put it here so that the same query can be re-used among all services if needed.
 package query
 
+import "fmt"
+
 // GetPendingTransactionQueryString return query list transaction have status pending.
 // Based on the state db document prefix, we basically get all documents that has prefix
 // greater \u0000Transactions and less than \u0000Transaction + inf as well as pending status
@@ -44,4 +46,19 @@ func GetPendingTransactionQueryString() string {
 			],
 			"use_index":["indexPendingTxDoc","indexPendingTx"]
 		}`
+}
+
+// GetTransactionByBlockchainId return query string to get all transaction buy blockchainId
+func GetTransactionByBlockchainId(blockchainId string) string {
+	return fmt.Sprintf(`
+		{ "selector": 
+			{ 	
+				"BlockChainId": 
+					{ "$eq": "%s" },
+				"_id": 
+					{"$gt": "\u0000Transactions",
+					"$lt": "\u0000Transactions\uFFFF"}			
+			},
+			"use_index":["indexBlockchainTxDoc","indexBlockchainTx"]
+		}`, blockchainId)
 }

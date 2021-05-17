@@ -20,12 +20,14 @@
 package base
 
 import (
+	"encoding/json"
 	"github.com/Akachain/gringotts/entity"
 	"github.com/Akachain/gringotts/errorcode"
 	"github.com/Akachain/gringotts/glossary"
 	"github.com/Akachain/gringotts/glossary/doc"
 	"github.com/Akachain/gringotts/helper"
 	"github.com/Akachain/gringotts/helper/glogger"
+	"github.com/Akachain/gringotts/pkg/query"
 	"github.com/Akachain/gringotts/repository"
 	"github.com/Akachain/gringotts/repository/base"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
@@ -192,4 +194,38 @@ func (b *Base) GetNFT(ctx contractapi.TransactionContextInterface, nftTokenId st
 	}
 
 	return nftToken, nil
+}
+
+func (b *Base) GetExchangeTxByBlockchainId(ctx contractapi.TransactionContextInterface, blockchainId string) ([]*entity.Transaction, error) {
+	txList := make([]*entity.Transaction, 0)
+	resultsIterator, err := b.Repo.GetQueryString(ctx, query.GetTransactionByBlockchainId(blockchainId))
+	if err != nil {
+		glogger.GetInstance().Errorf(ctx, "GetExchangeTxByBlockchainId - Get query exchange tx failed with error (%v)", err)
+		return nil, helper.RespError(errorcode.BizUnableGetTx)
+	}
+	defer resultsIterator.Close()
+
+	// Check data response after query in database
+	if !resultsIterator.HasNext() {
+		// Return with list transaction id empty
+		return txList, nil
+	}
+
+	for resultsIterator.HasNext() {
+		queryResponse, err := resultsIterator.Next()
+		if err != nil {
+			glogger.GetInstance().Errorf(ctx, "GetExchangeTxByBlockchainId - Start query failed with error (%v)", err)
+			return nil, helper.RespError(errorcode.BizUnableGetTx)
+		}
+		tx := entity.NewTransaction()
+		err = json.Unmarshal(queryResponse.Value, tx)
+		if err != nil {
+			glogger.GetInstance().Errorf(ctx, "GetExchangeTxByBlockchainId - Unable to unmarshal transaction error (%v)", err)
+			return txList, helper.RespError(errorcode.BizUnableGetTx)
+		}
+
+		txList = append(txList, tx)
+	}
+
+	return txList, nil
 }

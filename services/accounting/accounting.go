@@ -61,6 +61,7 @@ func (a *accountingService) GetTx(ctx contractapi.TransactionContextInterface) (
 		return txIdList, nil
 	}
 
+	mapFilterExchangeTx := make(map[string]string, 0)
 	for resultsIterator.HasNext() {
 		queryResponse, err := resultsIterator.Next()
 		if err != nil {
@@ -73,6 +74,17 @@ func (a *accountingService) GetTx(ctx contractapi.TransactionContextInterface) (
 			glogger.GetInstance().Error(ctx, "GetTx - Unable to unmarshal transaction")
 			continue
 		}
+
+		// check transaction is exchange or not
+		if tx.TxType == transaction.Exchange {
+			if _, ok := mapFilterExchangeTx[tx.BlockChainId]; !ok {
+				mapFilterExchangeTx[tx.BlockChainId] = tx.Id
+				txIdList = append(txIdList, tx.Id)
+			}
+			continue
+		}
+
+		// add transaction for otherwise
 		txIdList = append(txIdList, tx.Id)
 	}
 	glogger.GetInstance().Infof(ctx, "GetTx - List transaction have status pending: (%s)", strings.Join(txIdList, ","))
@@ -182,6 +194,32 @@ func (a *accountingService) txHandler(ctx contractapi.TransactionContextInterfac
 		}
 		tx.Status = transaction.Confirmed
 		break
+	case transaction.Exchange:
+		txList, err := a.GetExchangeTxByBlockchainId(ctx, tx.BlockChainId)
+		if err != nil {
+			glogger.GetInstance().Errorf(ctx, "TxHandler - Exchange - Get tx with blockchain id (%s) failed (%v)", tx.BlockChainId, err)
+			return transaction.Validation, err
+		}
+
+		if len(txList) <= 1 {
+			glogger.GetInstance().Error(ctx, "TxHandler - Exchange - Get exchange tx less than one")
+			return transaction.Validation, errors.New("Exchange transaction need have a pair")
+		}
+
+		for _, subTx := range txList {
+			if err := a.subAmount(ctx, mapCurrentBalance, subTx.FromWallet, subTx.Amount); err != nil {
+				glogger.GetInstance().Errorf(ctx, "TxHandler - Exchange - Transaction (%s): Unable to sub temp amount of From wallet", subTx.Id)
+				tx.Status = transaction.Rejected
+				return transaction.Validation, errors.WithMessage(err, "Sub balance of from wallet failed")
+			}
+
+			if err := a.addAmount(ctx, mapCurrentBalance, subTx.ToWallet, subTx.Amount); err != nil {
+				glogger.GetInstance().Errorf(ctx, "TxHandler - Exchange - Transaction (%s): Unable to add temp amount of To wallet", subTx.Id)
+				tx.Status = transaction.Rejected
+				return transaction.Validation, errors.WithMessage(err, "Add balance of to wallet failed")
+			}
+			subTx.Status = transaction.Confirmed
+		}
 	default:
 		glogger.GetInstance().Errorf(ctx, "TxHandler - Transaction (%s) has type (%s) not support", tx.Id, string(tx.TxType))
 		tx.Status = transaction.Rejected
