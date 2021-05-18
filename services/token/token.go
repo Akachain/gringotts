@@ -281,8 +281,8 @@ func (t *tokenService) Exchange(ctx contractapi.TransactionContextInterface, fro
 	txId = helper.GenerateID(ctx.GetStub().GetTxID(), toSecondWallet.TokenId)
 	txEntity = entity.NewTransaction(ctx)
 	txEntity.SpenderWallet = fromWalletFirstToken
-	txEntity.FromWallet = toWalletSecondToken
-	txEntity.ToWallet = fromWalletSecondToken
+	txEntity.FromWallet = fromWalletSecondToken
+	txEntity.ToWallet = toWalletSecondToken
 	txEntity.TxType = transaction.Exchange
 	txEntity.Amount = amountFirstToken
 	txEntity.Id = txId
