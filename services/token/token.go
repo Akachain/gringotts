@@ -263,7 +263,7 @@ func (t *tokenService) Exchange(ctx contractapi.TransactionContextInterface, fro
 		return err
 	}
 
-	txId := helper.GenerateID(doc.Transactions, fromFirstWallet.TokenId)
+	txId := helper.GenerateID(ctx.GetStub().GetTxID(), fromFirstWallet.TokenId)
 	// create new swap transaction
 	txEntity := entity.NewTransaction(ctx)
 	txEntity.SpenderWallet = fromWalletFirstToken
@@ -278,7 +278,7 @@ func (t *tokenService) Exchange(ctx contractapi.TransactionContextInterface, fro
 		return helper.RespError(errorcode.BizUnableCreateTX)
 	}
 
-	txId = helper.GenerateID(doc.Transactions, toSecondWallet.TokenId)
+	txId = helper.GenerateID(ctx.GetStub().GetTxID(), toSecondWallet.TokenId)
 	txEntity = entity.NewTransaction(ctx)
 	txEntity.SpenderWallet = fromWalletFirstToken
 	txEntity.FromWallet = toWalletSecondToken

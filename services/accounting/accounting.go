@@ -50,7 +50,7 @@ func (a *accountingService) GetTx(ctx contractapi.TransactionContextInterface) (
 	var txIdList []string
 	resultsIterator, err := a.Repo.GetQueryStringWithPagination(ctx, query.GetPendingTransactionQueryString())
 	if err != nil {
-		glogger.GetInstance().Errorf(ctx, "GetTx - Get query with paging failed with error (%v)", err)
+		glogger.GetInstance().Errorf(ctx, "GetTx - Get query with paging failed with error (%s)", err.Error())
 		return nil, helper.RespError(errorcode.BizUnableGetTx)
 	}
 	defer resultsIterator.Close()
@@ -65,7 +65,7 @@ func (a *accountingService) GetTx(ctx contractapi.TransactionContextInterface) (
 	for resultsIterator.HasNext() {
 		queryResponse, err := resultsIterator.Next()
 		if err != nil {
-			glogger.GetInstance().Errorf(ctx, "GetTx - Start query failed with error (%v)", err)
+			glogger.GetInstance().Errorf(ctx, "GetTx - Start query failed with error (%s)", err.Error())
 			return nil, helper.RespError(errorcode.BizUnableGetTx)
 		}
 		tx := entity.NewTransaction()
@@ -102,7 +102,7 @@ func (a *accountingService) CalculateBalance(ctx contractapi.TransactionContextI
 	for _, id := range accountingDto.TxId {
 		tx, err := a.GetTransaction(ctx, id)
 		if err != nil {
-			glogger.GetInstance().Errorf(ctx, "CalculateBalance - Get transaction (%s) failed with error (%v)", id, err)
+			glogger.GetInstance().Errorf(ctx, "CalculateBalance - Get transaction (%s) failed with error (%s)", id, err.Error())
 			continue
 		}
 		glogger.GetInstance().Debugf(ctx, "CalculateBalance - Transaction get from db: %s", spew.Sdump(tx))
@@ -120,10 +120,10 @@ func (a *accountingService) CalculateBalance(ctx contractapi.TransactionContextI
 		txHandleStep, err := a.txHandler(ctx, tx, mapCurrentBalance)
 		lstTx = append(lstTx, tx)
 		if err != nil {
-			glogger.GetInstance().Errorf(ctx, "CalculateBalance - Handle transaction (%s) failed with error (%v)", id, err)
+			glogger.GetInstance().Errorf(ctx, "CalculateBalance - Handle transaction (%s) failed with error (%s)", id, err.Error())
 			if txHandleStep != transaction.Validation {
 				if err := a.rollbackTxHandler(ctx, tx, mapCurrentBalance, txHandleStep); err != nil {
-					glogger.GetInstance().Errorf(ctx, "CalculateBalance - Rollback handle transaction (%s) failed with error (%v)", id, err)
+					glogger.GetInstance().Errorf(ctx, "CalculateBalance - Rollback handle transaction (%s) failed with error (%s)", id, err.Error())
 				}
 			}
 			continue
@@ -175,7 +175,7 @@ func (a *accountingService) txHandler(ctx contractapi.TransactionContextInterfac
 			return transaction.Validation, errors.New("From wallet id invalidate")
 		}
 		if err := a.addAmount(ctx, mapCurrentBalance, tx.ToWallet, tx.Amount); err != nil {
-			glogger.GetInstance().Errorf(ctx, "TxHandler - Mint - Transaction (%s): add balance failed (%v)", tx.Id, err)
+			glogger.GetInstance().Errorf(ctx, "TxHandler - Mint - Transaction (%s): add balance failed (%s)", tx.Id, err.Error())
 			tx.Status = transaction.Rejected
 			return transaction.Validation, errors.New("Add balance of to wallet failed")
 		}
@@ -188,7 +188,7 @@ func (a *accountingService) txHandler(ctx contractapi.TransactionContextInterfac
 			return transaction.Validation, errors.New("To wallet id invalidate")
 		}
 		if err := a.subAmount(ctx, mapCurrentBalance, tx.FromWallet, tx.Amount); err != nil {
-			glogger.GetInstance().Errorf(ctx, "TxHandler - Burn - Transaction (%s) sub balance failed (%v)", tx.Id, err)
+			glogger.GetInstance().Errorf(ctx, "TxHandler - Burn - Transaction (%s) sub balance failed (%s)", tx.Id, err.Error())
 			tx.Status = transaction.Rejected
 			return transaction.Validation, errors.New("Sub balance of from wallet failed")
 		}
@@ -197,7 +197,7 @@ func (a *accountingService) txHandler(ctx contractapi.TransactionContextInterfac
 	case transaction.Exchange:
 		txList, err := a.GetExchangeTxByBlockchainId(ctx, tx.BlockChainId)
 		if err != nil {
-			glogger.GetInstance().Errorf(ctx, "TxHandler - Exchange - Get tx with blockchain id (%s) failed (%v)", tx.BlockChainId, err)
+			glogger.GetInstance().Errorf(ctx, "TxHandler - Exchange - Get tx with blockchain id (%s) failed (%s)", tx.BlockChainId, err.Error())
 			return transaction.Validation, err
 		}
 
@@ -208,13 +208,13 @@ func (a *accountingService) txHandler(ctx contractapi.TransactionContextInterfac
 
 		for _, subTx := range txList {
 			if err := a.subAmount(ctx, mapCurrentBalance, subTx.FromWallet, subTx.Amount); err != nil {
-				glogger.GetInstance().Errorf(ctx, "TxHandler - Exchange - Transaction (%s): Unable to sub temp amount of From wallet", subTx.Id)
+				glogger.GetInstance().Errorf(ctx, "TxHandler - Exchange - Transaction (%s): Unable to sub temp amount of From wallet (%s)", subTx.Id, err.Error())
 				tx.Status = transaction.Rejected
 				return transaction.Validation, errors.WithMessage(err, "Sub balance of from wallet failed")
 			}
 
 			if err := a.addAmount(ctx, mapCurrentBalance, subTx.ToWallet, subTx.Amount); err != nil {
-				glogger.GetInstance().Errorf(ctx, "TxHandler - Exchange - Transaction (%s): Unable to add temp amount of To wallet", subTx.Id)
+				glogger.GetInstance().Errorf(ctx, "TxHandler - Exchange - Transaction (%s): Unable to add temp amount of To wallet (%s)", subTx.Id, err.Error())
 				tx.Status = transaction.Rejected
 				return transaction.Validation, errors.WithMessage(err, "Add balance of to wallet failed")
 			}
@@ -295,12 +295,12 @@ func (a *accountingService) updateBalance(ctx contractapi.TransactionContextInte
 	for key, value := range mapCurrentBalance {
 		wallet, err := a.GetWallet(ctx, key)
 		if err != nil {
-			glogger.GetInstance().Errorf(ctx, "updateBalance - Get wallet with id (%s) failed with err (%v)", key, err)
+			glogger.GetInstance().Errorf(ctx, "updateBalance - Get wallet with id (%s) failed with err (%s)", key, err.Error())
 			return helper.RespError(errorcode.BizUnableGetWallet)
 		}
 		wallet.Balances = value
 		if err := a.Repo.Update(ctx, wallet, doc.Wallets, helper.WalletKey(key)); err != nil {
-			glogger.GetInstance().Errorf(ctx, "updateBalance - Update balance of wallet (%s) failed with err (%v)", key, err)
+			glogger.GetInstance().Errorf(ctx, "updateBalance - Update balance of wallet (%s) failed with err (%s)", key, err.Error())
 			return helper.RespError(errorcode.BizUnableUpdateWallet)
 		}
 		glogger.GetInstance().Infof(ctx, "WalletId (%s) - Balances update succeed", key)
@@ -312,7 +312,8 @@ func (a *accountingService) updateBalance(ctx contractapi.TransactionContextInte
 func (a *accountingService) updateTransaction(ctx contractapi.TransactionContextInterface, lstTx []*entity.Transaction) error {
 	for _, tx := range lstTx {
 		if err := a.Repo.Update(ctx, tx, doc.Transactions, helper.TransactionKey(tx.Id)); err != nil {
-			glogger.GetInstance().Errorf(ctx, "UpdateTransaction - Update transaction (%s) failed with err (%v)", tx.Id, err)
+			glogger.GetInstance().Errorf(ctx, "UpdateTransaction - Update transaction (%s) failed with err (%s)", tx.Id, err.Error())
+			glogger.GetInstance().Errorf(ctx, "UpdateTransaction - Update transaction (%s) failed with err (%s)", tx.Id, err.Error())
 			return helper.RespError(errorcode.BizUnableUpdateTX)
 		}
 		glogger.GetInstance().Infof(ctx, "UpdateTransaction - Update transaction (%s) succeed", tx.Id)
