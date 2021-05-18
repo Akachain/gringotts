@@ -40,7 +40,7 @@ func NewNftService() services.NFT {
 	}
 }
 
-func (n *nftService) Mint(ctx contractapi.TransactionContextInterface, gs1Number string, ownerWalletId string, metaData string) (string, error) {
+func (n *nftService) Mint(ctx contractapi.TransactionContextInterface, gs1Number string, ownerWalletId string, metaData string, hashData string) (string, error) {
 	glogger.GetInstance().Info(ctx, "-----------NftToken Service - Mint-----------")
 
 	if _, err := n.GetActiveWallet(ctx, ownerWalletId); err != nil {
@@ -52,6 +52,7 @@ func (n *nftService) Mint(ctx contractapi.TransactionContextInterface, gs1Number
 	nftEntity.GS1Number = gs1Number
 	nftEntity.OwnerId = ownerWalletId
 	nftEntity.MetaData = metaData
+	nftEntity.HashData = hashData
 
 	if err := n.Repo.Create(ctx, nftEntity, doc.NftToken, helper.NFTKey(nftEntity.Id)); err != nil {
 		glogger.GetInstance().Errorf(ctx, "NftToken Service - Mint NftToken failed with error (%v)", err)

@@ -26,7 +26,7 @@ import (
 )
 
 type NFT struct {
-	NFTId     string
+	HashData  string
 	GS1Number string
 	MetaData  string
 	OwnerId   string

@@ -24,6 +24,7 @@ import "github.com/pkg/errors"
 type MintNFT struct {
 	GS1Number     string `json:"gs1Number"`
 	OwnerWalletId string `json:"ownerWalletId"`
+	HashData      string `json:"hashData"`
 	Metadata      string `json:"metadata"`
 }
 
@@ -38,6 +39,10 @@ func (m MintNFT) IsValid() error {
 
 	if m.Metadata == "" {
 		return errors.New("Metadata is invalid")
+	}
+
+	if m.HashData == "" {
+		return errors.New("Hash of data is invalid")
 	}
 
 	return nil

@@ -46,7 +46,7 @@ func (n *NftHandler) Mint(ctx contractapi.TransactionContextInterface, mintNFT d
 		return "", helper.RespError(errorcode.InvalidParam)
 	}
 
-	return n.nftService.Mint(ctx, mintNFT.GS1Number, mintNFT.OwnerWalletId, mintNFT.Metadata)
+	return n.nftService.Mint(ctx, mintNFT.GS1Number, mintNFT.OwnerWalletId, mintNFT.Metadata, mintNFT.HashData)
 }
 
 func (n *NftHandler) OwnerOf(ctx contractapi.TransactionContextInterface, ownerNFT dto.OwnerNFT) (string, error) {
