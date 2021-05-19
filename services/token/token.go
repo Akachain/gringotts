@@ -247,8 +247,8 @@ func (t *tokenService) Exchange(ctx contractapi.TransactionContextInterface, fro
 		return err
 	}
 
-	// validate first token
-	_, toSecondWallet, err := t.validateWalletTransfer(ctx, fromWalletSecondToken, toWalletSecondToken)
+	// validate second token
+	fromSecondWallet, _, err := t.validateWalletTransfer(ctx, fromWalletSecondToken, toWalletSecondToken)
 	if err != nil {
 		glogger.GetInstance().Errorf(ctx, "Exchange - Validation second pair failed with error (%v)", err)
 		return err
@@ -261,6 +261,11 @@ func (t *tokenService) Exchange(ctx contractapi.TransactionContextInterface, fro
 	if err != nil {
 		glogger.GetInstance().Errorf(ctx, "Exchange - Calculate balance exchange failed with error (%v)", err)
 		return err
+	}
+
+	if helper.CompareStringBalance(fromSecondWallet.Balances, amountFirstToken) < 0 {
+		glogger.GetInstance().Error(ctx, "Exchange - Balance of from second wallet is insufficient")
+		return helper.RespError(errorcode.BizBalanceNotEnough)
 	}
 
 	txId := helper.GenerateID(ctx.GetStub().GetTxID(), fromFirstWallet.TokenId)
@@ -278,7 +283,7 @@ func (t *tokenService) Exchange(ctx contractapi.TransactionContextInterface, fro
 		return helper.RespError(errorcode.BizUnableCreateTX)
 	}
 
-	txId = helper.GenerateID(ctx.GetStub().GetTxID(), toSecondWallet.TokenId)
+	txId = helper.GenerateID(ctx.GetStub().GetTxID(), fromSecondWallet.TokenId)
 	txEntity = entity.NewTransaction(ctx)
 	txEntity.SpenderWallet = fromWalletFirstToken
 	txEntity.FromWallet = fromWalletSecondToken
