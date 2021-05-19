@@ -116,6 +116,8 @@ func (a *accountingService) CalculateBalance(ctx contractapi.TransactionContextI
 		// update time when update transaction
 		tx.UpdatedAt = helper.TimestampISO(txTime.Seconds)
 
+		glogger.GetInstance().Infof(ctx, "CalculateBalance - Number tx1 (%d)", len(lstTx))
+
 		// check type of transaction
 		txHandleStep, err := a.txHandler(ctx, tx, mapCurrentBalance, lstTx)
 		if err != nil {
@@ -127,6 +129,7 @@ func (a *accountingService) CalculateBalance(ctx contractapi.TransactionContextI
 			}
 			continue
 		}
+		glogger.GetInstance().Infof(ctx, "CalculateBalance - Number tx2 (%d)", len(lstTx))
 	}
 
 	// Update transaction status
@@ -214,19 +217,20 @@ func (a *accountingService) txHandler(ctx contractapi.TransactionContextInterfac
 			glogger.GetInstance().Error(ctx, "TxHandler - Exchange - Get exchange tx less than one")
 			return transaction.Validation, errors.New("Exchange transaction need have a pair")
 		}
+
+		glogger.GetInstance().Infof(ctx, "TxHandler - Exchange number tx %d", len(txList))
+
 		flagRun := true
 		for _, subTx := range txList {
 			if flagRun {
 				if err := a.subAmount(ctx, mapCurrentBalance, subTx.FromWallet, subTx.Amount); err != nil {
 					glogger.GetInstance().Errorf(ctx, "TxHandler - Exchange - Transaction (%s): Unable to sub temp amount of From wallet (%s)", subTx.Id, err.Error())
 					flagRun = false
-					return transaction.Validation, errors.WithMessage(err, "Sub balance of from wallet failed")
 				}
 
 				if err := a.addAmount(ctx, mapCurrentBalance, subTx.ToWallet, subTx.Amount); err != nil {
 					glogger.GetInstance().Errorf(ctx, "TxHandler - Exchange - Transaction (%s): Unable to add temp amount of To wallet (%s)", subTx.Id, err.Error())
 					flagRun = false
-					return transaction.Validation, errors.WithMessage(err, "Add balance of to wallet failed")
 				}
 			}
 		}
@@ -238,6 +242,9 @@ func (a *accountingService) txHandler(ctx contractapi.TransactionContextInterfac
 				subTx.Status = transaction.Rejected
 				lstTx = append(lstTx, subTx)
 			}
+		}
+		if !flagRun {
+			return transaction.Validation, errors.New("TxHandler - Exchange - calculate balance failed")
 		}
 	default:
 		glogger.GetInstance().Errorf(ctx, "TxHandler - Transaction (%s) has type (%s) not support", tx.Id, string(tx.TxType))
