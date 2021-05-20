@@ -53,12 +53,22 @@ func (w *walletService) Create(ctx contractapi.TransactionContextInterface, toke
 		return "", helper.RespError(errorcode.InvalidParam)
 	}
 
+	// create wallet
 	walletEntity := entity.NewWallet(ctx)
 	walletEntity.Status = status
-	walletEntity.TokenId = tokenId
 	if err := w.Repo.Create(ctx, walletEntity, doc.Wallets, helper.WalletKey(walletEntity.Id)); err != nil {
 		glogger.GetInstance().Errorf(ctx, "Create - Create wallet failed with error (%v)", err)
 		return "", helper.RespError(errorcode.BizUnableCreateWallet)
+	}
+
+	// init stable balance of wallet when create new wallet
+	balanceEntity := entity.NewBalance(ctx)
+	balanceEntity.WalletId = walletEntity.Id
+	balanceEntity.TokenId = tokenId
+	balanceEntity.Balances = "0"
+	if err := w.Repo.Create(ctx, balanceEntity, doc.Balances, helper.BalanceKey(walletEntity.Id, tokenId)); err != nil {
+		glogger.GetInstance().Errorf(ctx, "Create - Init balance of stable token failed with error (%v)", err)
+		return "", helper.RespError(errorcode.BizUnableCreateBalance)
 	}
 	glogger.GetInstance().Infof(ctx, "-----------Wallet Service - Create Succeed: id (%s)-----------", walletEntity.Id)
 
@@ -91,17 +101,17 @@ func (w *walletService) Update(ctx contractapi.TransactionContextInterface, wall
 	return nil
 }
 
-func (w *walletService) BalanceOf(ctx contractapi.TransactionContextInterface, walletId string) (string, error) {
+func (w *walletService) BalanceOf(ctx contractapi.TransactionContextInterface, walletId string, tokenId string) (string, error) {
 	glogger.GetInstance().Info(ctx, "-----------Wallet Service - BalanceOf-----------")
 
-	wallet, err := w.GetWallet(ctx, walletId)
+	balanceToken, err := w.GetBalanceOfToken(ctx, walletId, tokenId)
 	if err != nil {
 		glogger.GetInstance().Errorf(ctx, "BalanceOf - Get wallet failed with error (%v)", err)
-		return "-1", helper.RespError(errorcode.BizUnableGetWallet)
+		return "-1", err
 	}
-	glogger.GetInstance().Infof(ctx, "-----------Wallet Service - BalanceOf wallet: (%s)-----------", wallet.Balances)
+	glogger.GetInstance().Infof(ctx, "-----------Wallet Service - BalanceOf wallet: (%s)-----------", balanceToken.Balances)
 
-	return wallet.Balances, nil
+	return balanceToken.Balances, nil
 }
 
 func (w *walletService) EnrollToken(ctx contractapi.TransactionContextInterface, tokenId string, fromWalletId []string, toWalletId []string) error {

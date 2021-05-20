@@ -21,40 +21,28 @@ package entity
 
 import (
 	"github.com/Akachain/gringotts/glossary/doc"
-	"github.com/Akachain/gringotts/glossary/transaction"
 	"github.com/Akachain/gringotts/helper"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
 
-// Transaction contains basic information relating to token transaction
-// From, To, Amount, type of transaction and its status.
-// The SpenderWallet is an additional field in case later on we want this is compatible
-// with ERC20
-type Transaction struct {
-	SpenderWallet string
-	FromWallet    string
-	ToWallet      string
-	FromTokenId   string
-	ToTokenId     string
-	Amount        string
-	TxType        transaction.Type
-	Status        transaction.Status
-	Note          string
-	Base          `mapstructure:",squash"`
+type Balance struct {
+	WalletId string
+	TokenId  string
+	Balances string
+	Base     `mapstructure:",squash"`
 }
 
-func NewTransaction(ctx ...contractapi.TransactionContextInterface) *Transaction {
+func NewBalance(ctx ...contractapi.TransactionContextInterface) *Balance {
 	if len(ctx) <= 0 {
-		return &Transaction{}
+		return &Balance{}
 	}
 	txTime, _ := ctx[0].GetStub().GetTxTimestamp()
-	return &Transaction{
+	return &Balance{
 		Base: Base{
-			Id:           helper.GenerateID(doc.Transactions, ctx[0].GetStub().GetTxID()),
+			Id:           helper.GenerateID(doc.Balances, ctx[0].GetStub().GetTxID()),
 			CreatedAt:    helper.TimestampISO(txTime.Seconds),
 			UpdatedAt:    helper.TimestampISO(txTime.Seconds),
 			BlockChainId: ctx[0].GetStub().GetTxID(),
 		},
-		Status: transaction.Pending,
 	}
 }

@@ -38,9 +38,7 @@ func (c CreateWallet) ToEntity(ctx contractapi.TransactionContextInterface) *ent
 	walletEntity := new(entity.Wallet)
 	walletEntity.Id = helper.GenerateID(doc.Wallets, ctx.GetStub().GetTxID())
 
-	walletEntity.TokenId = c.TokenId
 	walletEntity.Status = c.Status
-	walletEntity.Balances = "0"
 	walletEntity.CreatedAt = helper.TimestampISO(txTime.Seconds)
 	walletEntity.UpdatedAt = helper.TimestampISO(txTime.Seconds)
 	walletEntity.BlockChainId = ctx.GetStub().GetTxID()

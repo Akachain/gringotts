@@ -23,7 +23,6 @@ import (
 	"github.com/Akachain/gringotts/dto"
 	"github.com/Akachain/gringotts/handler"
 	"github.com/Akachain/gringotts/helper/glogger"
-	"github.com/Akachain/gringotts/pkg/ipc"
 	"github.com/Akachain/gringotts/smartcontract"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
@@ -36,12 +35,12 @@ type baseToken struct {
 	accountingHandler  handler.AccountingHandler
 }
 
-func NewBaseToken(nftIpc ...ipc.Ipc) smartcontract.BasicToken {
+func NewBaseToken() smartcontract.BasicToken {
 	return &baseToken{
 		tokenHandler:       handler.NewTokenHandler(),
 		walletHandler:      handler.NewWalletHandler(),
 		healthCheckHandler: handler.NewHealthCheckHandler(),
-		accountingHandler:  handler.NewAccountingHandler(nftIpc...),
+		accountingHandler:  handler.NewAccountingHandler(),
 	}
 }
 
@@ -103,9 +102,9 @@ func (b *baseToken) CalculateBalance(ctx contractapi.TransactionContextInterface
 	return b.accountingHandler.CalculateBalance(ctx, accountingDto)
 }
 
-func (b *baseToken) Swap(ctx contractapi.TransactionContextInterface, swapDto dto.SwapToken) error {
-	glogger.GetInstance().Info(ctx, "------------Swap ChainCode------------")
-	return b.tokenHandler.Swap(ctx, swapDto)
+func (b *baseToken) Exchange(ctx contractapi.TransactionContextInterface, exchangeToken dto.ExchangeToken) error {
+	glogger.GetInstance().Info(ctx, "------------Exchange ChainCode------------")
+	return b.tokenHandler.Exchange(ctx, exchangeToken)
 }
 
 func (b *baseToken) Issue(ctx contractapi.TransactionContextInterface, issueDto dto.IssueToken) error {

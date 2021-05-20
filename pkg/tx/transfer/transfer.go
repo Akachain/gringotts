@@ -17,25 +17,24 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package dto
+package transfer
 
 import (
-	"github.com/pkg/errors"
+	"github.com/Akachain/gringotts/entity"
+	"github.com/Akachain/gringotts/pkg/tx"
+	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
 
-type SwapToken struct {
-	FromWalletId string  `json:"fromWalletId"`
-	ToWalletId   string  `json:"toWalletId"`
-	Amount       float64 `json:"amount"`
+type txTransfer struct {
+	*tx.TxBase
 }
 
-func (s SwapToken) IsValid() error {
-	if s.FromWalletId == "" || s.ToWalletId == "" {
-		return errors.New("From/To wallet id is empty")
+func NewTxTransfer() tx.Handler {
+	return &txTransfer{
+		tx.NewTxBase(),
 	}
+}
 
-	if s.Amount <= 0 {
-		return errors.New("the swap amount is a negative/zero number")
-	}
-	return nil
+func (t *txTransfer) AccountingTx(ctx contractapi.TransactionContextInterface, tx *entity.Transaction, mapBalanceToken map[string]string) (*entity.Transaction, error) {
+	return t.TxHandlerTransfer(ctx, mapBalanceToken, tx)
 }

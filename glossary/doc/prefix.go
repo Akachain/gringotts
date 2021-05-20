@@ -30,4 +30,5 @@ const (
 	Enrollments  = "Enrollments"
 	NftToken     = "NftToken"
 	Exchange     = "Exchange"
+	Balances     = "Balances"
 )

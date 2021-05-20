@@ -32,5 +32,5 @@ type NFT interface {
 	BalanceOf(ctx contractapi.TransactionContextInterface, ownerWalletId string) (int, error)
 
 	// TransferFrom to transfer nft token from owner to other wallet
-	TransferFrom(ctx contractapi.TransactionContextInterface, ownerWalletId string, toWalletId string, nftTokenId string) error
+	TransferFrom(ctx contractapi.TransactionContextInterface, ownerWalletId string, toWalletId string, fromTokenId string, nftTokenId string, price float64) error
 }

@@ -28,10 +28,8 @@ import (
 
 // A wallet only contains 1 type of token and its balance.
 type Wallet struct {
-	TokenId  string
-	Status   glossary.Status
-	Balances string
-	Base     `mapstructure:",squash"`
+	Status glossary.Status
+	Base   `mapstructure:",squash"`
 }
 
 func NewWallet(ctx ...contractapi.TransactionContextInterface) *Wallet {

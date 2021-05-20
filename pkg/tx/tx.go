@@ -17,36 +17,13 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package handler
+package tx
 
 import (
-	"github.com/Akachain/gringotts/dto"
-	"github.com/Akachain/gringotts/errorcode"
-	"github.com/Akachain/gringotts/helper"
-	"github.com/Akachain/gringotts/helper/glogger"
-	"github.com/Akachain/gringotts/services"
-	"github.com/Akachain/gringotts/services/exchange"
+	"github.com/Akachain/gringotts/entity"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
 
-type ExchangeHandler struct {
-	exchangeService services.Exchange
-}
-
-func NewExchangeHandler() ExchangeHandler {
-	return ExchangeHandler{
-		exchangeService: exchange.NewExchangeService(),
-	}
-}
-
-func (e *ExchangeHandler) TransferNft(ctx contractapi.TransactionContextInterface, transferNft dto.TransferNFT) error {
-	glogger.GetInstance().Info(ctx, "-----------Exchange Handler - TransferNft-----------")
-
-	// checking dto validate
-	if err := transferNft.IsValid(); err != nil {
-		glogger.GetInstance().Errorf(ctx, "Exchange Handler - TransferNft Input invalidate %v", err)
-		return helper.RespError(errorcode.InvalidParam)
-	}
-
-	return e.exchangeService.TransferNft(ctx, transferNft.OwnerWalletId, transferNft.ToWalletId, transferNft.NFTTokenId, transferNft.Price)
+type Handler interface {
+	AccountingTx(ctx contractapi.TransactionContextInterface, transaction *entity.Transaction, mapBalanceToken map[string]string) (*entity.Transaction, error)
 }

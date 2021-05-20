@@ -67,6 +67,10 @@ const (
 	BizUnableGetExchange       ErrorCode = "325"
 	BizExchangeTxInvalidStatus ErrorCode = "326"
 	BizUnableUpdateExchange    ErrorCode = "327"
+	BizUnableCreateBalance     ErrorCode = "328"
+	BizUnableUpdateBalance     ErrorCode = "329"
+	BizUnableGetBalance        ErrorCode = "330"
+	BizNftNotPermission        ErrorCode = "331"
 )
 
 var mapErrorCode = map[ErrorCode]string{
@@ -102,6 +106,10 @@ var mapErrorCode = map[ErrorCode]string{
 	BizUnableGetExchange:       "Unable to get exchange nft record on blockchain",
 	BizExchangeTxInvalidStatus: "Exchange transaction have status difference pending on the blockchain",
 	BizUnableUpdateExchange:    "Unable to update exchange nft transaction on the blockchain",
+	BizUnableCreateBalance:     "Unable to create new balance of token on the blockchain",
+	BizUnableUpdateBalance:     "Unable to update balance of token on the blockchain",
+	BizUnableGetBalance:        "Unable to get balance of token on the blockchain",
+	BizNftNotPermission:        "Wallet Id not match owner of nft token",
 }
 
 func (e ErrorCode) Message() string {

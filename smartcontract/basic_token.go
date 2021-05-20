@@ -42,7 +42,7 @@ type BasicToken interface {
 	// Burn to delete token in the system
 	Burn(ctx contractapi.TransactionContextInterface, burnDto dto.BurnToken) error
 
-	// Transfers amount of tokens from address FromWalletId to address ToWalletId
+	// Transfer amount of tokens from address FromWalletId to address ToWalletId
 	Transfer(ctx contractapi.TransactionContextInterface, transferDto dto.TransferToken) error
 
 	// CreateTokenType to create new token type in the system
@@ -57,8 +57,8 @@ type BasicToken interface {
 	// CalculateBalance update balance of wallet. Accounting job will call this
 	CalculateBalance(ctx contractapi.TransactionContextInterface, accountingDto dto.AccountingBalance) error
 
-	// Swap to swap between token type. Example from Stable token to X token
-	Swap(ctx contractapi.TransactionContextInterface, swapDto dto.SwapToken) error
+	// Exchange to swap between token type. Example from Stable token to X token
+	Exchange(ctx contractapi.TransactionContextInterface, exchangeToken dto.ExchangeToken) error
 
 	// Issue to issue new token from stable token
 	Issue(ctx contractapi.TransactionContextInterface, issueDto dto.IssueToken) error

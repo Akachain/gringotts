@@ -17,13 +17,27 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package ipc
+package tx
 
 import (
 	"github.com/Akachain/gringotts/glossary/transaction"
-	"github.com/hyperledger/fabric-contract-api-go/contractapi"
+	"github.com/Akachain/gringotts/pkg/tx/exchange"
+	"github.com/Akachain/gringotts/pkg/tx/issue"
+	"github.com/Akachain/gringotts/pkg/tx/nft_transfer"
+	"github.com/Akachain/gringotts/pkg/tx/transfer"
 )
 
-type Ipc interface {
-	TransactionCallback(ctx contractapi.TransactionContextInterface, txId string, txStatus transaction.Status) error
+func GetTxHandler(txType transaction.Type) Handler {
+	switch txType {
+	case transaction.Transfer:
+		return transfer.NewTxTransfer()
+	case transaction.Issue:
+		return issue.NewTxIssue()
+	case transaction.Exchange:
+		return exchange.NewTxExchange()
+	case transaction.TransferNft:
+		return nft_transfer.NewTxNftTransfer()
+	default:
+		return nil
+	}
 }

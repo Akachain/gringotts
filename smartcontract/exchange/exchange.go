@@ -20,29 +20,19 @@
 package exchange
 
 import (
-	"github.com/Akachain/gringotts/dto"
-	"github.com/Akachain/gringotts/handler"
-	srvExchange "github.com/Akachain/gringotts/services/exchange"
 	"github.com/Akachain/gringotts/smartcontract"
 	"github.com/Akachain/gringotts/smartcontract/basic"
 	"github.com/Akachain/gringotts/smartcontract/nft"
-	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
 
 type exchange struct {
 	smartcontract.BasicToken
 	smartcontract.Erc721
-	handler.ExchangeHandler
 }
 
 func NewExchange() smartcontract.Exchange {
 	return &exchange{
-		basic.NewBaseToken(srvExchange.NewNftIpc()),
+		basic.NewBaseToken(),
 		nft.NewNFT(),
-		handler.NewExchangeHandler(),
 	}
-}
-
-func (e *exchange) TransferNft(ctx contractapi.TransactionContextInterface, transferNft dto.TransferNFT) error {
-	return e.ExchangeHandler.TransferNft(ctx, transferNft)
 }

@@ -24,33 +24,24 @@ import (
 	"github.com/Akachain/gringotts/dto"
 	"github.com/Akachain/gringotts/entity"
 	"github.com/Akachain/gringotts/errorcode"
-	"github.com/Akachain/gringotts/glossary"
 	"github.com/Akachain/gringotts/glossary/doc"
 	"github.com/Akachain/gringotts/glossary/transaction"
 	"github.com/Akachain/gringotts/helper"
 	"github.com/Akachain/gringotts/helper/glogger"
-	"github.com/Akachain/gringotts/pkg/ipc"
 	"github.com/Akachain/gringotts/pkg/query"
+	txHandler "github.com/Akachain/gringotts/pkg/tx"
 	"github.com/Akachain/gringotts/services/base"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
-	"github.com/pkg/errors"
 	"strings"
 )
 
 type accountingService struct {
 	*base.Base
-	ipc.Ipc
 }
 
-func NewAccountingService(nftIpc ...ipc.Ipc) *accountingService {
-	accountService := new(accountingService)
-	accountService.Base = base.NewBase()
-	if len(nftIpc) > 0 {
-		accountService.Ipc = nftIpc[0]
-	}
-
-	return accountService
+func NewAccountingService() *accountingService {
+	return &accountingService{base.NewBase()}
 }
 
 func (a *accountingService) GetTx(ctx contractapi.TransactionContextInterface) ([]string, error) {
@@ -108,23 +99,16 @@ func (a *accountingService) CalculateBalance(ctx contractapi.TransactionContextI
 			continue
 		}
 
-		// check type of transaction
-		if err = a.txHandler(ctx, tx, mapCurrentBalance); err != nil {
-			glogger.GetInstance().Errorf(ctx, "CalculateBalance - Handle transaction (%s) failed with error (%v)", id, err)
+		handler := txHandler.GetTxHandler(tx.TxType)
+		if handler == nil {
+			glogger.GetInstance().Errorf(ctx, "CalculateBalance -  Unable to get tx handler with transaction type (%s)", tx.TxType)
+			continue
 		}
-
-		// check callback handler
-		if a.Ipc != nil && tx.Note == glossary.NftExchange {
-			if err := a.Ipc.TransactionCallback(ctx, tx.Id, tx.Status); err != nil {
-				glogger.GetInstance().Errorf(ctx, "CalculateBalance - Handle transaction exchange (%s) failed with error (%v)", id, err)
-				if err := a.rollbackTxHandler(ctx, tx, mapCurrentBalance, transaction.AddToWallet); err != nil {
-					glogger.GetInstance().Errorf(ctx, "CalculateBalance - Rollback handle transaction (%s) failed with error (%v)", id, err)
-				}
-				tx.Status = transaction.Rejected
-			}
+		txUpdate, err := handler.AccountingTx(ctx, tx, mapCurrentBalance)
+		if err != nil {
+			glogger.GetInstance().Errorf(ctx, "CalculateBalance - Handle transaction (%s) failed with error (%s)", id, err.Error())
 		}
-
-		lstTx = append(lstTx, tx)
+		lstTx = append(lstTx, txUpdate)
 
 	}
 
@@ -141,157 +125,19 @@ func (a *accountingService) CalculateBalance(ctx contractapi.TransactionContextI
 	return nil
 }
 
-// txHandler to handle transaction and update calculate current balance of each wallet
-func (a *accountingService) txHandler(ctx contractapi.TransactionContextInterface, tx *entity.Transaction,
-	mapCurrentBalance map[string]string) error {
-	switch tx.TxType {
-	case transaction.Transfer, transaction.Swap, transaction.Issue:
-		if tx.FromWallet == glossary.SystemWallet || tx.ToWallet == glossary.SystemWallet {
-			glogger.GetInstance().Errorf(ctx, "TxHandler - Transfer - Transaction (%s) has from/to wallet Id is system type", tx.Id)
-			tx.Status = transaction.Rejected
-			return errors.New("From/To wallet id invalidate")
-		}
-
-		if err := a.subAmount(ctx, mapCurrentBalance, tx.FromWallet, tx.Amount); err != nil {
-			glogger.GetInstance().Errorf(ctx, "TxHandler - Transfer - Transaction (%s): Unable to sub temp amount of From wallet", tx.Id)
-			tx.Status = transaction.Rejected
-			return errors.WithMessage(err, "Sub balance of from wallet failed")
-		}
-
-		if err := a.addAmount(ctx, mapCurrentBalance, tx.ToWallet, tx.Amount); err != nil {
-			glogger.GetInstance().Errorf(ctx, "TxHandler - Transfer - Transaction (%s): Unable to add temp amount of To wallet", tx.Id)
-			tx.Status = transaction.Rejected
-			if err := a.rollbackTxHandler(ctx, tx, mapCurrentBalance, transaction.SubFromWallet); err != nil {
-				glogger.GetInstance().Errorf(ctx, "TxHandler - Rollback handle transaction (%s) failed with error (%v)", tx.Id, err)
-			}
-			return errors.WithMessage(err, "Add balance of to wallet failed")
-		}
-
-		tx.Status = transaction.Confirmed
-		break
-	case transaction.Mint:
-		if tx.FromWallet != glossary.SystemWallet {
-			glogger.GetInstance().Errorf(ctx, "TxHandler - Mint - Transaction (%s): has From wallet Id is not system type", tx.Id)
-			tx.Status = transaction.Rejected
-			return errors.New("From wallet id invalidate")
-		}
-		if err := a.addAmount(ctx, mapCurrentBalance, tx.ToWallet, tx.Amount); err != nil {
-			glogger.GetInstance().Errorf(ctx, "TxHandler - Mint - Transaction (%s): add balance failed (%v)", tx.Id, err)
-			tx.Status = transaction.Rejected
-			return errors.New("Add balance of to wallet failed")
-		}
-		tx.Status = transaction.Confirmed
-		break
-	case transaction.Burn:
-		if tx.ToWallet != glossary.SystemWallet {
-			glogger.GetInstance().Errorf(ctx, "TxHandler - Burn - Transaction (%s): has To wallet Id is not system type", tx.Id)
-			tx.Status = transaction.Rejected
-			return errors.New("To wallet id invalidate")
-		}
-		if err := a.subAmount(ctx, mapCurrentBalance, tx.FromWallet, tx.Amount); err != nil {
-			glogger.GetInstance().Errorf(ctx, "TxHandler - Burn - Transaction (%s) sub balance failed (%v)", tx.Id, err)
-			tx.Status = transaction.Rejected
-			return errors.New("Sub balance of from wallet failed")
-		}
-		tx.Status = transaction.Confirmed
-		break
-	default:
-		glogger.GetInstance().Errorf(ctx, "TxHandler - Transaction (%s) has type (%s) not support", tx.Id, string(tx.TxType))
-		tx.Status = transaction.Rejected
-	}
-
-	return nil
-}
-
-// rollbackTxHandler to rollback balance of wallet that was updated
-func (a *accountingService) rollbackTxHandler(ctx contractapi.TransactionContextInterface, tx *entity.Transaction,
-	mapCurrentBalance map[string]string, step transaction.Step) error {
-	// currently only rollback in case transfer or swap
-	if step == transaction.SubFromWallet {
-		if err := a.addAmount(ctx, mapCurrentBalance, tx.FromWallet, tx.Amount); err != nil {
-			glogger.GetInstance().Errorf(ctx, "RollbackTxHandler - Add balance of wallet (%s) with transaction (%s) failed", tx.FromWallet, tx.Id)
-			return err
-		}
-	}
-
-	if step == transaction.AddToWallet {
-		glogger.GetInstance().Infof(ctx, "RollbackTxHandler - Rollback add to wallet with transaction (%s)", tx.Id)
-		if err := a.subAmount(ctx, mapCurrentBalance, tx.ToWallet, tx.Amount); err != nil {
-			glogger.GetInstance().Errorf(ctx, "RollbackTxHandler - Transaction (%s): Unable to sub temp amount of To wallet", tx.Id)
-			tx.Status = transaction.Rejected
-			return errors.WithMessage(err, "Sub balance of to wallet failed")
-		}
-
-		if err := a.addAmount(ctx, mapCurrentBalance, tx.FromWallet, tx.Amount); err != nil {
-			glogger.GetInstance().Errorf(ctx, "RollbackTxHandler - Transaction (%s): Unable to add temp amount of From wallet", tx.Id)
-			tx.Status = transaction.Rejected
-			return errors.WithMessage(err, "Add balance of from wallet failed")
-		}
-	}
-	return nil
-}
-
-// addAmount to add amount for wallet
-func (a *accountingService) addAmount(ctx contractapi.TransactionContextInterface,
-	mapCurrentBalance map[string]string, walletId string, amount string) error {
-	// Load current balance of wallet into memory
-	if _, ok := mapCurrentBalance[walletId]; !ok {
-		wallet, err := a.GetWallet(ctx, walletId)
-		if err != nil {
-			return err
-		}
-		mapCurrentBalance[walletId] = wallet.Balances
-	}
-
-	// update current balance
-	updateCurrentBalance, err := helper.AddBalance(mapCurrentBalance[walletId], amount)
-	if err != nil {
-		return err
-	}
-	mapCurrentBalance[walletId] = updateCurrentBalance
-
-	return nil
-}
-
-// subAmount to sub amount for wallet
-func (a *accountingService) subAmount(ctx contractapi.TransactionContextInterface,
-	mapCurrentBalance map[string]string, walletId string, amount string) error {
-	// Load current balance of wallet into memory
-	if _, ok := mapCurrentBalance[walletId]; !ok {
-		wallet, err := a.GetWallet(ctx, walletId)
-		if err != nil {
-			return err
-		}
-		mapCurrentBalance[walletId] = wallet.Balances
-	}
-
-	// checking current balance with amount
-	if helper.CompareStringBalance(mapCurrentBalance[walletId], amount) <= 0 {
-		return errors.Errorf("Wallet (%s) do not have enough balance", walletId)
-	}
-
-	// update current balance
-	updateCurrentBalance, err := helper.SubBalance(mapCurrentBalance[walletId], amount)
-	if err != nil {
-		return err
-	}
-	mapCurrentBalance[walletId] = updateCurrentBalance
-
-	return nil
-}
-
 // updateBalance to update balance of wallet after handle transaction
 func (a *accountingService) updateBalance(ctx contractapi.TransactionContextInterface, mapCurrentBalance map[string]string) error {
 	for key, value := range mapCurrentBalance {
-		wallet, err := a.GetWallet(ctx, key)
+		balanceKey := strings.Split(key, "_")
+		balanceToken, err := a.GetBalanceOfToken(ctx, balanceKey[0], balanceKey[1])
 		if err != nil {
-			glogger.GetInstance().Errorf(ctx, "updateBalance - Get wallet with id (%s) failed with err (%v)", key, err)
-			return helper.RespError(errorcode.BizUnableGetWallet)
+			glogger.GetInstance().Errorf(ctx, "updateBalance - Get balance of token (%s) failed with err (%s)", key, err.Error())
+			return helper.RespError(errorcode.BizUnableGetBalance)
 		}
-		wallet.Balances = value
-		if err := a.Repo.Update(ctx, wallet, doc.Wallets, helper.WalletKey(key)); err != nil {
-			glogger.GetInstance().Errorf(ctx, "updateBalance - Update balance of wallet (%s) failed with err (%v)", key, err)
-			return helper.RespError(errorcode.BizUnableUpdateWallet)
+		balanceToken.Balances = value
+		if err := a.Repo.Update(ctx, balanceToken, doc.Balances, helper.BalanceKey(balanceKey[0], balanceKey[1])); err != nil {
+			glogger.GetInstance().Errorf(ctx, "updateBalance - Update balance of wallet (%s) failed with err (%s)", key, err.Error())
+			return helper.RespError(errorcode.BizUnableUpdateBalance)
 		}
 		glogger.GetInstance().Infof(ctx, "WalletId (%s) - Balances update succeed", key)
 	}

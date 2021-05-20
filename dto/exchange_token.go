@@ -17,40 +17,27 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package entity
+package dto
 
 import (
-	"github.com/Akachain/gringotts/glossary"
-	"github.com/Akachain/gringotts/glossary/doc"
-	"github.com/Akachain/gringotts/helper"
-	"github.com/hyperledger/fabric-contract-api-go/contractapi"
+	"github.com/pkg/errors"
 )
 
-// A Token structure will have the name of the token type,
-// the conversion rate to the base unit, and status (active/inactive)
-// the status is checked only when we create a new wallet.
-type Token struct {
-	Name        string
-	TickerToken string
-	Rate        float64
-	MaxSupply   string
-	TotalSupply string
-	Status      glossary.Status
-	Base        `mapstructure:",squash"`
+type ExchangeToken struct {
+	FromWalletId string  `json:"fromWalletId"`
+	ToWalletId   string  `json:"toWalletId"`
+	FromTokenId  string  `json:"fromTokenId"`
+	ToTokenId    string  `json:"toTokenId"`
+	Amount       float64 `json:"amount"`
 }
 
-func NewToken(ctx ...contractapi.TransactionContextInterface) *Token {
-	if len(ctx) <= 0 {
-		return &Token{}
+func (s ExchangeToken) IsValid() error {
+	if s.FromWalletId == "" || s.ToWalletId == "" {
+		return errors.New("From/To wallet id is empty")
 	}
-	txTime, _ := ctx[0].GetStub().GetTxTimestamp()
-	return &Token{
-		Base: Base{
-			Id:           helper.GenerateID(doc.Tokens, ctx[0].GetStub().GetTxID()),
-			CreatedAt:    helper.TimestampISO(txTime.Seconds),
-			UpdatedAt:    helper.TimestampISO(txTime.Seconds),
-			BlockChainId: ctx[0].GetStub().GetTxID(),
-		},
-		Status: glossary.Active,
+
+	if s.Amount <= 0 {
+		return errors.New("the swap amount is a negative/zero number")
 	}
+	return nil
 }

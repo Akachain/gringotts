@@ -32,6 +32,7 @@ import (
 type TransferToken struct {
 	FromWalletId string  `json:"fromWalletId"`
 	ToWalletId   string  `json:"toWalletId"`
+	TokenId      string  `json:"tokenId"`
 	Amount       float64 `json:"amount"`
 }
 
@@ -57,6 +58,10 @@ func (t TransferToken) ToEntity(ctx contractapi.TransactionContextInterface) *en
 func (t TransferToken) IsValid() error {
 	if t.FromWalletId == "" || t.ToWalletId == "" {
 		return errors.New("From/To wallet id is empty")
+	}
+
+	if t.TokenId == "" {
+		return errors.New("token id is empty")
 	}
 
 	if t.Amount <= 0 {

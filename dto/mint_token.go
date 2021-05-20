@@ -25,12 +25,13 @@ import (
 
 type MintToken struct {
 	WalletId string  `json:"walletId"`
+	TokenId  string  `json:"tokenId"`
 	Amount   float64 `json:"amount"`
 }
 
 func (m MintToken) IsValid() error {
-	if m.WalletId == "" {
-		return errors.New("wallet id is empty")
+	if m.WalletId == "" || m.TokenId == "" {
+		return errors.New("wallet/token id is empty")
 	}
 
 	if m.Amount <= 0 {

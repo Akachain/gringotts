@@ -23,12 +23,13 @@ import "errors"
 
 type BurnToken struct {
 	WalletId string  `json:"walletId"`
+	TokenId  string  `json:"tokenId"`
 	Amount   float64 `json:"amount"`
 }
 
 func (b BurnToken) IsValid() error {
-	if b.WalletId == "" {
-		return errors.New("wallet id is empty")
+	if b.WalletId == "" || b.TokenId == "" {
+		return errors.New("wallet/token id is empty")
 	}
 
 	if b.Amount <= 0 {

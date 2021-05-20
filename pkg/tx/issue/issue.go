@@ -17,44 +17,22 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package entity
+package issue
 
 import (
-	"github.com/Akachain/gringotts/glossary/doc"
-	"github.com/Akachain/gringotts/glossary/transaction"
-	"github.com/Akachain/gringotts/helper"
+	"github.com/Akachain/gringotts/entity"
+	"github.com/Akachain/gringotts/pkg/tx"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
 
-// Transaction contains basic information relating to token transaction
-// From, To, Amount, type of transaction and its status.
-// The SpenderWallet is an additional field in case later on we want this is compatible
-// with ERC20
-type Transaction struct {
-	SpenderWallet string
-	FromWallet    string
-	ToWallet      string
-	FromTokenId   string
-	ToTokenId     string
-	Amount        string
-	TxType        transaction.Type
-	Status        transaction.Status
-	Note          string
-	Base          `mapstructure:",squash"`
+type txIssue struct {
+	*tx.TxBase
 }
 
-func NewTransaction(ctx ...contractapi.TransactionContextInterface) *Transaction {
-	if len(ctx) <= 0 {
-		return &Transaction{}
-	}
-	txTime, _ := ctx[0].GetStub().GetTxTimestamp()
-	return &Transaction{
-		Base: Base{
-			Id:           helper.GenerateID(doc.Transactions, ctx[0].GetStub().GetTxID()),
-			CreatedAt:    helper.TimestampISO(txTime.Seconds),
-			UpdatedAt:    helper.TimestampISO(txTime.Seconds),
-			BlockChainId: ctx[0].GetStub().GetTxID(),
-		},
-		Status: transaction.Pending,
-	}
+func NewTxIssue() tx.Handler {
+	return &txIssue{tx.NewTxBase()}
+}
+
+func (t *txIssue) AccountingTx(ctx contractapi.TransactionContextInterface, tx *entity.Transaction, mapBalanceToken map[string]string) (*entity.Transaction, error) {
+	return t.TxHandlerTransfer(ctx, mapBalanceToken, tx)
 }

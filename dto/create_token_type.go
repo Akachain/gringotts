@@ -32,6 +32,7 @@ type CreateTokenType struct {
 	Name        string  `json:"name"`
 	TickerToken string  `json:"tickerToken"`
 	Rate        float64 `json:"rate"`
+	MaxSupply   string  `json:"maxSupply"`
 }
 
 func (c CreateTokenType) ToEntity(ctx contractapi.TransactionContextInterface) *entity.Token {

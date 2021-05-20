@@ -19,14 +19,7 @@
 
 package smartcontract
 
-import (
-	"github.com/Akachain/gringotts/dto"
-	"github.com/hyperledger/fabric-contract-api-go/contractapi"
-)
-
 type Exchange interface {
 	BasicToken
 	Erc721
-
-	TransferNft(ctx contractapi.TransactionContextInterface, transferNft dto.TransferNFT) error
 }

@@ -49,7 +49,11 @@ func NFTKey(nftId string) []string {
 	return []string{nftId}
 }
 
-// ExchangeKey return list key of exchange docs will be compose in couch db key
-func ExchangeKey(txId string) []string {
-	return []string{txId}
+// BalanceKey return list key of balance docs will be compose in couch db key
+func BalanceKey(keys ...string) []string {
+	var balanceKeys []string
+	for _, item := range keys {
+		balanceKeys = append(balanceKeys, item)
+	}
+	return balanceKeys
 }

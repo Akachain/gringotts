@@ -23,8 +23,10 @@ import (
 	"github.com/Akachain/gringotts/entity"
 	"github.com/Akachain/gringotts/errorcode"
 	"github.com/Akachain/gringotts/glossary/doc"
+	"github.com/Akachain/gringotts/glossary/transaction"
 	"github.com/Akachain/gringotts/helper"
 	"github.com/Akachain/gringotts/helper/glogger"
+	"github.com/Akachain/gringotts/pkg/unit"
 	"github.com/Akachain/gringotts/services"
 	"github.com/Akachain/gringotts/services/base"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
@@ -58,6 +60,17 @@ func (n *nftService) Mint(ctx contractapi.TransactionContextInterface, gs1Number
 		glogger.GetInstance().Errorf(ctx, "NftToken Service - Mint NftToken failed with error (%v)", err)
 		return "", helper.RespError(errorcode.BizUnableCreateNFT)
 	}
+
+	// create balance
+	balanceEntity := entity.NewBalance(ctx)
+	balanceEntity.WalletId = ownerWalletId
+	balanceEntity.TokenId = nftEntity.Id
+	balanceEntity.Balances = "1"
+	if err := n.Repo.Create(ctx, balanceEntity, doc.Balances, helper.BalanceKey(ownerWalletId, doc.NftToken, nftEntity.Id)); err != nil {
+		glogger.GetInstance().Errorf(ctx, "Create - Init balance of stable token failed with error (%v)", err)
+		return "", helper.RespError(errorcode.BizUnableCreateBalance)
+	}
+
 	glogger.GetInstance().Infof(ctx, "-----------NftToken Service - Transfer succeed (%s)-----------", nftEntity.Id)
 
 	return nftEntity.Id, nil
@@ -77,33 +90,49 @@ func (n *nftService) OwnerOf(ctx contractapi.TransactionContextInterface, nftTok
 
 func (n *nftService) BalanceOf(ctx contractapi.TransactionContextInterface, ownerWalletId string) (int, error) {
 	glogger.GetInstance().Info(ctx, "-----------NftToken Service - BalanceOf-----------")
+	// TODO implementation logic get number nft of owner wallet
 	return -1, nil
 }
 
-func (n *nftService) TransferFrom(ctx contractapi.TransactionContextInterface, ownerWalletId string, toWalletId string, nftTokenId string) error {
+func (n *nftService) TransferFrom(ctx contractapi.TransactionContextInterface, fromWalletId string, toWalletId string,
+	fromTokenId string, nftTokenId string, price float64) error {
 	glogger.GetInstance().Info(ctx, "-----------NftToken Service - TransferFrom-----------")
 
-	if _, err := n.GetActiveWallet(ctx, ownerWalletId); err != nil {
-		glogger.GetInstance().Errorf(ctx, "TransferFrom - Get owner wallet failed with error (%v)", err)
+	if _, _, err := n.ValidatePairWallet(ctx, fromWalletId, toWalletId); err != nil {
+		glogger.GetInstance().Errorf(ctx, "TransferFrom - Validation pair wallet nft failed with error (%s)", err.Error())
 		return err
 	}
 
-	if _, err := n.GetActiveWallet(ctx, toWalletId); err != nil {
-		glogger.GetInstance().Errorf(ctx, "TransferFrom - Get to wallet failed with error (%v)", err)
-		return err
-	}
-
+	// handler owner of nft
 	nftToken, err := n.GetNFT(ctx, nftTokenId)
 	if err != nil {
-		glogger.GetInstance().Errorf(ctx, "TransferFrom - Get NftToken failed with error (%v)", err)
+		glogger.GetInstance().Errorf(ctx, "TransferFrom - Get NftToken failed with error (%s)", err.Error())
 		return err
 	}
 
-	nftToken.OwnerId = toWalletId
-	if err := n.Repo.Update(ctx, nftToken, doc.NftToken, helper.NFTKey(nftToken.Id)); err != nil {
-		glogger.GetInstance().Errorf(ctx, "TransferFrom - Update NftToken failed with error (%v)", err)
-		return helper.RespError(errorcode.BizUnableUpdateNFT)
+	if nftToken.OwnerId != toWalletId {
+		glogger.GetInstance().Error(ctx, "NftTransfer - To wallet not match owner of nft token")
+		return helper.RespError(errorcode.BizNftNotPermission)
 	}
+
+	// convert price to akc base
+	amountUnit := unit.NewBalanceUnitFromFloat(price)
+
+	// create new swap transaction
+	txEntity := entity.NewTransaction(ctx)
+	txEntity.SpenderWallet = fromWalletId
+	txEntity.FromWallet = fromWalletId
+	txEntity.ToWallet = toWalletId
+	txEntity.FromTokenId = fromTokenId
+	txEntity.ToTokenId = nftTokenId
+	txEntity.TxType = transaction.TransferNft
+	txEntity.Amount = amountUnit.String()
+
+	if err := n.Repo.Create(ctx, txEntity, doc.Transactions, helper.TransactionKey(txEntity.Id)); err != nil {
+		glogger.GetInstance().Errorf(ctx, "TransferFrom - Create transfer nft transaction failed with error (%v)", err)
+		return helper.RespError(errorcode.BizUnableCreateTX)
+	}
+	glogger.GetInstance().Infof(ctx, "-----------NftToken Service - Transfer nft succeed (%s)-----------", txEntity.Id)
 
 	return nil
 }

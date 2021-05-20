@@ -22,14 +22,15 @@ package dto
 import "github.com/pkg/errors"
 
 type TransferNFT struct {
-	OwnerWalletId string  `json:"ownerWalletId"`
-	ToWalletId    string  `json:"toWalletId"`
-	NFTTokenId    string  `json:"nftTokenId"`
-	Price         float64 `json:"price"`
+	FromWalletId string  `json:"fromWalletId"`
+	ToWalletId   string  `json:"toWalletId"`
+	FromTokenId  string  `json:"fromTokenId"`
+	NftTokenId   string  `json:"nftTokenId"`
+	Price        float64 `json:"price"`
 }
 
 func (t TransferNFT) IsValid() error {
-	if t.OwnerWalletId == "" {
+	if t.FromWalletId == "" {
 		return errors.New("owner wallet id is invalid")
 	}
 
@@ -37,7 +38,7 @@ func (t TransferNFT) IsValid() error {
 		return errors.New("To wallet id is invalid")
 	}
 
-	if t.NFTTokenId == "" {
+	if t.NftTokenId == "" {
 		return errors.New("NFT token id is invalid")
 	}
 

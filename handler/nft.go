@@ -82,5 +82,5 @@ func (n *NftHandler) TransferNFT(ctx contractapi.TransactionContextInterface, tr
 		return helper.RespError(errorcode.InvalidParam)
 	}
 
-	return n.nftService.TransferFrom(ctx, transferNFT.OwnerWalletId, transferNFT.ToWalletId, transferNFT.NFTTokenId)
+	return n.nftService.TransferFrom(ctx, transferNFT.FromWalletId, transferNFT.ToWalletId, transferNFT.FromTokenId, transferNFT.NftTokenId, transferNFT.Price)
 }

@@ -72,7 +72,7 @@ func (w *WalletHandler) BalanceOf(ctx contractapi.TransactionContextInterface, b
 		glogger.GetInstance().Errorf(ctx, "Wallet Handler - Balance Input invalidate %v", err)
 		return "-1", helper.RespError(errorcode.InvalidParam)
 	}
-	return w.walletService.BalanceOf(ctx, balanceDto.WalletId)
+	return w.walletService.BalanceOf(ctx, balanceDto.WalletId, balanceDto.TokenId)
 }
 
 // EnrollToken to create or update enrollment policy for token

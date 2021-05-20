@@ -23,11 +23,16 @@ import "errors"
 
 type Balance struct {
 	WalletId string `json:"walletId"`
+	TokenId  string `json:"tokenId"`
 }
 
 func (b Balance) IsValid() error {
 	if b.WalletId == "" {
 		return errors.New("wallet id is empty")
+	}
+
+	if b.TokenId == "" {
+		return errors.New("token id is empty")
 	}
 
 	return nil
