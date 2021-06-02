@@ -25,20 +25,17 @@ import (
 	"github.com/Akachain/gringotts/glossary/doc"
 	"github.com/Akachain/gringotts/glossary/transaction"
 	"github.com/Akachain/gringotts/helper"
-	"github.com/Akachain/gringotts/pkg/unit"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
 
 type TransferToken struct {
-	FromWalletId string  `json:"fromWalletId"`
-	ToWalletId   string  `json:"toWalletId"`
-	TokenId      string  `json:"tokenId"`
-	Amount       float64 `json:"amount"`
+	FromWalletId string `json:"fromWalletId"`
+	ToWalletId   string `json:"toWalletId"`
+	TokenId      string `json:"tokenId"`
+	Amount       string `json:"amount"`
 }
 
 func (t TransferToken) ToEntity(ctx contractapi.TransactionContextInterface) *entity.Transaction {
-	balanceUnit := new(unit.BalanceUnit)
-	balanceUnit.SetFloatUnit(t.Amount)
 	txTime, _ := ctx.GetStub().GetTxTimestamp()
 	transactionEntity := new(entity.Transaction)
 	transactionEntity.Id = helper.GenerateID(doc.Transactions, ctx.GetStub().GetTxID())
@@ -47,7 +44,8 @@ func (t TransferToken) ToEntity(ctx contractapi.TransactionContextInterface) *en
 	transactionEntity.SpenderWallet = t.FromWalletId
 	transactionEntity.FromWallet = t.FromWalletId
 	transactionEntity.ToWallet = t.ToWalletId
-	transactionEntity.Amount = balanceUnit.String()
+	transactionEntity.FromTokenAmount = t.Amount
+	transactionEntity.ToTokenAmount = t.Amount
 	transactionEntity.CreatedAt = helper.TimestampISO(txTime.Seconds)
 	transactionEntity.UpdatedAt = helper.TimestampISO(txTime.Seconds)
 	transactionEntity.BlockChainId = ctx.GetStub().GetTxID()
@@ -64,8 +62,8 @@ func (t TransferToken) IsValid() error {
 		return errors.New("token id is empty")
 	}
 
-	if t.Amount <= 0 {
-		return errors.New("the transfer amount is a negative/zero number")
+	if t.Amount == "" {
+		return errors.New("the transfer amount is empty")
 	}
 	return nil
 }

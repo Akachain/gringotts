@@ -47,7 +47,7 @@ func NewBalanceUnitFromFloat(balanceF float64) *BalanceUnit {
 	return bUnit
 }
 
-// SetFloat to set amount or balance float to base unit
+// SetFloatUnit to set amount or balance float to base unit
 func (b *BalanceUnit) SetFloatUnit(value float64) {
 	valueToUnit := value * glossary.AkcBase
 	// TODO: need refactor

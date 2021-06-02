@@ -22,9 +22,9 @@ package dto
 import "errors"
 
 type BurnToken struct {
-	WalletId string  `json:"walletId"`
-	TokenId  string  `json:"tokenId"`
-	Amount   float64 `json:"amount"`
+	WalletId string `json:"walletId"`
+	TokenId  string `json:"tokenId"`
+	Amount   string `json:"amount"`
 }
 
 func (b BurnToken) IsValid() error {
@@ -32,8 +32,8 @@ func (b BurnToken) IsValid() error {
 		return errors.New("wallet/token id is empty")
 	}
 
-	if b.Amount <= 0 {
-		return errors.New("the transfer amount is a negative number")
+	if b.Amount == "" {
+		return errors.New("the transfer amount is empty")
 	}
 
 	return nil

@@ -45,25 +45,25 @@ func (t *txExchange) AccountingTx(ctx contractapi.TransactionContextInterface, t
 		return tx, errors.New("From/To wallet id invalidate")
 	}
 
-	if err := t.SubAmount(ctx, mapBalanceToken, tx.FromWallet, tx.FromTokenId, tx.Amount); err != nil {
+	if err := t.SubAmount(ctx, mapBalanceToken, tx.FromWallet, tx.FromTokenId, tx.FromTokenAmount); err != nil {
 		glogger.GetInstance().Errorf(ctx, "TxHandler - Exchange - Transaction (%s): Unable to sub temp amount of From wallet", tx.Id)
 		tx.Status = transaction.Rejected
 		return tx, errors.WithMessage(err, "Sub balance of from wallet failed")
 	}
 
-	if err := t.AddAmount(ctx, mapBalanceToken, tx.ToWallet, tx.FromTokenId, tx.Amount); err != nil {
+	if err := t.AddAmount(ctx, mapBalanceToken, tx.ToWallet, tx.FromTokenId, tx.FromTokenAmount); err != nil {
 		glogger.GetInstance().Errorf(ctx, "TxHandler - Exchange - Transaction (%s): Unable to add temp amount of To wallet", tx.Id)
 		tx.Status = transaction.Rejected
 		return tx, errors.WithMessage(err, "Add balance of to wallet failed")
 	}
 
-	if err := t.SubAmount(ctx, mapBalanceToken, tx.ToWallet, tx.ToTokenId, tx.Amount); err != nil {
+	if err := t.SubAmount(ctx, mapBalanceToken, tx.ToWallet, tx.ToTokenId, tx.ToTokenAmount); err != nil {
 		glogger.GetInstance().Errorf(ctx, "TxHandler - Exchange - Transaction (%s): Unable to sub temp amount of To wallet", tx.Id)
 		tx.Status = transaction.Rejected
 		return tx, errors.WithMessage(err, "Sub balance of from wallet failed")
 	}
 
-	if err := t.AddAmount(ctx, mapBalanceToken, tx.FromWallet, tx.ToTokenId, tx.Amount); err != nil {
+	if err := t.AddAmount(ctx, mapBalanceToken, tx.FromWallet, tx.ToTokenId, tx.ToTokenAmount); err != nil {
 		glogger.GetInstance().Errorf(ctx, "TxHandler - Exchange - Transaction (%s): Unable to add temp amount of From wallet", tx.Id)
 		tx.Status = transaction.Rejected
 		return tx, errors.WithMessage(err, "Add balance of to wallet failed")

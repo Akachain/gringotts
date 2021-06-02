@@ -24,11 +24,12 @@ import (
 )
 
 type ExchangeToken struct {
-	FromWalletId string  `json:"fromWalletId"`
-	ToWalletId   string  `json:"toWalletId"`
-	FromTokenId  string  `json:"fromTokenId"`
-	ToTokenId    string  `json:"toTokenId"`
-	Amount       float64 `json:"amount"`
+	FromWalletId    string `json:"fromWalletId"`
+	ToWalletId      string `json:"toWalletId"`
+	FromTokenId     string `json:"fromTokenId"`
+	ToTokenId       string `json:"toTokenId"`
+	FromTokenAmount string `json:"fromTokenAmount"`
+	ToTokenAmount   string `json:"toTokenAmount"`
 }
 
 func (s ExchangeToken) IsValid() error {
@@ -36,8 +37,8 @@ func (s ExchangeToken) IsValid() error {
 		return errors.New("From/To wallet id is empty")
 	}
 
-	if s.Amount <= 0 {
-		return errors.New("the swap amount is a negative/zero number")
+	if s.FromTokenAmount == "" || s.ToTokenAmount == "" {
+		return errors.New("the exchange amount is empty")
 	}
 	return nil
 }

@@ -32,7 +32,6 @@ import (
 type Token struct {
 	Name        string
 	TickerToken string
-	Rate        float64
 	MaxSupply   string
 	TotalSupply string
 	Status      glossary.Status

@@ -48,7 +48,7 @@ func (t *TokenHandler) Transfer(ctx contractapi.TransactionContextInterface, tra
 		return helper.RespError(errorcode.InvalidParam)
 	}
 
-	if _, err := t.tokenService.Transfer(ctx, transferDto.FromWalletId, transferDto.ToWalletId, transferDto.Amount, transferDto.TokenId); err != nil {
+	if _, err := t.tokenService.Transfer(ctx, transferDto.FromWalletId, transferDto.ToWalletId, transferDto.TokenId, transferDto.Amount); err != nil {
 		return err
 	}
 
@@ -65,7 +65,7 @@ func (t *TokenHandler) Mint(ctx contractapi.TransactionContextInterface, mintDto
 		return helper.RespError(errorcode.InvalidParam)
 	}
 
-	return t.tokenService.Mint(ctx, mintDto.WalletId, mintDto.Amount, mintDto.TokenId)
+	return t.tokenService.Mint(ctx, mintDto.WalletId, mintDto.TokenId, mintDto.Amount)
 }
 
 // Burn to burn token existed in the system.
@@ -78,7 +78,7 @@ func (t *TokenHandler) Burn(ctx contractapi.TransactionContextInterface, burnDto
 		return helper.RespError(errorcode.InvalidParam)
 	}
 
-	return t.tokenService.Burn(ctx, burnDto.WalletId, burnDto.Amount, burnDto.TokenId)
+	return t.tokenService.Burn(ctx, burnDto.WalletId, burnDto.TokenId, burnDto.Amount)
 }
 
 // CreateTokenType to create new token type.
@@ -91,7 +91,7 @@ func (t *TokenHandler) CreateTokenType(ctx contractapi.TransactionContextInterfa
 		return "", helper.RespError(errorcode.InvalidParam)
 	}
 
-	return t.tokenService.CreateType(ctx, tokenTypeDto.Name, tokenTypeDto.TickerToken, tokenTypeDto.Rate, tokenTypeDto.MaxSupply)
+	return t.tokenService.CreateType(ctx, tokenTypeDto.Name, tokenTypeDto.TickerToken, tokenTypeDto.MaxSupply)
 }
 
 // Exchange to swap between different token type.
@@ -105,7 +105,7 @@ func (t *TokenHandler) Exchange(ctx contractapi.TransactionContextInterface, exc
 	}
 
 	return t.tokenService.Exchange(ctx, exchangeToken.FromWalletId, exchangeToken.ToWalletId,
-		exchangeToken.FromTokenId, exchangeToken.ToTokenId, exchangeToken.Amount)
+		exchangeToken.FromTokenId, exchangeToken.ToTokenId, exchangeToken.FromTokenAmount, exchangeToken.ToTokenAmount)
 }
 
 // Issue to issue new token type form stable token.
@@ -118,5 +118,5 @@ func (t *TokenHandler) Issue(ctx contractapi.TransactionContextInterface, issueD
 		return helper.RespError(errorcode.InvalidParam)
 	}
 
-	return t.tokenService.Issue(ctx, issueDto.FromTokenId, issueDto.ToTokenId, issueDto.WalletId, issueDto.Amount)
+	return t.tokenService.Issue(ctx, issueDto.WalletId, issueDto.FromTokenId, issueDto.ToTokenId, issueDto.FromTokenAmount, issueDto.ToTokenAmount)
 }

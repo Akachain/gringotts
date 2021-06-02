@@ -31,16 +31,17 @@ import (
 // The SpenderWallet is an additional field in case later on we want this is compatible
 // with ERC20
 type Transaction struct {
-	SpenderWallet string
-	FromWallet    string
-	ToWallet      string
-	FromTokenId   string
-	ToTokenId     string
-	Amount        string
-	TxType        transaction.Type
-	Status        transaction.Status
-	Note          string
-	Base          `mapstructure:",squash"`
+	SpenderWallet   string
+	FromWallet      string
+	ToWallet        string
+	FromTokenId     string
+	ToTokenId       string
+	FromTokenAmount string
+	ToTokenAmount   string
+	TxType          transaction.Type
+	Status          transaction.Status
+	Note            string
+	Base            `mapstructure:",squash"`
 }
 
 func NewTransaction(ctx ...contractapi.TransactionContextInterface) *Transaction {

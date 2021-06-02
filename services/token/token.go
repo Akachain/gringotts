@@ -27,7 +27,6 @@ import (
 	"github.com/Akachain/gringotts/glossary/transaction"
 	"github.com/Akachain/gringotts/helper"
 	"github.com/Akachain/gringotts/helper/glogger"
-	"github.com/Akachain/gringotts/pkg/unit"
 	"github.com/Akachain/gringotts/services/base"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 	"strings"
@@ -43,18 +42,18 @@ func NewTokenService() *tokenService {
 	}
 }
 
-func (t *tokenService) TransferWithNote(ctx contractapi.TransactionContextInterface, fromWalletId, toWalletId string,
-	amount float64, note string, tokenId string) (string, error) {
+func (t *tokenService) TransferWithNote(ctx contractapi.TransactionContextInterface, fromWalletId, toWalletId, tokenId,
+	amount, note string) (string, error) {
 	glogger.GetInstance().Info(ctx, "-----------Token Service - TransferWithNote-----------")
-	return t.transferToken(ctx, fromWalletId, toWalletId, amount, note, tokenId)
+	return t.transferToken(ctx, fromWalletId, toWalletId, tokenId, amount, note)
 }
 
-func (t *tokenService) Transfer(ctx contractapi.TransactionContextInterface, fromWalletId, toWalletId string, amount float64, tokenId string) (string, error) {
+func (t *tokenService) Transfer(ctx contractapi.TransactionContextInterface, fromWalletId, toWalletId, tokenId, amount string) (string, error) {
 	glogger.GetInstance().Info(ctx, "-----------Token Service - Transfer-----------")
-	return t.transferToken(ctx, fromWalletId, toWalletId, amount, "", tokenId)
+	return t.transferToken(ctx, fromWalletId, toWalletId, tokenId, amount, "")
 }
 
-func (t *tokenService) Mint(ctx contractapi.TransactionContextInterface, walletId string, amount float64, tokenId string) error {
+func (t *tokenService) Mint(ctx contractapi.TransactionContextInterface, walletId, tokenId, amount string) error {
 	glogger.GetInstance().Info(ctx, "-----------Token Service - Mint-----------")
 
 	// validate wallet exited
@@ -63,16 +62,15 @@ func (t *tokenService) Mint(ctx contractapi.TransactionContextInterface, walletI
 		return err
 	}
 
-	// convert balance to akc base
-	amountUnit := unit.NewBalanceUnitFromFloat(amount)
-
 	// create tx mint token
 	txMint := entity.NewTransaction(ctx)
+	txMint.SpenderWallet = walletId
 	txMint.FromWallet = glossary.SystemWallet
 	txMint.ToWallet = walletId
 	txMint.FromTokenId = tokenId
 	txMint.ToTokenId = tokenId
-	txMint.Amount = amountUnit.String()
+	txMint.FromTokenAmount = amount
+	txMint.ToTokenAmount = amount
 	txMint.TxType = transaction.Mint
 
 	if err := t.Repo.Create(ctx, txMint, doc.Transactions, helper.TransactionKey(txMint.Id)); err != nil {
@@ -84,7 +82,7 @@ func (t *tokenService) Mint(ctx contractapi.TransactionContextInterface, walletI
 	return nil
 }
 
-func (t *tokenService) Burn(ctx contractapi.TransactionContextInterface, walletId string, amount float64, tokenId string) error {
+func (t *tokenService) Burn(ctx contractapi.TransactionContextInterface, walletId, tokenId, amount string) error {
 	glogger.GetInstance().Info(ctx, "-----------Token Service - Burn-----------")
 
 	// validate burn wallet exist
@@ -102,13 +100,10 @@ func (t *tokenService) Burn(ctx contractapi.TransactionContextInterface, walletI
 	}
 
 	// check balance enough to burn
-	if helper.CompareFloatBalance(balanceToken.Balances, amount) < 0 {
+	if helper.CompareStringBalance(balanceToken.Balances, amount) < 0 {
 		glogger.GetInstance().Error(ctx, "Burn - Wallet balance is insufficient", err)
 		return helper.RespError(errorcode.BizBalanceNotEnough)
 	}
-
-	// convert balance to akc base
-	amountUnit := unit.NewBalanceUnitFromFloat(amount)
 
 	// create tx burn token
 	txBurn := entity.NewTransaction(ctx)
@@ -117,7 +112,8 @@ func (t *tokenService) Burn(ctx contractapi.TransactionContextInterface, walletI
 	txBurn.ToWallet = glossary.SystemWallet
 	txBurn.FromTokenId = tokenId
 	txBurn.ToTokenId = tokenId
-	txBurn.Amount = amountUnit.String()
+	txBurn.FromTokenAmount = amount
+	txBurn.ToTokenAmount = amount
 	txBurn.TxType = transaction.Burn
 
 	if err := t.Repo.Create(ctx, txBurn, doc.Transactions, helper.TransactionKey(txBurn.Id)); err != nil {
@@ -129,13 +125,12 @@ func (t *tokenService) Burn(ctx contractapi.TransactionContextInterface, walletI
 	return nil
 }
 
-func (t *tokenService) CreateType(ctx contractapi.TransactionContextInterface, name string, tickerToken string, rate float64, maxSupply string) (string, error) {
+func (t *tokenService) CreateType(ctx contractapi.TransactionContextInterface, name, tickerToken, maxSupply string) (string, error) {
 	glogger.GetInstance().Info(ctx, "-----------Token Service - CreateType-----------")
 
 	tokenEntity := entity.NewToken(ctx)
 	tokenEntity.Name = name
 	tokenEntity.TickerToken = tickerToken
-	tokenEntity.Rate = rate
 	tokenEntity.MaxSupply = maxSupply
 
 	if err := t.Repo.Create(ctx, tokenEntity, doc.Tokens, helper.TokenKey(tokenEntity.Id)); err != nil {
@@ -147,8 +142,8 @@ func (t *tokenService) CreateType(ctx contractapi.TransactionContextInterface, n
 	return tokenEntity.Id, nil
 }
 
-func (t *tokenService) Exchange(ctx contractapi.TransactionContextInterface, fromWalletId, toWalletId string,
-	fromTokenId string, toTokenId string, amount float64) error {
+func (t *tokenService) Exchange(ctx contractapi.TransactionContextInterface, fromWalletId, toWalletId, fromTokenId,
+	toTokenId, fromTokenAmount, toTokenAmount string) error {
 	glogger.GetInstance().Info(ctx, "-----------Token Service - Exchange-----------")
 
 	// validate from wallet and to wallet have active or not
@@ -159,9 +154,6 @@ func (t *tokenService) Exchange(ctx contractapi.TransactionContextInterface, fro
 
 	// TODO: validate token
 
-	// convert balance to akc base
-	amountUnit := unit.NewBalanceUnitFromFloat(amount)
-
 	// create new swap transaction
 	txEntity := entity.NewTransaction(ctx)
 	txEntity.SpenderWallet = fromWalletId
@@ -169,8 +161,9 @@ func (t *tokenService) Exchange(ctx contractapi.TransactionContextInterface, fro
 	txEntity.ToWallet = toWalletId
 	txEntity.FromTokenId = fromTokenId
 	txEntity.ToTokenId = toTokenId
+	txEntity.FromTokenAmount = fromTokenAmount
+	txEntity.ToTokenAmount = toTokenAmount
 	txEntity.TxType = transaction.Exchange
-	txEntity.Amount = amountUnit.String()
 
 	if err := t.Repo.Create(ctx, txEntity, doc.Transactions, helper.TransactionKey(txEntity.Id)); err != nil {
 		glogger.GetInstance().Errorf(ctx, "Exchange - Create exchange transaction failed with error (%v)", err)
@@ -181,7 +174,7 @@ func (t *tokenService) Exchange(ctx contractapi.TransactionContextInterface, fro
 	return nil
 }
 
-func (t *tokenService) Issue(ctx contractapi.TransactionContextInterface, fromTokenId, toTokenId, walletId string, amount float64) error {
+func (t *tokenService) Issue(ctx contractapi.TransactionContextInterface, walletId string, fromTokenId, toTokenId, fromTokenAmount, toTokenAmount string) error {
 	glogger.GetInstance().Info(ctx, "-----------Token Service - Issue-----------")
 
 	// validate wallet active or not
@@ -210,13 +203,6 @@ func (t *tokenService) Issue(ctx contractapi.TransactionContextInterface, fromTo
 		}
 	}
 
-	// calculate amount sub from wallet and add to wallet
-	amountUpdate, err := t.calculateAmountSwap(ctx, wallet, fromTokenId, amount)
-	if err != nil {
-		glogger.GetInstance().Errorf(ctx, "Issue - Calculate balance issue failed with error (%v)", err)
-		return err
-	}
-
 	// create new swap transaction
 	txEntity := entity.NewTransaction(ctx)
 	txEntity.SpenderWallet = wallet.Id
@@ -224,8 +210,9 @@ func (t *tokenService) Issue(ctx contractapi.TransactionContextInterface, fromTo
 	txEntity.ToWallet = wallet.Id
 	txEntity.FromTokenId = fromTokenId
 	txEntity.ToTokenId = toTokenId
+	txEntity.FromTokenAmount = fromTokenAmount
+	txEntity.ToTokenAmount = toTokenAmount
 	txEntity.TxType = transaction.Issue
-	txEntity.Amount = amountUpdate
 
 	if err := t.Repo.Create(ctx, txEntity, doc.Transactions, helper.TransactionKey(txEntity.Id)); err != nil {
 		glogger.GetInstance().Errorf(ctx, "Issue - Create swap transaction failed with error (%v)", err)
@@ -236,7 +223,7 @@ func (t *tokenService) Issue(ctx contractapi.TransactionContextInterface, fromTo
 	return nil
 }
 
-func (t *tokenService) validateTransfer(ctx contractapi.TransactionContextInterface, fromWalletId, toWalletId string, tokenId string, amount float64) error {
+func (t *tokenService) validateTransfer(ctx contractapi.TransactionContextInterface, fromWalletId, toWalletId, tokenId, amount string) error {
 	walletFrom, _, err := t.ValidatePairWallet(ctx, fromWalletId, toWalletId)
 	if err != nil {
 		return err
@@ -248,44 +235,18 @@ func (t *tokenService) validateTransfer(ctx contractapi.TransactionContextInterf
 	}
 
 	// check balance enough to transfer
-	if helper.CompareFloatBalance(balanceToken.Balances, amount) < 0 {
+	if helper.CompareStringBalance(balanceToken.Balances, amount) < 0 {
 		glogger.GetInstance().Error(ctx, "ValidateTransfer - Balance of from wallet is insufficient")
 		return helper.RespError(errorcode.BizBalanceNotEnough)
 	}
 	return nil
 }
 
-func (t *tokenService) calculateAmountSwap(ctx contractapi.TransactionContextInterface, wallet *entity.Wallet, tokenId string, amount float64) (string, error) {
-	tokenFrom, err := t.GetTokenType(ctx, tokenId)
-	if err != nil {
-		glogger.GetInstance().Error(ctx, "CalculateAmountSwap - Get token type failed with err (%v)", err)
-	}
-
-	amountUpdate := amount * tokenFrom.Rate
-	amountUpdateUnit := unit.NewBalanceUnitFromFloat(amountUpdate)
-
-	balanceToken, err := t.GetBalanceOfToken(ctx, wallet.Id, tokenId)
-	if err != nil {
-		return "-1", err
-	}
-
-	// check balance enough to transfer
-	if helper.CompareStringBalance(balanceToken.Balances, amountUpdateUnit.String()) < 0 {
-		glogger.GetInstance().Error(ctx, "CalculateAmountSwap - Balance of from wallet is insufficient")
-		return "-1", helper.RespError(errorcode.BizBalanceNotEnough)
-	}
-	return amountUpdateUnit.String(), nil
-}
-
-func (t *tokenService) transferToken(ctx contractapi.TransactionContextInterface, fromWalletId, toWalletId string,
-	amount float64, note string, tokenId string) (string, error) {
+func (t *tokenService) transferToken(ctx contractapi.TransactionContextInterface, fromWalletId, toWalletId, tokenId, amount, note string) (string, error) {
 	if err := t.validateTransfer(ctx, fromWalletId, toWalletId, tokenId, amount); err != nil {
 		glogger.GetInstance().Errorf(ctx, "Transfer - Validation transfer failed with error (%v)", err)
 		return "", err
 	}
-
-	// convert amount to base unit
-	amountUnit := unit.NewBalanceUnitFromFloat(amount)
 
 	// create new transfer transaction
 	txEntity := entity.NewTransaction(ctx)
@@ -294,8 +255,9 @@ func (t *tokenService) transferToken(ctx contractapi.TransactionContextInterface
 	txEntity.ToWallet = toWalletId
 	txEntity.FromTokenId = tokenId
 	txEntity.ToTokenId = tokenId
+	txEntity.FromTokenAmount = amount
+	txEntity.ToTokenAmount = amount
 	txEntity.TxType = transaction.Transfer
-	txEntity.Amount = amountUnit.String()
 	txEntity.Note = note
 
 	if err := t.Repo.Create(ctx, txEntity, doc.Transactions, helper.TransactionKey(txEntity.Id)); err != nil {

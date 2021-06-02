@@ -20,7 +20,9 @@
 package helper
 
 import (
+	"github.com/Akachain/gringotts/glossary"
 	"gotest.tools/assert"
+	"math/big"
 	"testing"
 )
 
@@ -38,4 +40,24 @@ func TestAddBalance(t *testing.T) {
 	add, err := AddBalance(sub, "1234")
 	assert.NilError(t, err, "Fail to add balance")
 	assert.Equal(t, add, "0")
+}
+
+func TestBigInt(t *testing.T) {
+	f := 0.333333
+	bInt := new(big.Int)
+	bInt.SetInt64(int64(f * glossary.AkcBase))
+	t.Log(bInt.Int64())
+
+	currB := new(big.Int)
+	currB.SetInt64(333333333)
+
+	newB := currB.Mul(currB, bInt)
+	t.Log(newB)
+
+	divNumber := new(big.Int)
+	divNumber.SetInt64(glossary.AkcBase)
+	t.Log(divNumber.Int64())
+
+	t.Log(newB.Div(newB, divNumber).Int64())
+	t.Log(newB.Mod(newB, divNumber))
 }

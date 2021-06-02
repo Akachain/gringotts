@@ -24,9 +24,9 @@ import (
 )
 
 type MintToken struct {
-	WalletId string  `json:"walletId"`
-	TokenId  string  `json:"tokenId"`
-	Amount   float64 `json:"amount"`
+	WalletId string `json:"walletId"`
+	TokenId  string `json:"tokenId"`
+	Amount   string `json:"amount"`
 }
 
 func (m MintToken) IsValid() error {
@@ -34,8 +34,8 @@ func (m MintToken) IsValid() error {
 		return errors.New("wallet/token id is empty")
 	}
 
-	if m.Amount <= 0 {
-		return errors.New("the transfer amount is a negative number")
+	if m.Amount == "" {
+		return errors.New("the transfer amount is empty")
 	}
 
 	return nil

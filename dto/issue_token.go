@@ -22,17 +22,20 @@ package dto
 import "github.com/pkg/errors"
 
 type IssueToken struct {
+	// wallet use to issue new token
+	WalletId string `json:"walletId"`
+
 	// token will use to issue to other token. example is stable token
 	FromTokenId string `json:"fromTokenId"`
 
 	// token will be issued base on stable token
 	ToTokenId string `json:"toTokenId"`
 
-	// wallet use to issue new token
-	WalletId string `json:"walletId"`
+	// number of token will be use to issue new token. Use base unit (ax10^8)
+	FromTokenAmount string `json:"fromTokenAmount"`
 
-	// number of from token will be use to issue new token
-	Amount float64 `json:"amount"`
+	// number of new token will be issue. Use base unit (ax10^8)
+	ToTokenAmount string `json:"toTokenAmount"`
 }
 
 func (i IssueToken) IsValid() error {
@@ -43,8 +46,12 @@ func (i IssueToken) IsValid() error {
 		return errors.New("From/To token id is empty")
 	}
 
-	if i.Amount <= 0 {
-		return errors.New("the issue amount is a negative/zero number")
+	if i.FromTokenAmount == "" {
+		return errors.New("the amount of from token is empty")
+	}
+
+	if i.ToTokenAmount == "" {
+		return errors.New("the amount of new token is empty")
 	}
 	return nil
 }
