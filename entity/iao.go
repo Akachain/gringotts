@@ -17,21 +17,38 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-// Package doc contains prefixes for state database document. For example, a Token
-// object will be saved in the state database with key \u0000Token....
-// This helps searching for this particular object much easier.
-package doc
+package entity
 
-const (
-	Transactions = "Transactions"
-	Wallets      = "Wallets"
-	Tokens       = "Tokens"
-	HealthCheck  = "HealthCheck"
-	Enrollments  = "Enrollments"
-	NftToken     = "NftToken"
-	Exchange     = "Exchange"
-	Balances     = "Balances"
-	Iao          = "Iao"
-	InvestorBook = "InvestorBook"
-	Asset        = "Asset"
+import (
+	"github.com/Akachain/gringotts/glossary/doc"
+	"github.com/Akachain/gringotts/glossary/iao"
+	"github.com/Akachain/gringotts/helper"
+	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
+
+type Iao struct {
+	AssetId           string
+	AssetTokenId      string
+	AssetTokenAmount  string
+	StableTokenAmount string
+	StartDate         string
+	EndDate           string
+	Status            iao.Status
+	Rate              float64
+	Base              `mapstructure:",squash"`
+}
+
+func NewIao(ctx ...contractapi.TransactionContextInterface) *Iao {
+	if len(ctx) <= 0 {
+		return &Iao{}
+	}
+	txTime, _ := ctx[0].GetStub().GetTxTimestamp()
+	return &Iao{
+		Base: Base{
+			Id:           helper.GenerateID(doc.Iao, ctx[0].GetStub().GetTxID()),
+			CreatedAt:    helper.TimestampISO(txTime.Seconds),
+			UpdatedAt:    helper.TimestampISO(txTime.Seconds),
+			BlockChainId: ctx[0].GetStub().GetTxID(),
+		},
+	}
+}

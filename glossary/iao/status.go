@@ -17,21 +17,12 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-// Package doc contains prefixes for state database document. For example, a Token
-// object will be saved in the state database with key \u0000Token....
-// This helps searching for this particular object much easier.
-package doc
+package iao
+
+type Status string
 
 const (
-	Transactions = "Transactions"
-	Wallets      = "Wallets"
-	Tokens       = "Tokens"
-	HealthCheck  = "HealthCheck"
-	Enrollments  = "Enrollments"
-	NftToken     = "NftToken"
-	Exchange     = "Exchange"
-	Balances     = "Balances"
-	Iao          = "Iao"
-	InvestorBook = "InvestorBook"
-	Asset        = "Asset"
+	New      Status = "New"
+	Done            = "Done"
+	Canceled        = "Canceled"
 )

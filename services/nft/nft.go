@@ -126,7 +126,8 @@ func (n *nftService) TransferFrom(ctx contractapi.TransactionContextInterface, f
 	txEntity.FromTokenId = fromTokenId
 	txEntity.ToTokenId = nftTokenId
 	txEntity.TxType = transaction.TransferNft
-	txEntity.Amount = amountUnit.String()
+	txEntity.FromTokenAmount = amountUnit.String()
+	txEntity.ToTokenAmount = amountUnit.String()
 
 	if err := n.Repo.Create(ctx, txEntity, doc.Transactions, helper.TransactionKey(txEntity.Id)); err != nil {
 		glogger.GetInstance().Errorf(ctx, "TransferFrom - Create transfer nft transaction failed with error (%v)", err)
