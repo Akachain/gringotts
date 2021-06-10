@@ -20,7 +20,7 @@
 package handler
 
 import (
-	token2 "github.com/Akachain/gringotts/dto/token"
+	tokenDto "github.com/Akachain/gringotts/dto/token"
 	"github.com/Akachain/gringotts/errorcode"
 	"github.com/Akachain/gringotts/helper"
 	"github.com/Akachain/gringotts/helper/glogger"
@@ -39,7 +39,7 @@ func NewTokenHandler() *TokenHandler {
 }
 
 // Transfer to transfer token between wallet.
-func (t *TokenHandler) Transfer(ctx contractapi.TransactionContextInterface, transferDto token2.TransferToken) error {
+func (t *TokenHandler) Transfer(ctx contractapi.TransactionContextInterface, transferDto tokenDto.TransferToken) error {
 	glogger.GetInstance().Info(ctx, "-----------Token Handler - Transfer-----------")
 
 	// checking dto validate
@@ -56,7 +56,7 @@ func (t *TokenHandler) Transfer(ctx contractapi.TransactionContextInterface, tra
 }
 
 // Mint generate new token for wallet.
-func (t *TokenHandler) Mint(ctx contractapi.TransactionContextInterface, mintDto token2.MintToken) error {
+func (t *TokenHandler) Mint(ctx contractapi.TransactionContextInterface, mintDto tokenDto.MintToken) error {
 	glogger.GetInstance().Info(ctx, "-----------Token Handler - Mint-----------")
 
 	// checking dto validate
@@ -69,7 +69,7 @@ func (t *TokenHandler) Mint(ctx contractapi.TransactionContextInterface, mintDto
 }
 
 // Burn to burn token existed in the system.
-func (t *TokenHandler) Burn(ctx contractapi.TransactionContextInterface, burnDto token2.BurnToken) error {
+func (t *TokenHandler) Burn(ctx contractapi.TransactionContextInterface, burnDto tokenDto.BurnToken) error {
 	glogger.GetInstance().Info(ctx, "-----------Token Handler - Burn-----------")
 
 	// checking dto validate
@@ -82,7 +82,7 @@ func (t *TokenHandler) Burn(ctx contractapi.TransactionContextInterface, burnDto
 }
 
 // CreateTokenType to create new token type.
-func (t *TokenHandler) CreateTokenType(ctx contractapi.TransactionContextInterface, tokenTypeDto token2.CreateTokenType) (string, error) {
+func (t *TokenHandler) CreateTokenType(ctx contractapi.TransactionContextInterface, tokenTypeDto tokenDto.CreateTokenType) (string, error) {
 	glogger.GetInstance().Info(ctx, "-----------Token Handler - CreateTokenType-----------")
 
 	// checking dto validate
@@ -95,7 +95,7 @@ func (t *TokenHandler) CreateTokenType(ctx contractapi.TransactionContextInterfa
 }
 
 // Exchange to swap between different token type.
-func (t *TokenHandler) Exchange(ctx contractapi.TransactionContextInterface, exchangeToken token2.ExchangeToken) error {
+func (t *TokenHandler) Exchange(ctx contractapi.TransactionContextInterface, exchangeToken tokenDto.ExchangeToken) error {
 	glogger.GetInstance().Info(ctx, "-----------Token Handler - Exchange-----------")
 
 	// checking dto validate
@@ -109,7 +109,7 @@ func (t *TokenHandler) Exchange(ctx contractapi.TransactionContextInterface, exc
 }
 
 // Issue to issue new token type form stable token.
-func (t *TokenHandler) Issue(ctx contractapi.TransactionContextInterface, issueDto token2.IssueToken) error {
+func (t *TokenHandler) Issue(ctx contractapi.TransactionContextInterface, issueDto tokenDto.IssueToken) error {
 	glogger.GetInstance().Info(ctx, "-----------Token Handler - Exchange-----------")
 
 	// checking dto validate
@@ -119,17 +119,4 @@ func (t *TokenHandler) Issue(ctx contractapi.TransactionContextInterface, issueD
 	}
 
 	return t.tokenService.Issue(ctx, issueDto.WalletId, issueDto.FromTokenId, issueDto.ToTokenId, issueDto.FromTokenAmount, issueDto.ToTokenAmount)
-}
-
-func (t *TokenHandler) Exchange(ctx contractapi.TransactionContextInterface, exchangeToken dto.ExchangeToken) error {
-	glogger.GetInstance().Info(ctx, "-----------Token Handler - Exchange-----------")
-
-	// checking dto validate
-	if err := exchangeToken.IsValid(); err != nil {
-		glogger.GetInstance().Errorf(ctx, "TokenHandler - Exchange Input invalidate %v", err)
-		return helper.RespError(errorcode.InvalidParam)
-	}
-
-	return t.tokenService.Exchange(ctx, exchangeToken.FromWalletFirstToken, exchangeToken.ToWalletFirstToken,
-		exchangeToken.FromWalletSecondToken, exchangeToken.ToWalletSecondToken, exchangeToken.Amount)
 }
