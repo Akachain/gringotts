@@ -140,6 +140,7 @@ func (w *walletService) EnrollToken(ctx contractapi.TransactionContextInterface,
 		}
 	} else {
 		enrollmentEntity := entity.NewEnrollment(ctx)
+		enrollmentEntity.TokenId = tokenId
 		if len(fromWalletId) > 0 && !helper.ArrayContains(fromWalletId, "") {
 			enrollmentEntity.FromWalletId = strings.Join(fromWalletId, ",")
 		}

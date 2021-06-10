@@ -17,49 +17,25 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package helper
+package dto
 
-import (
-	"github.com/Akachain/gringotts/glossary"
-	"gotest.tools/assert"
-	"math/big"
-	"testing"
-)
+import "github.com/pkg/errors"
 
-func TestSubBalance(t *testing.T) {
-	sub, err := SubBalance("0", "1234")
-	assert.NilError(t, err, "Fail to sub balance")
-	assert.Equal(t, sub, "-1234")
+type ExchangeToken struct {
+	FromWalletFirstToken  string  `json:"fromWalletFirstToken"`
+	ToWalletFirstToken    string  `json:"toWalletFirstToken"`
+	FromWalletSecondToken string  `json:"fromWalletSecondToken"`
+	ToWalletSecondToken   string  `json:"toWalletSecondToken"`
+	Amount                float64 `json:"amount"`
 }
 
-func TestAddBalance(t *testing.T) {
-	sub, err := SubBalance("0", "1234")
-	assert.NilError(t, err, "Fail to sub balance")
-	assert.Equal(t, sub, "-1234")
+func (e ExchangeToken) IsValid() error {
+	if e.FromWalletFirstToken == "" || e.FromWalletSecondToken == "" || e.ToWalletFirstToken == "" || e.ToWalletSecondToken == "" {
+		return errors.New("input is invalid")
+	}
 
-	add, err := AddBalance(sub, "1234")
-	assert.NilError(t, err, "Fail to add balance")
-	assert.Equal(t, add, "0")
-}
-
-func TestCompareFloatBalance(t *testing.T) {
-	res := CompareFloatBalance("100000000", 1)
-	assert.Equal(t, res, 0)
-
-	res = CompareFloatBalance("100000000", 2)
-	assert.Equal(t, res, -1)
-
-	res = CompareFloatBalance("1000000000", 1)
-	assert.Equal(t, res, 1)
-}
-
-func TestCompareStringBalance(t *testing.T) {
-	res := CompareStringBalance("100000000", "100000000")
-	assert.Equal(t, res, 0)
-
-	res = CompareStringBalance("100000000", "200000000")
-	assert.Equal(t, res, -1)
-
-	res = CompareStringBalance("1000000000", "100000000")
-	assert.Equal(t, res, 1)
+	if e.Amount <= 0 {
+		return errors.New("the exchange amount is a negative/zero number")
+	}
+	return nil
 }
