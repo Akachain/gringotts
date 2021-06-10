@@ -26,17 +26,17 @@ import (
 	"github.com/Akachain/gringotts/glossary/transaction"
 	"github.com/Akachain/gringotts/helper"
 	"github.com/Akachain/gringotts/helper/glogger"
-	"github.com/Akachain/gringotts/pkg/tx"
+	"github.com/Akachain/gringotts/pkg/tx/base"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 	"github.com/pkg/errors"
 )
 
 type txMint struct {
-	*tx.TxBase
+	*base.TxBase
 }
 
-func NewTxMint() tx.Handler {
-	return &txMint{tx.NewTxBase()}
+func NewTxMint() *txMint {
+	return &txMint{base.NewTxBase()}
 }
 
 func (t *txMint) AccountingTx(ctx contractapi.TransactionContextInterface, tx *entity.Transaction, mapBalanceToken map[string]string) (*entity.Transaction, error) {

@@ -21,17 +21,17 @@ package transfer
 
 import (
 	"github.com/Akachain/gringotts/entity"
-	"github.com/Akachain/gringotts/pkg/tx"
+	"github.com/Akachain/gringotts/pkg/tx/base"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
 
 type txTransfer struct {
-	*tx.TxBase
+	*base.TxBase
 }
 
-func NewTxTransfer() tx.Handler {
+func NewTxTransfer() *txTransfer {
 	return &txTransfer{
-		tx.NewTxBase(),
+		base.NewTxBase(),
 	}
 }
 

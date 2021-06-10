@@ -19,7 +19,6 @@
 
 package iao
 
-import "C"
 import "github.com/pkg/errors"
 
 type CreateAsset struct {
