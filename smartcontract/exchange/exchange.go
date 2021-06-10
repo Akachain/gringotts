@@ -22,17 +22,17 @@ package exchange
 import (
 	"github.com/Akachain/gringotts/smartcontract"
 	"github.com/Akachain/gringotts/smartcontract/basic"
-	"github.com/Akachain/gringotts/smartcontract/nft"
+	"github.com/Akachain/gringotts/smartcontract/iao"
 )
 
 type exchange struct {
 	smartcontract.BasicToken
-	smartcontract.Erc721
+	smartcontract.Iao
 }
 
 func NewExchange() smartcontract.Exchange {
 	return &exchange{
 		basic.NewBaseToken(),
-		nft.NewNFT(),
+		iao.NewIaoSc(),
 	}
 }

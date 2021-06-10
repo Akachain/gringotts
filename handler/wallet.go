@@ -20,7 +20,7 @@
 package handler
 
 import (
-	"github.com/Akachain/gringotts/dto"
+	"github.com/Akachain/gringotts/dto/token"
 	"github.com/Akachain/gringotts/errorcode"
 	"github.com/Akachain/gringotts/helper"
 	"github.com/Akachain/gringotts/helper/glogger"
@@ -40,7 +40,7 @@ func NewWalletHandler() *WalletHandler {
 }
 
 // CreateWallet generate new wallet with token type
-func (w *WalletHandler) CreateWallet(ctx contractapi.TransactionContextInterface, createWalletDto dto.CreateWallet) (string, error) {
+func (w *WalletHandler) CreateWallet(ctx contractapi.TransactionContextInterface, createWalletDto token.CreateWallet) (string, error) {
 	glogger.GetInstance().Info(ctx, "-----------Wallet Handler - CreateWallet-----------")
 
 	// checking dto validate
@@ -52,7 +52,7 @@ func (w *WalletHandler) CreateWallet(ctx contractapi.TransactionContextInterface
 }
 
 // UpdateWallet to update status of wallet
-func (w *WalletHandler) UpdateWallet(ctx contractapi.TransactionContextInterface, updateWalletDto dto.UpdateWallet) error {
+func (w *WalletHandler) UpdateWallet(ctx contractapi.TransactionContextInterface, updateWalletDto token.UpdateWallet) error {
 	glogger.GetInstance().Info(ctx, "-----------Wallet Handler - UpdateWallet-----------")
 
 	// checking dto validate
@@ -64,7 +64,7 @@ func (w *WalletHandler) UpdateWallet(ctx contractapi.TransactionContextInterface
 }
 
 // BalanceOf to return balance of wallet
-func (w *WalletHandler) BalanceOf(ctx contractapi.TransactionContextInterface, balanceDto dto.Balance) (string, error) {
+func (w *WalletHandler) BalanceOf(ctx contractapi.TransactionContextInterface, balanceDto token.Balance) (string, error) {
 	glogger.GetInstance().Info(ctx, "-----------Wallet Handler - BalanceOf-----------")
 
 	// checking dto validate
@@ -76,7 +76,7 @@ func (w *WalletHandler) BalanceOf(ctx contractapi.TransactionContextInterface, b
 }
 
 // EnrollToken to create or update enrollment policy for token
-func (w *WalletHandler) EnrollToken(ctx contractapi.TransactionContextInterface, enrollmentDto dto.Enrollment) error {
+func (w *WalletHandler) EnrollToken(ctx contractapi.TransactionContextInterface, enrollmentDto token.Enrollment) error {
 	glogger.GetInstance().Info(ctx, "-----------Wallet Handler - EnrollToken-----------")
 
 	// checking dto validate

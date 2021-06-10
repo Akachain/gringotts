@@ -44,6 +44,21 @@ func NewBase() *Base {
 	}
 }
 
+func (b *Base) GetAsset(ctx contractapi.TransactionContextInterface, assetId string) (*entity.Asset, error) {
+	assetData, err := b.Repo.Get(ctx, doc.Asset, helper.AssetKey(assetId))
+	if err != nil {
+		glogger.GetInstance().Errorf(ctx, "Base - Get asset (%s) failed with error (%s)", assetId, err.Error())
+		return nil, helper.RespError(errorcode.BizUnableGetAsset)
+	}
+
+	asset := entity.NewAsset()
+	if err = mapstructure.Decode(assetData, &asset); err != nil {
+		glogger.GetInstance().Errorf(ctx, "Base - Decode asset failed with error  (%s)", err.Error())
+		return nil, helper.RespError(errorcode.BizUnableMapDecode)
+	}
+	return asset, nil
+}
+
 func (b *Base) GetTransaction(ctx contractapi.TransactionContextInterface, txId string) (*entity.Transaction, error) {
 	txData, err := b.Repo.Get(ctx, doc.Transactions, helper.TransactionKey(txId))
 	if err != nil {
@@ -221,7 +236,7 @@ func (b *Base) RollbackTxHandler(ctx contractapi.TransactionContextInterface, tx
 	mapCurrentBalance map[string]string, step transaction.Step) error {
 	// currently only rollback in case transfer or swap
 	if step == transaction.SubFromWallet {
-		if err := b.AddAmount(ctx, mapCurrentBalance, tx.FromWallet, tx.FromTokenId, tx.Amount); err != nil {
+		if err := b.AddAmount(ctx, mapCurrentBalance, tx.FromWallet, tx.FromTokenId, tx.FromTokenAmount); err != nil {
 			glogger.GetInstance().Errorf(ctx, "RollbackTxHandler - Add balance of wallet (%s) with transaction (%s) failed", tx.FromWallet, tx.Id)
 			return err
 		}

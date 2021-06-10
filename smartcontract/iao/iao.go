@@ -17,42 +17,32 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package nft
+package iao
 
 import (
-	nft2 "github.com/Akachain/gringotts/dto/nft"
+	"github.com/Akachain/gringotts/dto/iao"
 	"github.com/Akachain/gringotts/handler"
-	"github.com/Akachain/gringotts/helper/glogger"
 	"github.com/Akachain/gringotts/smartcontract"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
+	"github.com/pkg/errors"
 )
 
-type nft struct {
-	nftHandler handler.NftHandler
+type iaoSc struct {
+	iaoHandler handler.IaoHandler
 }
 
-func NewNFT() smartcontract.Erc721 {
-	return &nft{
-		nftHandler: handler.NewNftHandler(),
-	}
+func NewIaoSc() smartcontract.Iao {
+	return &iaoSc{iaoHandler: handler.NewIaoHandler()}
 }
 
-func (n *nft) MintNft(ctx contractapi.TransactionContextInterface, mintNFT nft2.MintNFT) (string, error) {
-	glogger.GetInstance().Info(ctx, "------------Mint NFT SmartContract------------")
-	return n.nftHandler.Mint(ctx, mintNFT)
+func (i *iaoSc) CreateAsset(ctx contractapi.TransactionContextInterface, asset iao.CreateAsset) (string, error) {
+	return i.iaoHandler.CreateAsset(ctx, asset)
 }
 
-func (n *nft) OwnerOf(ctx contractapi.TransactionContextInterface, ownerNFT nft2.OwnerNFT) (string, error) {
-	glogger.GetInstance().Info(ctx, "------------OwnerOf NFT SmartContract------------")
-	return n.nftHandler.OwnerOf(ctx, ownerNFT)
+func (i *iaoSc) CreateIao(ctx contractapi.TransactionContextInterface, assetIao iao.AssetIao) (string, error) {
+	return i.iaoHandler.CreateIao(ctx, assetIao)
 }
 
-func (n *nft) BalanceOf(ctx contractapi.TransactionContextInterface, balanceOfNFT nft2.BalanceOfNFT) (int, error) {
-	glogger.GetInstance().Info(ctx, "------------BalanceOf NFT SmartContract------------")
-	return n.nftHandler.BalanceOf(ctx, balanceOfNFT)
-}
-
-func (n *nft) TransferFrom(ctx contractapi.TransactionContextInterface, transferNFT nft2.TransferNFT) error {
-	glogger.GetInstance().Info(ctx, "------------TransferFrom NFT SmartContract------------")
-	return n.nftHandler.TransferNFT(ctx, transferNFT)
+func (i *iaoSc) BuyAssetToken(ctx contractapi.TransactionContextInterface, asset iao.BuyAsset) error {
+	return errors.New("implement me")
 }

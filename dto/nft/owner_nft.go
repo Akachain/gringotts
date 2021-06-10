@@ -17,41 +17,18 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package dto
+package nft
 
 import "github.com/pkg/errors"
 
-type IssueToken struct {
-	// wallet use to issue new token
-	WalletId string `json:"walletId"`
-
-	// token will use to issue to other token. example is stable token
-	FromTokenId string `json:"fromTokenId"`
-
-	// token will be issued base on stable token
-	ToTokenId string `json:"toTokenId"`
-
-	// number of token will be use to issue new token. Use base unit (ax10^8)
-	FromTokenAmount string `json:"fromTokenAmount"`
-
-	// number of new token will be issue. Use base unit (ax10^8)
-	ToTokenAmount string `json:"toTokenAmount"`
+type OwnerNFT struct {
+	NFTTokenId string `json:"nftTokenId"`
 }
 
-func (i IssueToken) IsValid() error {
-	if i.WalletId == "" {
-		return errors.New("Wallet Id is empty")
-	}
-	if i.FromTokenId == "" || i.ToTokenId == "" {
-		return errors.New("From/To token id is empty")
+func (o OwnerNFT) IsValid() error {
+	if o.NFTTokenId == "" {
+		return errors.New("NFT token id is invalid")
 	}
 
-	if i.FromTokenAmount == "" {
-		return errors.New("the amount of from token is empty")
-	}
-
-	if i.ToTokenAmount == "" {
-		return errors.New("the amount of new token is empty")
-	}
 	return nil
 }

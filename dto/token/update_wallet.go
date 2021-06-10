@@ -17,26 +17,25 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package dto
+package token
 
 import (
 	"errors"
+	"github.com/Akachain/gringotts/glossary"
 )
 
-type MintToken struct {
-	WalletId string `json:"walletId"`
-	TokenId  string `json:"tokenId"`
-	Amount   string `json:"amount"`
+type UpdateWallet struct {
+	WalletId string          `json:"walletId"`
+	Status   glossary.Status `json:"status"`
 }
 
-func (m MintToken) IsValid() error {
-	if m.WalletId == "" || m.TokenId == "" {
-		return errors.New("wallet/token id is empty")
+func (u UpdateWallet) IsValid() error {
+	if u.WalletId == "" {
+		return errors.New("wallet id is empty")
 	}
-
-	if m.Amount == "" {
-		return errors.New("the transfer amount is empty")
+	switch u.Status {
+	case glossary.Active, glossary.InActive:
+		return nil
 	}
-
-	return nil
+	return errors.New("invalid wallet status")
 }

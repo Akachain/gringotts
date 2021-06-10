@@ -17,39 +17,14 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package entity
+package services
 
-import (
-	"github.com/Akachain/gringotts/glossary/doc"
-	"github.com/Akachain/gringotts/glossary/iao"
-	"github.com/Akachain/gringotts/helper"
-	"github.com/hyperledger/fabric-contract-api-go/contractapi"
-)
+import "github.com/hyperledger/fabric-contract-api-go/contractapi"
 
-type Iao struct {
-	AssetId           string
-	AssetTokenId      string
-	AssetTokenAmount  string
-	StableTokenAmount string
-	StartDate         string
-	EndDate           string
-	Status            iao.Status
-	Rate              float64
-	Base              `mapstructure:",squash"`
-}
+type Iao interface {
+	// CreateAsset to create new asset and token type
+	CreateAsset(ctx contractapi.TransactionContextInterface, name, owner, tokenName, tickerToken, maxSupply, totalValue, expireDate string) (string, error)
 
-func NewIao(ctx ...contractapi.TransactionContextInterface) *Iao {
-	if len(ctx) <= 0 {
-		return &Iao{}
-	}
-	txTime, _ := ctx[0].GetStub().GetTxTimestamp()
-	return &Iao{
-		Base: Base{
-			Id:           helper.GenerateID(doc.Iao, ctx[0].GetStub().GetTxID()),
-			CreatedAt:    helper.TimestampISO(txTime.Seconds),
-			UpdatedAt:    helper.TimestampISO(txTime.Seconds),
-			BlockChainId: ctx[0].GetStub().GetTxID(),
-		},
-		Status: iao.New,
-	}
+	// CreateIao to create new iao of asset
+	CreateIao(ctx contractapi.TransactionContextInterface, assetId, assetTokenAmount, startDate, endDate string, rate float64) (string, error)
 }

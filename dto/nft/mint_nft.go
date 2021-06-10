@@ -17,17 +17,32 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package dto
+package nft
 
 import "github.com/pkg/errors"
 
-type OwnerNFT struct {
-	NFTTokenId string `json:"nftTokenId"`
+type MintNFT struct {
+	GS1Number     string `json:"gs1Number"`
+	OwnerWalletId string `json:"ownerWalletId"`
+	HashData      string `json:"hashData"`
+	Metadata      string `json:"metadata"`
 }
 
-func (o OwnerNFT) IsValid() error {
-	if o.NFTTokenId == "" {
-		return errors.New("NFT token id is invalid")
+func (m MintNFT) IsValid() error {
+	if m.OwnerWalletId == "" {
+		return errors.New("owner wallet id is invalid")
+	}
+
+	if m.GS1Number == "" {
+		return errors.New("GS1 serial number is invalid")
+	}
+
+	if m.Metadata == "" {
+		return errors.New("Metadata is invalid")
+	}
+
+	if m.HashData == "" {
+		return errors.New("Hash of data is invalid")
 	}
 
 	return nil

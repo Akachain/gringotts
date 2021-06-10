@@ -20,7 +20,7 @@
 package handler
 
 import (
-	"github.com/Akachain/gringotts/dto"
+	token2 "github.com/Akachain/gringotts/dto/token"
 	"github.com/Akachain/gringotts/errorcode"
 	"github.com/Akachain/gringotts/helper"
 	"github.com/Akachain/gringotts/helper/glogger"
@@ -39,7 +39,7 @@ func NewTokenHandler() *TokenHandler {
 }
 
 // Transfer to transfer token between wallet.
-func (t *TokenHandler) Transfer(ctx contractapi.TransactionContextInterface, transferDto dto.TransferToken) error {
+func (t *TokenHandler) Transfer(ctx contractapi.TransactionContextInterface, transferDto token2.TransferToken) error {
 	glogger.GetInstance().Info(ctx, "-----------Token Handler - Transfer-----------")
 
 	// checking dto validate
@@ -56,7 +56,7 @@ func (t *TokenHandler) Transfer(ctx contractapi.TransactionContextInterface, tra
 }
 
 // Mint generate new token for wallet.
-func (t *TokenHandler) Mint(ctx contractapi.TransactionContextInterface, mintDto dto.MintToken) error {
+func (t *TokenHandler) Mint(ctx contractapi.TransactionContextInterface, mintDto token2.MintToken) error {
 	glogger.GetInstance().Info(ctx, "-----------Token Handler - Mint-----------")
 
 	// checking dto validate
@@ -69,7 +69,7 @@ func (t *TokenHandler) Mint(ctx contractapi.TransactionContextInterface, mintDto
 }
 
 // Burn to burn token existed in the system.
-func (t *TokenHandler) Burn(ctx contractapi.TransactionContextInterface, burnDto dto.BurnToken) error {
+func (t *TokenHandler) Burn(ctx contractapi.TransactionContextInterface, burnDto token2.BurnToken) error {
 	glogger.GetInstance().Info(ctx, "-----------Token Handler - Burn-----------")
 
 	// checking dto validate
@@ -82,7 +82,7 @@ func (t *TokenHandler) Burn(ctx contractapi.TransactionContextInterface, burnDto
 }
 
 // CreateTokenType to create new token type.
-func (t *TokenHandler) CreateTokenType(ctx contractapi.TransactionContextInterface, tokenTypeDto dto.CreateTokenType) (string, error) {
+func (t *TokenHandler) CreateTokenType(ctx contractapi.TransactionContextInterface, tokenTypeDto token2.CreateTokenType) (string, error) {
 	glogger.GetInstance().Info(ctx, "-----------Token Handler - CreateTokenType-----------")
 
 	// checking dto validate
@@ -95,7 +95,7 @@ func (t *TokenHandler) CreateTokenType(ctx contractapi.TransactionContextInterfa
 }
 
 // Exchange to swap between different token type.
-func (t *TokenHandler) Exchange(ctx contractapi.TransactionContextInterface, exchangeToken dto.ExchangeToken) error {
+func (t *TokenHandler) Exchange(ctx contractapi.TransactionContextInterface, exchangeToken token2.ExchangeToken) error {
 	glogger.GetInstance().Info(ctx, "-----------Token Handler - Exchange-----------")
 
 	// checking dto validate
@@ -109,7 +109,7 @@ func (t *TokenHandler) Exchange(ctx contractapi.TransactionContextInterface, exc
 }
 
 // Issue to issue new token type form stable token.
-func (t *TokenHandler) Issue(ctx contractapi.TransactionContextInterface, issueDto dto.IssueToken) error {
+func (t *TokenHandler) Issue(ctx contractapi.TransactionContextInterface, issueDto token2.IssueToken) error {
 	glogger.GetInstance().Info(ctx, "-----------Token Handler - Exchange-----------")
 
 	// checking dto validate

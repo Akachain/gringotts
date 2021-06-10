@@ -17,28 +17,30 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package dto
+package nft
 
-import (
-	"github.com/pkg/errors"
-)
+import "github.com/pkg/errors"
 
-type ExchangeToken struct {
-	FromWalletId    string `json:"fromWalletId"`
-	ToWalletId      string `json:"toWalletId"`
-	FromTokenId     string `json:"fromTokenId"`
-	ToTokenId       string `json:"toTokenId"`
-	FromTokenAmount string `json:"fromTokenAmount"`
-	ToTokenAmount   string `json:"toTokenAmount"`
+type TransferNFT struct {
+	FromWalletId string  `json:"fromWalletId"`
+	ToWalletId   string  `json:"toWalletId"`
+	FromTokenId  string  `json:"fromTokenId"`
+	NftTokenId   string  `json:"nftTokenId"`
+	Price        float64 `json:"price"`
 }
 
-func (s ExchangeToken) IsValid() error {
-	if s.FromWalletId == "" || s.ToWalletId == "" {
-		return errors.New("From/To wallet id is empty")
+func (t TransferNFT) IsValid() error {
+	if t.FromWalletId == "" {
+		return errors.New("owner wallet id is invalid")
 	}
 
-	if s.FromTokenAmount == "" || s.ToTokenAmount == "" {
-		return errors.New("the exchange amount is empty")
+	if t.ToWalletId == "" {
+		return errors.New("To wallet id is invalid")
 	}
+
+	if t.NftTokenId == "" {
+		return errors.New("NFT token id is invalid")
+	}
+
 	return nil
 }

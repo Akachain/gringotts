@@ -17,39 +17,23 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package entity
+package token
 
-import (
-	"github.com/Akachain/gringotts/glossary/doc"
-	"github.com/Akachain/gringotts/glossary/iao"
-	"github.com/Akachain/gringotts/helper"
-	"github.com/hyperledger/fabric-contract-api-go/contractapi"
-)
+import "errors"
 
-type Iao struct {
-	AssetId           string
-	AssetTokenId      string
-	AssetTokenAmount  string
-	StableTokenAmount string
-	StartDate         string
-	EndDate           string
-	Status            iao.Status
-	Rate              float64
-	Base              `mapstructure:",squash"`
+type Balance struct {
+	WalletId string `json:"walletId"`
+	TokenId  string `json:"tokenId"`
 }
 
-func NewIao(ctx ...contractapi.TransactionContextInterface) *Iao {
-	if len(ctx) <= 0 {
-		return &Iao{}
+func (b Balance) IsValid() error {
+	if b.WalletId == "" {
+		return errors.New("wallet id is empty")
 	}
-	txTime, _ := ctx[0].GetStub().GetTxTimestamp()
-	return &Iao{
-		Base: Base{
-			Id:           helper.GenerateID(doc.Iao, ctx[0].GetStub().GetTxID()),
-			CreatedAt:    helper.TimestampISO(txTime.Seconds),
-			UpdatedAt:    helper.TimestampISO(txTime.Seconds),
-			BlockChainId: ctx[0].GetStub().GetTxID(),
-		},
-		Status: iao.New,
+
+	if b.TokenId == "" {
+		return errors.New("token id is empty")
 	}
+
+	return nil
 }

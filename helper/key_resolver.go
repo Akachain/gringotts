@@ -57,3 +57,13 @@ func BalanceKey(keys ...string) []string {
 	}
 	return balanceKeys
 }
+
+// AssetKey return list key of Asset will be compose in couch db key
+func AssetKey(assetId string) []string {
+	return []string{assetId}
+}
+
+// IaoKey return list key of Asset will be compose in couch db key
+func IaoKey(iaoId string) []string {
+	return []string{iaoId}
+}

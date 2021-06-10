@@ -21,7 +21,7 @@ package accounting
 
 import (
 	"encoding/json"
-	"github.com/Akachain/gringotts/dto"
+	"github.com/Akachain/gringotts/dto/token"
 	"github.com/Akachain/gringotts/entity"
 	"github.com/Akachain/gringotts/errorcode"
 	"github.com/Akachain/gringotts/glossary/doc"
@@ -79,7 +79,7 @@ func (a *accountingService) GetTx(ctx contractapi.TransactionContextInterface) (
 	return txIdList, nil
 }
 
-func (a *accountingService) CalculateBalance(ctx contractapi.TransactionContextInterface, accountingDto dto.AccountingBalance) error {
+func (a *accountingService) CalculateBalance(ctx contractapi.TransactionContextInterface, accountingDto token.AccountingBalance) error {
 	glogger.GetInstance().Infof(ctx, "CalculateBalance - List transaction: (%s)", strings.Join(accountingDto.TxId, ","))
 	// map temp balance
 	mapCurrentBalance := make(map[string]string, len(accountingDto.TxId)*2)

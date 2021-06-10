@@ -17,18 +17,11 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package dto
+package iao
 
-import "github.com/pkg/errors"
-
-type BalanceOfNFT struct {
-	OwnerWalletId string `json:"ownerWalletId"`
-}
-
-func (b BalanceOfNFT) IsValid() error {
-	if b.OwnerWalletId == "" {
-		return errors.New("owner wallet id is invalid")
-	}
-
-	return nil
+type BuyAsset struct {
+	IaoId    string `json:"iaoId"`
+	WalletId string `json:"walletId"`
+	TokenId  string `json:"tokenId"`
+	Funds    string `json:"funds"`
 }

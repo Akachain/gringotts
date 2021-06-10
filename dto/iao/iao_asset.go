@@ -17,41 +17,29 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package dto
+package iao
 
-import (
-	"errors"
-	"github.com/Akachain/gringotts/entity"
-	"github.com/Akachain/gringotts/glossary"
-	"github.com/Akachain/gringotts/glossary/doc"
-	"github.com/Akachain/gringotts/helper"
-	"github.com/hyperledger/fabric-contract-api-go/contractapi"
-)
+import "github.com/pkg/errors"
 
-type CreateWallet struct {
-	TokenId string          `json:"tokenId"`
-	Status  glossary.Status `json:"status"`
+type AssetIao struct {
+	AssetId          string  `json:"assetId"`
+	AssetTokenAmount string  `json:"assetTokenAmount"`
+	StartDate        string  `json:"startDate"`
+	EndDate          string  `json:"endDate"`
+	Rate             float64 `json:"rate"`
 }
 
-func (c CreateWallet) ToEntity(ctx contractapi.TransactionContextInterface) *entity.Wallet {
-	txTime, _ := ctx.GetStub().GetTxTimestamp()
-	walletEntity := new(entity.Wallet)
-	walletEntity.Id = helper.GenerateID(doc.Wallets, ctx.GetStub().GetTxID())
-
-	walletEntity.Status = c.Status
-	walletEntity.CreatedAt = helper.TimestampISO(txTime.Seconds)
-	walletEntity.UpdatedAt = helper.TimestampISO(txTime.Seconds)
-	walletEntity.BlockChainId = ctx.GetStub().GetTxID()
-	return walletEntity
-}
-
-func (c CreateWallet) IsValid() error {
-	if c.TokenId == "" {
-		return errors.New("token id is empty")
+func (a AssetIao) IsValid() error {
+	if a.AssetId == "" || a.AssetTokenAmount == "" {
+		return errors.New("AssetId/AssetTokenAmount is empty")
 	}
-	switch c.Status {
-	case glossary.Active, glossary.InActive:
-		return nil
+	if a.StartDate == "" || a.EndDate == "" {
+		return errors.New("StartDate/EndDate id is empty")
 	}
-	return errors.New("invalid wallet status")
+
+	if a.Rate <= 0 {
+		return errors.New("Rate of asset token must be greater than zero")
+	}
+
+	return nil
 }

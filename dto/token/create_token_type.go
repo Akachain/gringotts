@@ -17,53 +17,39 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package dto
+package token
 
 import (
 	"errors"
 	"github.com/Akachain/gringotts/entity"
+	"github.com/Akachain/gringotts/glossary"
 	"github.com/Akachain/gringotts/glossary/doc"
-	"github.com/Akachain/gringotts/glossary/transaction"
 	"github.com/Akachain/gringotts/helper"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
 
-type TransferToken struct {
-	FromWalletId string `json:"fromWalletId"`
-	ToWalletId   string `json:"toWalletId"`
-	TokenId      string `json:"tokenId"`
-	Amount       string `json:"amount"`
+type CreateTokenType struct {
+	Name        string `json:"name"`
+	TickerToken string `json:"tickerToken"`
+	MaxSupply   string `json:"maxSupply"`
 }
 
-func (t TransferToken) ToEntity(ctx contractapi.TransactionContextInterface) *entity.Transaction {
+func (c CreateTokenType) ToEntity(ctx contractapi.TransactionContextInterface) *entity.Token {
 	txTime, _ := ctx.GetStub().GetTxTimestamp()
-	transactionEntity := new(entity.Transaction)
-	transactionEntity.Id = helper.GenerateID(doc.Transactions, ctx.GetStub().GetTxID())
-	transactionEntity.TxType = transaction.Transfer
-	transactionEntity.Status = transaction.Pending
-	transactionEntity.SpenderWallet = t.FromWalletId
-	transactionEntity.FromWallet = t.FromWalletId
-	transactionEntity.ToWallet = t.ToWalletId
-	transactionEntity.FromTokenAmount = t.Amount
-	transactionEntity.ToTokenAmount = t.Amount
-	transactionEntity.CreatedAt = helper.TimestampISO(txTime.Seconds)
-	transactionEntity.UpdatedAt = helper.TimestampISO(txTime.Seconds)
-	transactionEntity.BlockChainId = ctx.GetStub().GetTxID()
-
-	return transactionEntity
+	tokenEntity := new(entity.Token)
+	tokenEntity.Id = helper.GenerateID(doc.Tokens, ctx.GetStub().GetTxID())
+	tokenEntity.Name = c.Name
+	tokenEntity.TickerToken = c.TickerToken
+	tokenEntity.Status = glossary.Active
+	tokenEntity.CreatedAt = helper.TimestampISO(txTime.Seconds)
+	tokenEntity.UpdatedAt = helper.TimestampISO(txTime.Seconds)
+	tokenEntity.BlockChainId = ctx.GetStub().GetTxID()
+	return tokenEntity
 }
 
-func (t TransferToken) IsValid() error {
-	if t.FromWalletId == "" || t.ToWalletId == "" {
-		return errors.New("From/To wallet id is empty")
-	}
-
-	if t.TokenId == "" {
-		return errors.New("token id is empty")
-	}
-
-	if t.Amount == "" {
-		return errors.New("the transfer amount is empty")
+func (c CreateTokenType) IsValid() error {
+	if c.Name == "" || c.TickerToken == "" {
+		return errors.New("name/ticker of token is empty")
 	}
 	return nil
 }

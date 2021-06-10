@@ -17,25 +17,41 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package dto
+package token
 
-import (
-	"errors"
-	"github.com/Akachain/gringotts/glossary"
-)
+import "github.com/pkg/errors"
 
-type UpdateWallet struct {
-	WalletId string          `json:"walletId"`
-	Status   glossary.Status `json:"status"`
+type IssueToken struct {
+	// wallet use to issue new token
+	WalletId string `json:"walletId"`
+
+	// token will use to issue to other token. example is stable token
+	FromTokenId string `json:"fromTokenId"`
+
+	// token will be issued base on stable token
+	ToTokenId string `json:"toTokenId"`
+
+	// number of token will be use to issue new token. Use base unit (ax10^8)
+	FromTokenAmount string `json:"fromTokenAmount"`
+
+	// number of new token will be issue. Use base unit (ax10^8)
+	ToTokenAmount string `json:"toTokenAmount"`
 }
 
-func (u UpdateWallet) IsValid() error {
-	if u.WalletId == "" {
-		return errors.New("wallet id is empty")
+func (i IssueToken) IsValid() error {
+	if i.WalletId == "" {
+		return errors.New("Wallet Id is empty")
 	}
-	switch u.Status {
-	case glossary.Active, glossary.InActive:
-		return nil
+	if i.FromTokenId == "" || i.ToTokenId == "" {
+		return errors.New("From/To token id is empty")
 	}
-	return errors.New("invalid wallet status")
+
+	if i.FromTokenAmount == "" {
+		return errors.New("the amount of from token is empty")
+	}
+
+	if i.ToTokenAmount == "" {
+		return errors.New("the amount of new token is empty")
+	}
+	return nil
 }

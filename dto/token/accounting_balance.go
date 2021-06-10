@@ -17,39 +17,22 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package entity
+// Package DTO (Data Transfer Object) contains data objects that are passed
+// between the handler layer and the service request. It helps serialize the JSON request
+// into objects used in the chaincode as well as perform some basic validation
+// on the input format and logic.
+package token
 
-import (
-	"github.com/Akachain/gringotts/glossary/doc"
-	"github.com/Akachain/gringotts/glossary/iao"
-	"github.com/Akachain/gringotts/helper"
-	"github.com/hyperledger/fabric-contract-api-go/contractapi"
-)
+import "github.com/pkg/errors"
 
-type Iao struct {
-	AssetId           string
-	AssetTokenId      string
-	AssetTokenAmount  string
-	StableTokenAmount string
-	StartDate         string
-	EndDate           string
-	Status            iao.Status
-	Rate              float64
-	Base              `mapstructure:",squash"`
+type AccountingBalance struct {
+	TxId []string `json:"txId"`
 }
 
-func NewIao(ctx ...contractapi.TransactionContextInterface) *Iao {
-	if len(ctx) <= 0 {
-		return &Iao{}
+func (a AccountingBalance) IsValid() error {
+	if a.TxId == nil || len(a.TxId) <= 0 {
+		return errors.New("transaction list is invalid")
 	}
-	txTime, _ := ctx[0].GetStub().GetTxTimestamp()
-	return &Iao{
-		Base: Base{
-			Id:           helper.GenerateID(doc.Iao, ctx[0].GetStub().GetTxID()),
-			CreatedAt:    helper.TimestampISO(txTime.Seconds),
-			UpdatedAt:    helper.TimestampISO(txTime.Seconds),
-			BlockChainId: ctx[0].GetStub().GetTxID(),
-		},
-		Status: iao.New,
-	}
+
+	return nil
 }

@@ -17,39 +17,24 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package dto
+package token
 
-import (
-	"errors"
-	"github.com/Akachain/gringotts/entity"
-	"github.com/Akachain/gringotts/glossary"
-	"github.com/Akachain/gringotts/glossary/doc"
-	"github.com/Akachain/gringotts/helper"
-	"github.com/hyperledger/fabric-contract-api-go/contractapi"
-)
+import "errors"
 
-type CreateTokenType struct {
-	Name        string `json:"name"`
-	TickerToken string `json:"tickerToken"`
-	MaxSupply   string `json:"maxSupply"`
+type BurnToken struct {
+	WalletId string `json:"walletId"`
+	TokenId  string `json:"tokenId"`
+	Amount   string `json:"amount"`
 }
 
-func (c CreateTokenType) ToEntity(ctx contractapi.TransactionContextInterface) *entity.Token {
-	txTime, _ := ctx.GetStub().GetTxTimestamp()
-	tokenEntity := new(entity.Token)
-	tokenEntity.Id = helper.GenerateID(doc.Tokens, ctx.GetStub().GetTxID())
-	tokenEntity.Name = c.Name
-	tokenEntity.TickerToken = c.TickerToken
-	tokenEntity.Status = glossary.Active
-	tokenEntity.CreatedAt = helper.TimestampISO(txTime.Seconds)
-	tokenEntity.UpdatedAt = helper.TimestampISO(txTime.Seconds)
-	tokenEntity.BlockChainId = ctx.GetStub().GetTxID()
-	return tokenEntity
-}
-
-func (c CreateTokenType) IsValid() error {
-	if c.Name == "" || c.TickerToken == "" {
-		return errors.New("name/ticker of token is empty")
+func (b BurnToken) IsValid() error {
+	if b.WalletId == "" || b.TokenId == "" {
+		return errors.New("wallet/token id is empty")
 	}
+
+	if b.Amount == "" {
+		return errors.New("the transfer amount is empty")
+	}
+
 	return nil
 }

@@ -71,6 +71,11 @@ const (
 	BizUnableUpdateBalance     ErrorCode = "329"
 	BizUnableGetBalance        ErrorCode = "330"
 	BizNftNotPermission        ErrorCode = "331"
+	BizUnableCreateAsset       ErrorCode = "332"
+	BizUnableGetAsset          ErrorCode = "333"
+	BizUnableCreateIao         ErrorCode = "334"
+	BizUnableGetIao            ErrorCode = "335"
+	BizUnableUpdateAsset       ErrorCode = "336"
 )
 
 var mapErrorCode = map[ErrorCode]string{
@@ -110,6 +115,11 @@ var mapErrorCode = map[ErrorCode]string{
 	BizUnableUpdateBalance:     "Unable to update balance of token on the blockchain",
 	BizUnableGetBalance:        "Unable to get balance of token on the blockchain",
 	BizNftNotPermission:        "Wallet Id not match owner of nft token",
+	BizUnableCreateAsset:       "Unable to create new asset on the blockchain",
+	BizUnableGetAsset:          "Unable to get asset on the blockchain",
+	BizUnableCreateIao:         "Unable to create new iao campaign on the blockchain",
+	BizUnableGetIao:            "Unable to get Iao campaign on the blockchain",
+	BizUnableUpdateAsset:       "Unable to update asset on the blockchain",
 }
 
 func (e ErrorCode) Message() string {

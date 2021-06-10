@@ -17,46 +17,46 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-// Package handler take request from the smart contract API and pass the
-// DTO object to the service layer.
 package handler
 
 import (
-	"github.com/Akachain/gringotts/dto/token"
+	iaoDto "github.com/Akachain/gringotts/dto/iao"
 	"github.com/Akachain/gringotts/errorcode"
 	"github.com/Akachain/gringotts/helper"
 	"github.com/Akachain/gringotts/helper/glogger"
 	"github.com/Akachain/gringotts/services"
-	"github.com/Akachain/gringotts/services/accounting"
+	"github.com/Akachain/gringotts/services/iao"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
 
-type AccountingHandler struct {
-	accountingService services.Accounting
+type IaoHandler struct {
+	iaoService services.Iao
 }
 
-func NewAccountingHandler() AccountingHandler {
-	return AccountingHandler{
-		accounting.NewAccountingService(),
-	}
+func NewIaoHandler() IaoHandler {
+	return IaoHandler{iao.NewIaoService()}
 }
 
-// GetAccountingTx return limit 10 transaction have status pending to accounting balance.
-func (a *AccountingHandler) GetAccountingTx(ctx contractapi.TransactionContextInterface) ([]string, error) {
-	glogger.GetInstance().Info(ctx, "-----------Accounting Handler - GetAccountingTx-----------")
-
-	return a.accountingService.GetTx(ctx)
-}
-
-// CalculateBalance calculate balance of list transaction from client.
-func (a *AccountingHandler) CalculateBalance(ctx contractapi.TransactionContextInterface, accountingBalance token.AccountingBalance) error {
-	glogger.GetInstance().Info(ctx, "-----------Accounting Handler - CalculateBalance-----------")
+func (i IaoHandler) CreateAsset(ctx contractapi.TransactionContextInterface, asset iaoDto.CreateAsset) (string, error) {
+	glogger.GetInstance().Info(ctx, "-----------Iao Handler - CreateAsset-----------")
 
 	// checking dto validate
-	if err := accountingBalance.IsValid(); err != nil {
-		glogger.GetInstance().Errorf(ctx, "Accounting - CalculateBalance Input invalidate %v", err)
-		return helper.RespError(errorcode.InvalidParam)
+	if err := asset.IsValid(); err != nil {
+		glogger.GetInstance().Errorf(ctx, "IaoHandler - CreateAsset Input invalidate %v", err)
+		return "", helper.RespError(errorcode.InvalidParam)
 	}
 
-	return a.accountingService.CalculateBalance(ctx, accountingBalance)
+	return i.iaoService.CreateAsset(ctx, asset.Name, asset.Owner, asset.TokenName, asset.TickerToken, asset.MaxSupply, asset.TotalValue, asset.ExpireDate)
+}
+
+func (i IaoHandler) CreateIao(ctx contractapi.TransactionContextInterface, assetIao iaoDto.AssetIao) (string, error) {
+	glogger.GetInstance().Info(ctx, "-----------Iao Handler - CreateIao-----------")
+
+	// checking dto validate
+	if err := assetIao.IsValid(); err != nil {
+		glogger.GetInstance().Errorf(ctx, "IaoHandler - CreateIao Input invalidate %v", err)
+		return "", helper.RespError(errorcode.InvalidParam)
+	}
+
+	return i.iaoService.CreateIao(ctx, assetIao.AssetId, assetIao.AssetTokenAmount, assetIao.StartDate, assetIao.EndDate, assetIao.Rate)
 }

@@ -21,5 +21,5 @@ package smartcontract
 
 type Exchange interface {
 	BasicToken
-	Erc721
+	Iao
 }

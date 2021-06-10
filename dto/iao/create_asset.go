@@ -17,24 +17,35 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package dto
+package iao
 
-import "errors"
+import "C"
+import "github.com/pkg/errors"
 
-type BurnToken struct {
-	WalletId string `json:"walletId"`
-	TokenId  string `json:"tokenId"`
-	Amount   string `json:"amount"`
+type CreateAsset struct {
+	Name        string `json:"name"`
+	Owner       string `json:"owner"`
+	TokenName   string `json:"tokenName"`
+	TickerToken string `json:"tickerToken"`
+	MaxSupply   string `json:"maxSupply"`
+	TotalValue  string `json:"totalValue"`
+	ExpireDate  string `json:"expireDate"`
 }
 
-func (b BurnToken) IsValid() error {
-	if b.WalletId == "" || b.TokenId == "" {
-		return errors.New("wallet/token id is empty")
+func (c CreateAsset) IsValid() error {
+	if c.Name == "" || c.Owner == "" {
+		return errors.New("Name/Owner is empty")
+	}
+	if c.TokenName == "" || c.TickerToken == "" {
+		return errors.New("TokenName/TickerToken id is empty")
 	}
 
-	if b.Amount == "" {
-		return errors.New("the transfer amount is empty")
+	if c.MaxSupply == "" {
+		return errors.New("The max supply of asset token is empty")
 	}
 
+	if c.TotalValue == "" {
+		return errors.New("Total value of new token is empty")
+	}
 	return nil
 }

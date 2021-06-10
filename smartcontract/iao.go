@@ -17,30 +17,20 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package dto
+package smartcontract
 
-import "github.com/pkg/errors"
+import (
+	"github.com/Akachain/gringotts/dto/iao"
+	"github.com/hyperledger/fabric-contract-api-go/contractapi"
+)
 
-type TransferNFT struct {
-	FromWalletId string  `json:"fromWalletId"`
-	ToWalletId   string  `json:"toWalletId"`
-	FromTokenId  string  `json:"fromTokenId"`
-	NftTokenId   string  `json:"nftTokenId"`
-	Price        float64 `json:"price"`
-}
+type Iao interface {
+	// CreateAsset to create new asset and token type
+	CreateAsset(ctx contractapi.TransactionContextInterface, asset iao.CreateAsset) (string, error)
 
-func (t TransferNFT) IsValid() error {
-	if t.FromWalletId == "" {
-		return errors.New("owner wallet id is invalid")
-	}
+	// CreateIao to create new iao for asset. It will return address of Iao to investor buy asset token
+	CreateIao(ctx contractapi.TransactionContextInterface, assetIao iao.AssetIao) (string, error)
 
-	if t.ToWalletId == "" {
-		return errors.New("To wallet id is invalid")
-	}
-
-	if t.NftTokenId == "" {
-		return errors.New("NFT token id is invalid")
-	}
-
-	return nil
+	// BuyAssetToken investor call to buy asset token
+	BuyAssetToken(ctx contractapi.TransactionContextInterface, asset iao.BuyAsset) error
 }

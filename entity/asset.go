@@ -19,11 +19,34 @@
 
 package entity
 
+import (
+	"github.com/Akachain/gringotts/glossary/doc"
+	"github.com/Akachain/gringotts/helper"
+	"github.com/hyperledger/fabric-contract-api-go/contractapi"
+)
+
 type Asset struct {
-	Name        string
-	Owner       string
-	TokenId     string
-	TokenAmount string
-	ExpireDate  string
-	Base        `mapstructure:",squash"`
+	Name           string
+	Owner          string
+	TokenId        string
+	TokenAmount    string
+	TotalValue     string
+	ExpireDate     string
+	RemainingToken string
+	Base           `mapstructure:",squash"`
+}
+
+func NewAsset(ctx ...contractapi.TransactionContextInterface) *Asset {
+	if len(ctx) <= 0 {
+		return &Asset{}
+	}
+	txTime, _ := ctx[0].GetStub().GetTxTimestamp()
+	return &Asset{
+		Base: Base{
+			Id:           helper.GenerateID(doc.Asset, ctx[0].GetStub().GetTxID()),
+			CreatedAt:    helper.TimestampISO(txTime.Seconds),
+			UpdatedAt:    helper.TimestampISO(txTime.Seconds),
+			BlockChainId: ctx[0].GetStub().GetTxID(),
+		},
+	}
 }
