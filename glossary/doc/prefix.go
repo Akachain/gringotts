@@ -28,5 +28,10 @@ const (
 	Tokens       = "Tokens"
 	HealthCheck  = "HealthCheck"
 	Enrollments  = "Enrollments"
-	NFT          = "NFT"
+	NftToken     = "NftToken"
+	Exchange     = "Exchange"
+	Balances     = "Balances"
+	Iao          = "Iao"
+	InvestorBook = "InvestorBook"
+	Asset        = "Asset"
 )

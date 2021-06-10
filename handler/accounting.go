@@ -22,7 +22,7 @@
 package handler
 
 import (
-	"github.com/Akachain/gringotts/dto"
+	"github.com/Akachain/gringotts/dto/token"
 	"github.com/Akachain/gringotts/errorcode"
 	"github.com/Akachain/gringotts/helper"
 	"github.com/Akachain/gringotts/helper/glogger"
@@ -49,7 +49,7 @@ func (a *AccountingHandler) GetAccountingTx(ctx contractapi.TransactionContextIn
 }
 
 // CalculateBalance calculate balance of list transaction from client.
-func (a *AccountingHandler) CalculateBalance(ctx contractapi.TransactionContextInterface, accountingBalance dto.AccountingBalance) error {
+func (a *AccountingHandler) CalculateBalance(ctx contractapi.TransactionContextInterface, accountingBalance token.AccountingBalance) error {
 	glogger.GetInstance().Info(ctx, "-----------Accounting Handler - CalculateBalance-----------")
 
 	// checking dto validate

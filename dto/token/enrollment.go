@@ -17,27 +17,23 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package dto
+package token
 
 import "github.com/pkg/errors"
 
-type TransferNFT struct {
-	OwnerWalletId string `json:"ownerWalletId"`
-	ToWalletId    string `json:"toWalletId"`
-	NFTTokenId    string `json:"nftTokenId"`
+type Enrollment struct {
+	TokenId      string   `json:"tokenId"`
+	FromWalletId []string `json:"fromWalletId"`
+	ToWalletId   []string `json:"toWalletId"`
 }
 
-func (t TransferNFT) IsValid() error {
-	if t.OwnerWalletId == "" {
-		return errors.New("owner wallet id is invalid")
+func (e Enrollment) IsValid() error {
+	if e.TokenId == "" {
+		return errors.New("Token Id is empty")
 	}
 
-	if t.ToWalletId == "" {
-		return errors.New("To wallet id is invalid")
-	}
-
-	if t.NFTTokenId == "" {
-		return errors.New("NFT token id is invalid")
+	if len(e.FromWalletId) <= 0 {
+		return errors.New("From wallet id is empty")
 	}
 
 	return nil

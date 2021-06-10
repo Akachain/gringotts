@@ -20,7 +20,7 @@
 package basic
 
 import (
-	"github.com/Akachain/gringotts/dto"
+	"github.com/Akachain/gringotts/dto/token"
 	"github.com/Akachain/gringotts/handler"
 	"github.com/Akachain/gringotts/helper/glogger"
 	"github.com/Akachain/gringotts/smartcontract"
@@ -50,38 +50,38 @@ func (b *baseToken) InitLedger(ctx contractapi.TransactionContextInterface) erro
 }
 
 // Wallet feature
-func (b *baseToken) CreateWallet(ctx contractapi.TransactionContextInterface, createWallet dto.CreateWallet) (string, error) {
+func (b *baseToken) CreateWallet(ctx contractapi.TransactionContextInterface, createWallet token.CreateWallet) (string, error) {
 	glogger.GetInstance().Info(ctx, "------------CreateWallet ChainCode------------")
 	return b.walletHandler.CreateWallet(ctx, createWallet)
 }
 
-func (b *baseToken) UpdateWallet(ctx contractapi.TransactionContextInterface, updateWallet dto.UpdateWallet) error {
+func (b *baseToken) UpdateWallet(ctx contractapi.TransactionContextInterface, updateWallet token.UpdateWallet) error {
 	glogger.GetInstance().Info(ctx, "------------UpdateWallet ChainCode------------")
 	return b.walletHandler.UpdateWallet(ctx, updateWallet)
 }
 
-func (b *baseToken) GetBalance(ctx contractapi.TransactionContextInterface, balance dto.Balance) (string, error) {
+func (b *baseToken) GetBalance(ctx contractapi.TransactionContextInterface, balance token.Balance) (string, error) {
 	glogger.GetInstance().Info(ctx, "------------GetBalance ChainCode------------")
 	return b.walletHandler.BalanceOf(ctx, balance)
 }
 
 // Token feature
-func (b *baseToken) Mint(ctx contractapi.TransactionContextInterface, mintDto dto.MintToken) error {
+func (b *baseToken) Mint(ctx contractapi.TransactionContextInterface, mintDto token.MintToken) error {
 	glogger.GetInstance().Info(ctx, "------------Mint ChainCode------------")
 	return b.tokenHandler.Mint(ctx, mintDto)
 }
 
-func (b *baseToken) Burn(ctx contractapi.TransactionContextInterface, burnDto dto.BurnToken) error {
+func (b *baseToken) Burn(ctx contractapi.TransactionContextInterface, burnDto token.BurnToken) error {
 	glogger.GetInstance().Info(ctx, "------------Burn ChainCode------------")
 	return b.tokenHandler.Burn(ctx, burnDto)
 }
 
-func (b *baseToken) Transfer(ctx contractapi.TransactionContextInterface, transferDto dto.TransferToken) error {
+func (b *baseToken) Transfer(ctx contractapi.TransactionContextInterface, transferDto token.TransferToken) error {
 	glogger.GetInstance().Info(ctx, "------------Transfer ChainCode------------")
 	return b.tokenHandler.Transfer(ctx, transferDto)
 }
 
-func (b *baseToken) CreateTokenType(ctx contractapi.TransactionContextInterface, createTokenTypeDto dto.CreateTokenType) (string, error) {
+func (b *baseToken) CreateTokenType(ctx contractapi.TransactionContextInterface, createTokenTypeDto token.CreateTokenType) (string, error) {
 	glogger.GetInstance().Info(ctx, "------------CreateTokenType ChainCode------------")
 	return b.tokenHandler.CreateTokenType(ctx, createTokenTypeDto)
 }
@@ -103,22 +103,22 @@ func (b *baseToken) GetAccountingTx(ctx contractapi.TransactionContextInterface)
 	return b.accountingHandler.GetAccountingTx(ctx)
 }
 
-func (b *baseToken) CalculateBalance(ctx contractapi.TransactionContextInterface, accountingDto dto.AccountingBalance) error {
+func (b *baseToken) CalculateBalance(ctx contractapi.TransactionContextInterface, accountingDto token.AccountingBalance) error {
 	glogger.GetInstance().Info(ctx, "------------CalculateBalance ChainCode------------")
 	return b.accountingHandler.CalculateBalance(ctx, accountingDto)
 }
 
-func (b *baseToken) Swap(ctx contractapi.TransactionContextInterface, swapDto dto.SwapToken) error {
-	glogger.GetInstance().Info(ctx, "------------Swap ChainCode------------")
-	return b.tokenHandler.Swap(ctx, swapDto)
+func (b *baseToken) Exchange(ctx contractapi.TransactionContextInterface, exchangeToken token.ExchangeToken) error {
+	glogger.GetInstance().Info(ctx, "------------Exchange ChainCode------------")
+	return b.tokenHandler.Exchange(ctx, exchangeToken)
 }
 
-func (b *baseToken) Issue(ctx contractapi.TransactionContextInterface, issueDto dto.IssueToken) error {
+func (b *baseToken) Issue(ctx contractapi.TransactionContextInterface, issueDto token.IssueToken) error {
 	glogger.GetInstance().Info(ctx, "------------Issue ChainCode------------")
 	return b.tokenHandler.Issue(ctx, issueDto)
 }
 
-func (b *baseToken) EnrollToken(ctx contractapi.TransactionContextInterface, enrollmentDto dto.Enrollment) error {
+func (b *baseToken) EnrollToken(ctx contractapi.TransactionContextInterface, enrollmentDto token.Enrollment) error {
 	glogger.GetInstance().Info(ctx, "------------EnrollToken ChainCode------------")
 	return b.walletHandler.EnrollToken(ctx, enrollmentDto)
 }

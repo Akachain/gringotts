@@ -17,25 +17,24 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package dto
+package token
 
-import (
-	"errors"
-	"github.com/Akachain/gringotts/glossary"
-)
+import "errors"
 
-type UpdateWallet struct {
-	WalletId string          `json:"walletId"`
-	Status   glossary.Status `json:"status"`
+type BurnToken struct {
+	WalletId string `json:"walletId"`
+	TokenId  string `json:"tokenId"`
+	Amount   string `json:"amount"`
 }
 
-func (u UpdateWallet) IsValid() error {
-	if u.WalletId == "" {
-		return errors.New("wallet id is empty")
+func (b BurnToken) IsValid() error {
+	if b.WalletId == "" || b.TokenId == "" {
+		return errors.New("wallet/token id is empty")
 	}
-	switch u.Status {
-	case glossary.Active, glossary.InActive:
-		return nil
+
+	if b.Amount == "" {
+		return errors.New("the transfer amount is empty")
 	}
-	return errors.New("invalid wallet status")
+
+	return nil
 }

@@ -17,22 +17,12 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-// Package DTO (Data Transfer Object) contains data objects that are passed
-// between the handler layer and the service request. It helps serialize the JSON request
-// into objects used in the chaincode as well as perform some basic validation
-// on the input format and logic.
-package dto
+package iao
 
-import "github.com/pkg/errors"
+type Status string
 
-type AccountingBalance struct {
-	TxId []string `json:"txId"`
-}
-
-func (a AccountingBalance) IsValid() error {
-	if a.TxId == nil || len(a.TxId) <= 0 {
-		return errors.New("transaction list is invalid")
-	}
-
-	return nil
-}
+const (
+	New      Status = "New"
+	Done            = "Done"
+	Canceled        = "Canceled"
+)

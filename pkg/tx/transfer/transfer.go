@@ -17,18 +17,24 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package dto
+package transfer
 
-import "errors"
+import (
+	"github.com/Akachain/gringotts/entity"
+	"github.com/Akachain/gringotts/pkg/tx"
+	"github.com/hyperledger/fabric-contract-api-go/contractapi"
+)
 
-type Balance struct {
-	WalletId string `json:"walletId"`
+type txTransfer struct {
+	*tx.TxBase
 }
 
-func (b Balance) IsValid() error {
-	if b.WalletId == "" {
-		return errors.New("wallet id is empty")
+func NewTxTransfer() tx.Handler {
+	return &txTransfer{
+		tx.NewTxBase(),
 	}
+}
 
-	return nil
+func (t *txTransfer) AccountingTx(ctx contractapi.TransactionContextInterface, tx *entity.Transaction, mapBalanceToken map[string]string) (*entity.Transaction, error) {
+	return t.TxHandlerTransfer(ctx, mapBalanceToken, tx)
 }

@@ -17,27 +17,10 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package dto
+package services
 
-import "github.com/pkg/errors"
+import "github.com/hyperledger/fabric-contract-api-go/contractapi"
 
-type IssueToken struct {
-	TokenId      string  `json:"tokenId"`
-	FromWalletId string  `json:"fromWalletId"`
-	ToWalletId   string  `json:"toWalletId"`
-	Amount       float64 `json:"amount"`
-}
-
-func (i IssueToken) IsValid() error {
-	if i.TokenId == "" {
-		return errors.New("Token Id is empty")
-	}
-	if i.FromWalletId == "" || i.ToWalletId == "" {
-		return errors.New("From/To wallet id is empty")
-	}
-
-	if i.Amount <= 0 {
-		return errors.New("the issue amount is a negative/zero number")
-	}
-	return nil
+type Exchange interface {
+	TransferNft(ctx contractapi.TransactionContextInterface, ownerWalletId string, toWalletId string, nftToken string, price float64) error
 }

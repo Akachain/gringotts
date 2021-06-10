@@ -31,9 +31,10 @@ import (
 // the status is checked only when we create a new wallet.
 type Token struct {
 	Name        string
-	Rate        float64
-	Status      glossary.Status
 	TickerToken string
+	MaxSupply   string
+	TotalSupply string
+	Status      glossary.Status
 	Base        `mapstructure:",squash"`
 }
 

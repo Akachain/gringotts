@@ -20,22 +20,21 @@
 package smartcontract
 
 import (
-	"github.com/Akachain/gringotts/dto"
+	"github.com/Akachain/gringotts/dto/nft"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
 
 type Erc721 interface {
-	contractapi.ContractInterface
 
-	// Mint to generate new NFT with GS1 number
-	Mint(ctx contractapi.TransactionContextInterface, mintNFT dto.MintNFT) (string, error)
+	// MintNft to generate new NFT with GS1 number
+	MintNft(ctx contractapi.TransactionContextInterface, mintNFT nft.MintNFT) (string, error)
 
 	// OwnerOf to find the owner of an NFT
-	OwnerOf(ctx contractapi.TransactionContextInterface, ownerNFT dto.OwnerNFT) (string, error)
+	OwnerOf(ctx contractapi.TransactionContextInterface, ownerNFT nft.OwnerNFT) (string, error)
 
 	// BalanceOf to count all NFTs assigned to an owner
-	BalanceOf(ctx contractapi.TransactionContextInterface, balanceOfNFT dto.BalanceOfNFT) (int, error)
+	BalanceOf(ctx contractapi.TransactionContextInterface, balanceOfNFT nft.BalanceOfNFT) (int, error)
 
 	// TransferFrom to transfers the ownership of an NFT from one wallet to another wallet
-	TransferFrom(ctx contractapi.TransactionContextInterface, transferNFT dto.TransferNFT) error
+	TransferFrom(ctx contractapi.TransactionContextInterface, transferNFT nft.TransferNFT) error
 }

@@ -17,24 +17,28 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package dto
+package token
 
-import "github.com/pkg/errors"
+import (
+	"github.com/pkg/errors"
+)
 
-type Enrollment struct {
-	TokenId      string   `json:"tokenId"`
-	FromWalletId []string `json:"fromWalletId"`
-	ToWalletId   []string `json:"toWalletId"`
+type ExchangeToken struct {
+	FromWalletId    string `json:"fromWalletId"`
+	ToWalletId      string `json:"toWalletId"`
+	FromTokenId     string `json:"fromTokenId"`
+	ToTokenId       string `json:"toTokenId"`
+	FromTokenAmount string `json:"fromTokenAmount"`
+	ToTokenAmount   string `json:"toTokenAmount"`
 }
 
-func (e Enrollment) IsValid() error {
-	if e.TokenId == "" {
-		return errors.New("Token Id is empty")
+func (s ExchangeToken) IsValid() error {
+	if s.FromWalletId == "" || s.ToWalletId == "" {
+		return errors.New("From/To wallet id is empty")
 	}
 
-	if len(e.FromWalletId) <= 0 {
-		return errors.New("From wallet id is empty")
+	if s.FromTokenAmount == "" || s.ToTokenAmount == "" {
+		return errors.New("the exchange amount is empty")
 	}
-
 	return nil
 }

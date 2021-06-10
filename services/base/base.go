@@ -20,18 +20,18 @@
 package base
 
 import (
-	"encoding/json"
 	"github.com/Akachain/gringotts/entity"
 	"github.com/Akachain/gringotts/errorcode"
 	"github.com/Akachain/gringotts/glossary"
 	"github.com/Akachain/gringotts/glossary/doc"
+	"github.com/Akachain/gringotts/glossary/transaction"
 	"github.com/Akachain/gringotts/helper"
 	"github.com/Akachain/gringotts/helper/glogger"
-	"github.com/Akachain/gringotts/pkg/query"
 	"github.com/Akachain/gringotts/repository"
 	"github.com/Akachain/gringotts/repository/base"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 	"github.com/mitchellh/mapstructure"
+	"github.com/pkg/errors"
 )
 
 type Base struct {
@@ -44,16 +44,31 @@ func NewBase() *Base {
 	}
 }
 
+func (b *Base) GetAsset(ctx contractapi.TransactionContextInterface, assetId string) (*entity.Asset, error) {
+	assetData, err := b.Repo.Get(ctx, doc.Asset, helper.AssetKey(assetId))
+	if err != nil {
+		glogger.GetInstance().Errorf(ctx, "Base - Get asset (%s) failed with error (%s)", assetId, err.Error())
+		return nil, helper.RespError(errorcode.BizUnableGetAsset)
+	}
+
+	asset := entity.NewAsset()
+	if err = mapstructure.Decode(assetData, &asset); err != nil {
+		glogger.GetInstance().Errorf(ctx, "Base - Decode asset failed with error  (%s)", err.Error())
+		return nil, helper.RespError(errorcode.BizUnableMapDecode)
+	}
+	return asset, nil
+}
+
 func (b *Base) GetTransaction(ctx contractapi.TransactionContextInterface, txId string) (*entity.Transaction, error) {
 	txData, err := b.Repo.Get(ctx, doc.Transactions, helper.TransactionKey(txId))
 	if err != nil {
-		glogger.GetInstance().Errorf(ctx, "Base - Get transaction (%s) failed with error (%v)", txId, err)
+		glogger.GetInstance().Errorf(ctx, "Base - Get transaction (%s) failed with error (%s)", txId, err.Error())
 		return nil, helper.RespError(errorcode.BizUnableGetTx)
 	}
 
 	tx := entity.NewTransaction()
 	if err = mapstructure.Decode(txData, &tx); err != nil {
-		glogger.GetInstance().Errorf(ctx, "Base - Decode transaction failed with error (%v)", err)
+		glogger.GetInstance().Errorf(ctx, "Base - Decode transaction failed with error  (%s)", err.Error())
 		return nil, helper.RespError(errorcode.BizUnableMapDecode)
 	}
 	return tx, nil
@@ -62,13 +77,13 @@ func (b *Base) GetTransaction(ctx contractapi.TransactionContextInterface, txId 
 func (b *Base) GetTokenType(ctx contractapi.TransactionContextInterface, tokenId string) (*entity.Token, error) {
 	tokenData, err := b.Repo.Get(ctx, doc.Tokens, helper.TokenKey(tokenId))
 	if err != nil {
-		glogger.GetInstance().Errorf(ctx, "Base - Get token type failed with error (%v)", err)
+		glogger.GetInstance().Errorf(ctx, "Base - Get token type failed with error  (%s)", err.Error())
 		return nil, helper.RespError(errorcode.BizUnableGetTokenType)
 	}
 
 	token := new(entity.Token)
 	if err = mapstructure.Decode(tokenData, &token); err != nil {
-		glogger.GetInstance().Errorf(ctx, "Base - Decode token type failed with error (%v)", err)
+		glogger.GetInstance().Errorf(ctx, "Base - Decode token type failed with error  (%s)", err.Error())
 		return nil, helper.RespError(errorcode.BizUnableMapDecode)
 	}
 	return token, nil
@@ -77,13 +92,13 @@ func (b *Base) GetTokenType(ctx contractapi.TransactionContextInterface, tokenId
 func (b *Base) GetWallet(ctx contractapi.TransactionContextInterface, walletId string) (*entity.Wallet, error) {
 	walletData, err := b.Repo.Get(ctx, doc.Wallets, helper.WalletKey(walletId))
 	if err != nil {
-		glogger.GetInstance().Errorf(ctx, "Base - Get wallet failed with error (%v)", err)
+		glogger.GetInstance().Errorf(ctx, "Base - Get wallet failed with error  (%s)", err.Error())
 		return nil, helper.RespError(errorcode.BizUnableGetWallet)
 	}
 
 	wallet := new(entity.Wallet)
 	if err = mapstructure.Decode(walletData, &wallet); err != nil {
-		glogger.GetInstance().Errorf(ctx, "Base - Decode wallet failed with error (%v)", err)
+		glogger.GetInstance().Errorf(ctx, "Base - Decode wallet failed with error  (%s)", err.Error())
 		return nil, helper.RespError(errorcode.BizUnableMapDecode)
 	}
 	return wallet, nil
@@ -101,131 +116,130 @@ func (b *Base) GetActiveWallet(ctx contractapi.TransactionContextInterface, wall
 	return wallet, nil
 }
 
-func (b *Base) AddBalance(ctx contractapi.TransactionContextInterface, walletId string, amount string) error {
-	txTime, _ := ctx.GetStub().GetTxTimestamp()
-	//  update balance of wallet
-	walletData, err := b.Repo.Get(ctx, doc.Wallets, helper.WalletKey(walletId))
-	if err != nil {
-		glogger.GetInstance().Errorf(ctx, "Base - Get wallet failed with error (%v)", err)
-		return helper.RespError(errorcode.BizUnableGetWallet)
-	}
-
-	wallet := new(entity.Wallet)
-	if err = mapstructure.Decode(walletData, &wallet); err != nil {
-		glogger.GetInstance().Errorf(ctx, "Base - Decode wallet failed with error (%v)", err)
-		return helper.RespError(errorcode.BizUnableMapDecode)
-	}
-
-	updatedBalance, err := helper.AddBalance(wallet.Balances, amount)
-	if err != nil {
-		glogger.GetInstance().Errorf(ctx, "Base - Sub balance of wallet failed with error (%v)", err)
-		return helper.RespError(errorcode.BizUnableUpdateWallet)
-	}
-	wallet.Balances = updatedBalance
-	wallet.UpdatedAt = helper.TimestampISO(txTime.Seconds)
-	if err := b.Repo.Update(ctx, wallet, doc.Wallets, helper.WalletKey(wallet.Id)); err != nil {
-		glogger.GetInstance().Errorf(ctx, "Transfer - Update wallet failed with error (%v)", err)
-		return helper.RespError(errorcode.BizUnableUpdateWallet)
-	}
-	return nil
-}
-
-func (b *Base) SubBalance(ctx contractapi.TransactionContextInterface, walletId string, amount string) error {
-	txTime, _ := ctx.GetStub().GetTxTimestamp()
-	//  update balance of wallet
-	walletData, err := b.Repo.Get(ctx, doc.Wallets, helper.WalletKey(walletId))
-	if err != nil {
-		glogger.GetInstance().Errorf(ctx, "Base - Get wallet failed with error (%v)", err)
-		return helper.RespError(errorcode.BizUnableGetWallet)
-	}
-
-	wallet := new(entity.Wallet)
-	if err = mapstructure.Decode(walletData, &wallet); err != nil {
-		glogger.GetInstance().Errorf(ctx, "Base - Decode wallet failed with error (%v)", err)
-		return helper.RespError(errorcode.BizUnableMapDecode)
-	}
-
-	// check balance insufficient
-	if helper.CompareStringBalance(wallet.Balances, amount) < 0 {
-		glogger.GetInstance().Error(ctx, "Base - Balance of wallet  insufficient")
-		return helper.RespError(errorcode.BizBalanceNotEnough)
-	}
-
-	updatedBalance, err := helper.SubBalance(wallet.Balances, amount)
-	if err != nil {
-		glogger.GetInstance().Errorf(ctx, "Base - Sub balance of wallet failed with error (%v)", err)
-		return helper.RespError(errorcode.BizUnableUpdateWallet)
-	}
-	wallet.Balances = updatedBalance
-	wallet.UpdatedAt = helper.TimestampISO(txTime.Seconds)
-	if err := b.Repo.Update(ctx, wallet, doc.Wallets, helper.WalletKey(wallet.Id)); err != nil {
-		glogger.GetInstance().Errorf(ctx, "Transfer - Update from wallet failed with error (%v)", err)
-		return helper.RespError(errorcode.BizUnableUpdateWallet)
-	}
-	return nil
-}
-
 func (b *Base) GetEnrollment(ctx contractapi.TransactionContextInterface, tokenId string) (*entity.Enrollment, error) {
 	enrollmentData, err := b.Repo.Get(ctx, doc.Enrollments, helper.EnrollmentKey(tokenId))
 	if err != nil {
-		glogger.GetInstance().Errorf(ctx, "Base - Get enrollment failed with error (%v)", err)
+		glogger.GetInstance().Errorf(ctx, "Base - Get enrollment failed with error  (%s)", err.Error())
 		return nil, helper.RespError(errorcode.BizUnableGetEnrollment)
 	}
 
 	enrollment := new(entity.Enrollment)
 	if err = mapstructure.Decode(enrollmentData, &enrollment); err != nil {
-		glogger.GetInstance().Errorf(ctx, "Base - Decode enrollment failed with error (%v)", err)
+		glogger.GetInstance().Errorf(ctx, "Base - Decode enrollment failed with error  (%s)", err.Error())
 		return nil, helper.RespError(errorcode.BizUnableMapDecode)
 	}
 	return enrollment, nil
 }
 
 func (b *Base) GetNFT(ctx contractapi.TransactionContextInterface, nftTokenId string) (*entity.NFT, error) {
-	nftData, err := b.Repo.Get(ctx, doc.NFT, helper.NFTKey(nftTokenId))
+	nftData, err := b.Repo.Get(ctx, doc.NftToken, helper.NFTKey(nftTokenId))
 	if err != nil {
-		glogger.GetInstance().Errorf(ctx, "GetNFT - Get NFT failed with error (%v)", err)
+		glogger.GetInstance().Errorf(ctx, "GetNFT - Get NftToken failed with error (%s)", err.Error())
 		return nil, helper.RespError(errorcode.BizUnableGetNFT)
 	}
 
 	nftToken := new(entity.NFT)
 	if err = mapstructure.Decode(nftData, &nftToken); err != nil {
-		glogger.GetInstance().Errorf(ctx, "GetNFT - Decode NFT token failed with error (%v)", err)
+		glogger.GetInstance().Errorf(ctx, "GetNFT - Decode NftToken token failed with error (%s)", err.Error())
 		return nil, helper.RespError(errorcode.BizUnableMapDecode)
 	}
 
 	return nftToken, nil
 }
 
-func (b *Base) GetExchangeTxByBlockchainId(ctx contractapi.TransactionContextInterface, blockchainId string) ([]*entity.Transaction, error) {
-	txList := make([]*entity.Transaction, 0)
-	resultsIterator, err := b.Repo.GetQueryString(ctx, query.GetTransactionByBlockchainId(blockchainId))
+func (b *Base) GetBalanceOfToken(ctx contractapi.TransactionContextInterface, walletId string, tokenId string) (*entity.Balance, error) {
+	balanceData, err := b.Repo.Get(ctx, doc.Balances, helper.BalanceKey(walletId, tokenId))
 	if err != nil {
-		glogger.GetInstance().Errorf(ctx, "GetExchangeTxByBlockchainId - Get query exchange tx failed with error (%v)", err)
-		return nil, helper.RespError(errorcode.BizUnableGetTx)
-	}
-	defer resultsIterator.Close()
-
-	// Check data response after query in database
-	if !resultsIterator.HasNext() {
-		// Return with list transaction id empty
-		return txList, nil
+		glogger.GetInstance().Errorf(ctx, "Base - Get balance of token failed with error (%s)", err.Error())
+		return nil, helper.RespError(errorcode.BizUnableGetBalance)
 	}
 
-	for resultsIterator.HasNext() {
-		queryResponse, err := resultsIterator.Next()
+	balance := new(entity.Balance)
+	if err = mapstructure.Decode(balanceData, &balance); err != nil {
+		glogger.GetInstance().Errorf(ctx, "Base - Decode balance of token failed with error (%s)", err.Error())
+		return nil, helper.RespError(errorcode.BizUnableMapDecode)
+	}
+	return balance, nil
+}
+
+func (b *Base) ValidatePairWallet(ctx contractapi.TransactionContextInterface, fromWalletId,
+	toWalletId string) (walletFrom, walletTo *entity.Wallet, err error) {
+	// validate to wallet exist
+	walletTo, err = b.GetActiveWallet(ctx, toWalletId)
+	if err != nil {
+		glogger.GetInstance().Errorf(ctx, "Base - Get To Wallet failed with error (%v)", err)
+		return nil, nil, err
+	}
+
+	// validate from wallet exist
+	walletFrom, err = b.GetActiveWallet(ctx, fromWalletId)
+	if err != nil {
+		glogger.GetInstance().Errorf(ctx, "Base - Get From Wallet failed with error (%v)", err)
+		return nil, nil, err
+	}
+	return walletFrom, walletTo, err
+}
+
+// AddAmount to add amount of balance token
+func (b *Base) AddAmount(ctx contractapi.TransactionContextInterface,
+	mapCurrentBalance map[string]string, walletId string, tokenId string, amount string) error {
+	key := walletId + "_" + tokenId
+	// Load current balance of wallet into memory
+	if _, ok := mapCurrentBalance[key]; !ok {
+		balanceToken, err := b.GetBalanceOfToken(ctx, walletId, tokenId)
 		if err != nil {
-			glogger.GetInstance().Errorf(ctx, "GetExchangeTxByBlockchainId - Start query failed with error (%v)", err)
-			return nil, helper.RespError(errorcode.BizUnableGetTx)
+			return err
 		}
-		tx := entity.NewTransaction()
-		err = json.Unmarshal(queryResponse.Value, tx)
-		if err != nil {
-			glogger.GetInstance().Errorf(ctx, "GetExchangeTxByBlockchainId - Unable to unmarshal transaction error (%v)", err)
-			return txList, helper.RespError(errorcode.BizUnableGetTx)
-		}
-
-		txList = append(txList, tx)
+		mapCurrentBalance[key] = balanceToken.Balances
 	}
 
-	return txList, nil
+	// update current balance
+	updateCurrentBalance, err := helper.AddBalance(mapCurrentBalance[key], amount)
+	if err != nil {
+		return err
+	}
+	mapCurrentBalance[key] = updateCurrentBalance
+
+	return nil
+}
+
+// SubAmount to sub amount of balance token
+func (b *Base) SubAmount(ctx contractapi.TransactionContextInterface,
+	mapCurrentBalance map[string]string, walletId string, tokenId string, amount string) error {
+	key := walletId + "_" + tokenId
+	// Load current balance of wallet into memory
+	if _, ok := mapCurrentBalance[key]; !ok {
+		balanceToken, err := b.GetBalanceOfToken(ctx, walletId, tokenId)
+		if err != nil {
+			return err
+		}
+		mapCurrentBalance[key] = balanceToken.Balances
+	}
+
+	// checking current balance with amount
+	if helper.CompareStringBalance(mapCurrentBalance[key], amount) < 0 {
+		return errors.Errorf("Wallet (%s) do not have enough balance", key)
+	}
+
+	// update current balance
+	updateCurrentBalance, err := helper.SubBalance(mapCurrentBalance[key], amount)
+	if err != nil {
+		return err
+	}
+	mapCurrentBalance[key] = updateCurrentBalance
+
+	return nil
+}
+
+// RollbackTxHandler to rollback balance of wallet that was updated
+func (b *Base) RollbackTxHandler(ctx contractapi.TransactionContextInterface, tx *entity.Transaction,
+	mapCurrentBalance map[string]string, step transaction.Step) error {
+	// currently only rollback in case transfer or swap
+	if step == transaction.SubFromWallet {
+		if err := b.AddAmount(ctx, mapCurrentBalance, tx.FromWallet, tx.FromTokenId, tx.FromTokenAmount); err != nil {
+			glogger.GetInstance().Errorf(ctx, "RollbackTxHandler - Add balance of wallet (%s) with transaction (%s) failed", tx.FromWallet, tx.Id)
+			return err
+		}
+	}
+	return nil
 }

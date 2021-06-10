@@ -32,7 +32,7 @@ type Wallet interface {
 	Update(ctx contractapi.TransactionContextInterface, walletId string, status glossary.Status) error
 
 	// BalanceOf get balance of wallet
-	BalanceOf(ctx contractapi.TransactionContextInterface, walletId string) (string, error)
+	BalanceOf(ctx contractapi.TransactionContextInterface, walletId string, tokenId string) (string, error)
 
 	// EnrollToken to register wallet id that will be issue/mint token into.
 	// Currently support add list from wallet id and to wallet id

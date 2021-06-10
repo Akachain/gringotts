@@ -48,3 +48,22 @@ func EnrollmentKey(tokenId string) []string {
 func NFTKey(nftId string) []string {
 	return []string{nftId}
 }
+
+// BalanceKey return list key of balance docs will be compose in couch db key
+func BalanceKey(keys ...string) []string {
+	var balanceKeys []string
+	for _, item := range keys {
+		balanceKeys = append(balanceKeys, item)
+	}
+	return balanceKeys
+}
+
+// AssetKey return list key of Asset will be compose in couch db key
+func AssetKey(assetId string) []string {
+	return []string{assetId}
+}
+
+// IaoKey return list key of Asset will be compose in couch db key
+func IaoKey(iaoId string) []string {
+	return []string{iaoId}
+}

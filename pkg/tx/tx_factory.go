@@ -17,43 +17,33 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package dto
+package tx
 
 import (
-	"errors"
-	"github.com/Akachain/gringotts/entity"
-	"github.com/Akachain/gringotts/glossary"
-	"github.com/Akachain/gringotts/glossary/doc"
-	"github.com/Akachain/gringotts/helper"
-	"github.com/hyperledger/fabric-contract-api-go/contractapi"
+	"github.com/Akachain/gringotts/glossary/transaction"
+	"github.com/Akachain/gringotts/pkg/tx/burn"
+	"github.com/Akachain/gringotts/pkg/tx/exchange"
+	"github.com/Akachain/gringotts/pkg/tx/issue"
+	"github.com/Akachain/gringotts/pkg/tx/mint"
+	"github.com/Akachain/gringotts/pkg/tx/nft_transfer"
+	"github.com/Akachain/gringotts/pkg/tx/transfer"
 )
 
-type CreateWallet struct {
-	TokenId string          `json:"tokenId"`
-	Status  glossary.Status `json:"status"`
-}
-
-func (c CreateWallet) ToEntity(ctx contractapi.TransactionContextInterface) *entity.Wallet {
-	txTime, _ := ctx.GetStub().GetTxTimestamp()
-	walletEntity := new(entity.Wallet)
-	walletEntity.Id = helper.GenerateID(doc.Wallets, ctx.GetStub().GetTxID())
-
-	walletEntity.TokenId = c.TokenId
-	walletEntity.Status = c.Status
-	walletEntity.Balances = "0"
-	walletEntity.CreatedAt = helper.TimestampISO(txTime.Seconds)
-	walletEntity.UpdatedAt = helper.TimestampISO(txTime.Seconds)
-	walletEntity.BlockChainId = ctx.GetStub().GetTxID()
-	return walletEntity
-}
-
-func (c CreateWallet) IsValid() error {
-	if c.TokenId == "" {
-		return errors.New("token id is empty")
-	}
-	switch c.Status {
-	case glossary.Active, glossary.InActive:
+func GetTxHandler(txType transaction.Type) Handler {
+	switch txType {
+	case transaction.Transfer:
+		return transfer.NewTxTransfer()
+	case transaction.Issue:
+		return issue.NewTxIssue()
+	case transaction.Exchange:
+		return exchange.NewTxExchange()
+	case transaction.TransferNft:
+		return nft_transfer.NewTxNftTransfer()
+	case transaction.Mint:
+		return mint.NewTxMint()
+	case transaction.Burn:
+		return burn.NewTxBurn()
+	default:
 		return nil
 	}
-	return errors.New("invalid wallet status")
 }

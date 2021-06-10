@@ -23,7 +23,7 @@ import "github.com/hyperledger/fabric-contract-api-go/contractapi"
 
 type NFT interface {
 	// Mint generate new NFT token
-	Mint(ctx contractapi.TransactionContextInterface, gs1Number string, ownerWalletId string, metaData string) (string, error)
+	Mint(ctx contractapi.TransactionContextInterface, gs1Number string, ownerWalletId string, metaData string, hashData string) (string, error)
 
 	// OwnerOf return owner wallet id of nft token
 	OwnerOf(ctx contractapi.TransactionContextInterface, nftTokenId string) (string, error)
@@ -32,5 +32,5 @@ type NFT interface {
 	BalanceOf(ctx contractapi.TransactionContextInterface, ownerWalletId string) (int, error)
 
 	// TransferFrom to transfer nft token from owner to other wallet
-	TransferFrom(ctx contractapi.TransactionContextInterface, ownerWalletId string, toWalletId string, nftTokenId string) error
+	TransferFrom(ctx contractapi.TransactionContextInterface, ownerWalletId string, toWalletId string, fromTokenId string, nftTokenId string, price float64) error
 }

@@ -17,44 +17,39 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package dto
+package entity
 
 import (
-	"errors"
-	"github.com/Akachain/gringotts/entity"
-	"github.com/Akachain/gringotts/glossary"
 	"github.com/Akachain/gringotts/glossary/doc"
+	"github.com/Akachain/gringotts/glossary/iao"
 	"github.com/Akachain/gringotts/helper"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
 
-type CreateTokenType struct {
-	Name        string  `json:"name"`
-	TickerToken string  `json:"tickerToken"`
-	Rate        float64 `json:"rate"`
+type Iao struct {
+	AssetId           string
+	AssetTokenId      string
+	AssetTokenAmount  string
+	StableTokenAmount string
+	StartDate         string
+	EndDate           string
+	Status            iao.Status
+	Rate              float64
+	Base              `mapstructure:",squash"`
 }
 
-func (c CreateTokenType) ToEntity(ctx contractapi.TransactionContextInterface) *entity.Token {
-	txTime, _ := ctx.GetStub().GetTxTimestamp()
-	tokenEntity := new(entity.Token)
-	tokenEntity.Id = helper.GenerateID(doc.Tokens, ctx.GetStub().GetTxID())
-	tokenEntity.Name = c.Name
-	tokenEntity.TickerToken = c.TickerToken
-	tokenEntity.Rate = c.Rate
-	tokenEntity.Status = glossary.Active
-	tokenEntity.CreatedAt = helper.TimestampISO(txTime.Seconds)
-	tokenEntity.UpdatedAt = helper.TimestampISO(txTime.Seconds)
-	tokenEntity.BlockChainId = ctx.GetStub().GetTxID()
-	return tokenEntity
-}
-
-func (c CreateTokenType) IsValid() error {
-	if c.Name == "" || c.TickerToken == "" {
-		return errors.New("name/ticker of token is empty")
+func NewIao(ctx ...contractapi.TransactionContextInterface) *Iao {
+	if len(ctx) <= 0 {
+		return &Iao{}
 	}
-	if c.Rate < 0 {
-		return errors.New("rate of token must be greater than zero")
+	txTime, _ := ctx[0].GetStub().GetTxTimestamp()
+	return &Iao{
+		Base: Base{
+			Id:           helper.GenerateID(doc.Iao, ctx[0].GetStub().GetTxID()),
+			CreatedAt:    helper.TimestampISO(txTime.Seconds),
+			UpdatedAt:    helper.TimestampISO(txTime.Seconds),
+			BlockChainId: ctx[0].GetStub().GetTxID(),
+		},
+		Status: iao.New,
 	}
-
-	return nil
 }

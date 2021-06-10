@@ -20,7 +20,7 @@
 package nft
 
 import (
-	"github.com/Akachain/gringotts/dto"
+	nft2 "github.com/Akachain/gringotts/dto/nft"
 	"github.com/Akachain/gringotts/handler"
 	"github.com/Akachain/gringotts/helper/glogger"
 	"github.com/Akachain/gringotts/smartcontract"
@@ -28,7 +28,6 @@ import (
 )
 
 type nft struct {
-	contractapi.Contract
 	nftHandler handler.NftHandler
 }
 
@@ -38,22 +37,22 @@ func NewNFT() smartcontract.Erc721 {
 	}
 }
 
-func (n *nft) Mint(ctx contractapi.TransactionContextInterface, mintNFT dto.MintNFT) (string, error) {
+func (n *nft) MintNft(ctx contractapi.TransactionContextInterface, mintNFT nft2.MintNFT) (string, error) {
 	glogger.GetInstance().Info(ctx, "------------Mint NFT SmartContract------------")
 	return n.nftHandler.Mint(ctx, mintNFT)
 }
 
-func (n *nft) OwnerOf(ctx contractapi.TransactionContextInterface, ownerNFT dto.OwnerNFT) (string, error) {
+func (n *nft) OwnerOf(ctx contractapi.TransactionContextInterface, ownerNFT nft2.OwnerNFT) (string, error) {
 	glogger.GetInstance().Info(ctx, "------------OwnerOf NFT SmartContract------------")
 	return n.nftHandler.OwnerOf(ctx, ownerNFT)
 }
 
-func (n *nft) BalanceOf(ctx contractapi.TransactionContextInterface, balanceOfNFT dto.BalanceOfNFT) (int, error) {
+func (n *nft) BalanceOf(ctx contractapi.TransactionContextInterface, balanceOfNFT nft2.BalanceOfNFT) (int, error) {
 	glogger.GetInstance().Info(ctx, "------------BalanceOf NFT SmartContract------------")
 	return n.nftHandler.BalanceOf(ctx, balanceOfNFT)
 }
 
-func (n *nft) TransferFrom(ctx contractapi.TransactionContextInterface, transferNFT dto.TransferNFT) error {
+func (n *nft) TransferFrom(ctx contractapi.TransactionContextInterface, transferNFT nft2.TransferNFT) error {
 	glogger.GetInstance().Info(ctx, "------------TransferFrom NFT SmartContract------------")
 	return n.nftHandler.TransferNFT(ctx, transferNFT)
 }

@@ -20,7 +20,7 @@
 package smartcontract
 
 import (
-	"github.com/Akachain/gringotts/dto"
+	"github.com/Akachain/gringotts/dto/token"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
 
@@ -28,25 +28,25 @@ type BasicToken interface {
 	contractapi.ContractInterface
 
 	// CreateWallet to create new wallet. Each wallet belong to token type
-	CreateWallet(ctx contractapi.TransactionContextInterface, createWallet dto.CreateWallet) (string, error)
+	CreateWallet(ctx contractapi.TransactionContextInterface, createWallet token.CreateWallet) (string, error)
 
 	// UpdateWallet to update status of wallet. Active or InActive
-	UpdateWallet(ctx contractapi.TransactionContextInterface, updateWallet dto.UpdateWallet) error
+	UpdateWallet(ctx contractapi.TransactionContextInterface, updateWallet token.UpdateWallet) error
 
 	// GetBalance return balance of wallet
-	GetBalance(ctx contractapi.TransactionContextInterface, balance dto.Balance) (string, error)
+	GetBalance(ctx contractapi.TransactionContextInterface, balance token.Balance) (string, error)
 
 	// Mint to init base token in the system
-	Mint(ctx contractapi.TransactionContextInterface, mintDto dto.MintToken) error
+	Mint(ctx contractapi.TransactionContextInterface, mintDto token.MintToken) error
 
 	// Burn to delete token in the system
-	Burn(ctx contractapi.TransactionContextInterface, burnDto dto.BurnToken) error
+	Burn(ctx contractapi.TransactionContextInterface, burnDto token.BurnToken) error
 
-	// Transfers amount of tokens from address FromWalletId to address ToWalletId
-	Transfer(ctx contractapi.TransactionContextInterface, transferDto dto.TransferToken) error
+	// Transfer amount of tokens from address FromWalletId to address ToWalletId
+	Transfer(ctx contractapi.TransactionContextInterface, transferDto token.TransferToken) error
 
 	// CreateTokenType to create new token type in the system
-	CreateTokenType(ctx contractapi.TransactionContextInterface, createTokenTypeDto dto.CreateTokenType) (string, error)
+	CreateTokenType(ctx contractapi.TransactionContextInterface, createTokenTypeDto token.CreateTokenType) (string, error)
 
 	// CreateHealthCheck check system ready to use
 	CreateHealthCheck(ctx contractapi.TransactionContextInterface, arg string) (string, error)
@@ -55,17 +55,14 @@ type BasicToken interface {
 	GetAccountingTx(ctx contractapi.TransactionContextInterface) ([]string, error)
 
 	// CalculateBalance update balance of wallet. Accounting job will call this
-	CalculateBalance(ctx contractapi.TransactionContextInterface, accountingDto dto.AccountingBalance) error
+	CalculateBalance(ctx contractapi.TransactionContextInterface, accountingDto token.AccountingBalance) error
 
-	// Swap to swap between token type. Example from Stable token to X token
-	Swap(ctx contractapi.TransactionContextInterface, swapDto dto.SwapToken) error
+	// Exchange to swap between token type. Example from Stable token to X token
+	Exchange(ctx contractapi.TransactionContextInterface, exchangeToken token.ExchangeToken) error
 
 	// Issue to issue new token from stable token
-	Issue(ctx contractapi.TransactionContextInterface, issueDto dto.IssueToken) error
+	Issue(ctx contractapi.TransactionContextInterface, issueDto token.IssueToken) error
 
 	// EnrollToken to register wallet policy use to issue new token
-	EnrollToken(ctx contractapi.TransactionContextInterface, enrollmentDto dto.Enrollment) error
-
-	// Exchange to exchange token between two user have diff token type
-	Exchange(ctx contractapi.TransactionContextInterface, exchangeToken dto.ExchangeToken) error
+	EnrollToken(ctx contractapi.TransactionContextInterface, enrollmentDto token.Enrollment) error
 }

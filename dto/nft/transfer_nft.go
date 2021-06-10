@@ -17,22 +17,29 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package dto
+package nft
 
-import "errors"
+import "github.com/pkg/errors"
 
-type BurnToken struct {
-	WalletId string  `json:"walletId"`
-	Amount   float64 `json:"amount"`
+type TransferNFT struct {
+	FromWalletId string  `json:"fromWalletId"`
+	ToWalletId   string  `json:"toWalletId"`
+	FromTokenId  string  `json:"fromTokenId"`
+	NftTokenId   string  `json:"nftTokenId"`
+	Price        float64 `json:"price"`
 }
 
-func (b BurnToken) IsValid() error {
-	if b.WalletId == "" {
-		return errors.New("wallet id is empty")
+func (t TransferNFT) IsValid() error {
+	if t.FromWalletId == "" {
+		return errors.New("owner wallet id is invalid")
 	}
 
-	if b.Amount <= 0 {
-		return errors.New("the transfer amount is a negative number")
+	if t.ToWalletId == "" {
+		return errors.New("To wallet id is invalid")
+	}
+
+	if t.NftTokenId == "" {
+		return errors.New("NFT token id is invalid")
 	}
 
 	return nil

@@ -20,7 +20,7 @@
 package handler
 
 import (
-	"github.com/Akachain/gringotts/dto"
+	nft2 "github.com/Akachain/gringotts/dto/nft"
 	"github.com/Akachain/gringotts/errorcode"
 	"github.com/Akachain/gringotts/helper"
 	"github.com/Akachain/gringotts/helper/glogger"
@@ -37,7 +37,7 @@ func NewNftHandler() NftHandler {
 	return NftHandler{nft.NewNftService()}
 }
 
-func (n *NftHandler) Mint(ctx contractapi.TransactionContextInterface, mintNFT dto.MintNFT) (string, error) {
+func (n *NftHandler) Mint(ctx contractapi.TransactionContextInterface, mintNFT nft2.MintNFT) (string, error) {
 	glogger.GetInstance().Info(ctx, "-----------NFT Handler - Mint-----------")
 
 	// checking dto validate
@@ -46,10 +46,10 @@ func (n *NftHandler) Mint(ctx contractapi.TransactionContextInterface, mintNFT d
 		return "", helper.RespError(errorcode.InvalidParam)
 	}
 
-	return n.nftService.Mint(ctx, mintNFT.GS1Number, mintNFT.OwnerWalletId, mintNFT.Metadata)
+	return n.nftService.Mint(ctx, mintNFT.GS1Number, mintNFT.OwnerWalletId, mintNFT.Metadata, mintNFT.HashData)
 }
 
-func (n *NftHandler) OwnerOf(ctx contractapi.TransactionContextInterface, ownerNFT dto.OwnerNFT) (string, error) {
+func (n *NftHandler) OwnerOf(ctx contractapi.TransactionContextInterface, ownerNFT nft2.OwnerNFT) (string, error) {
 	glogger.GetInstance().Info(ctx, "-----------NFT Handler - OwnerOf-----------")
 
 	// checking dto validate
@@ -61,7 +61,7 @@ func (n *NftHandler) OwnerOf(ctx contractapi.TransactionContextInterface, ownerN
 	return n.nftService.OwnerOf(ctx, ownerNFT.NFTTokenId)
 }
 
-func (n *NftHandler) BalanceOf(ctx contractapi.TransactionContextInterface, balanceOfNFT dto.BalanceOfNFT) (int, error) {
+func (n *NftHandler) BalanceOf(ctx contractapi.TransactionContextInterface, balanceOfNFT nft2.BalanceOfNFT) (int, error) {
 	glogger.GetInstance().Info(ctx, "-----------NFT Handler - BalanceOf-----------")
 
 	// checking dto validate
@@ -73,7 +73,7 @@ func (n *NftHandler) BalanceOf(ctx contractapi.TransactionContextInterface, bala
 	return n.nftService.BalanceOf(ctx, balanceOfNFT.OwnerWalletId)
 }
 
-func (n *NftHandler) TransferNFT(ctx contractapi.TransactionContextInterface, transferNFT dto.TransferNFT) error {
+func (n *NftHandler) TransferNFT(ctx contractapi.TransactionContextInterface, transferNFT nft2.TransferNFT) error {
 	glogger.GetInstance().Info(ctx, "-----------NFT Handler - TransferNFT-----------")
 
 	// checking dto validate
@@ -82,5 +82,5 @@ func (n *NftHandler) TransferNFT(ctx contractapi.TransactionContextInterface, tr
 		return helper.RespError(errorcode.InvalidParam)
 	}
 
-	return n.nftService.TransferFrom(ctx, transferNFT.OwnerWalletId, transferNFT.ToWalletId, transferNFT.NFTTokenId)
+	return n.nftService.TransferFrom(ctx, transferNFT.FromWalletId, transferNFT.ToWalletId, transferNFT.FromTokenId, transferNFT.NftTokenId, transferNFT.Price)
 }

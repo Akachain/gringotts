@@ -17,25 +17,18 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package dto
+package nft
 
-import (
-	"github.com/pkg/errors"
-)
+import "github.com/pkg/errors"
 
-type SwapToken struct {
-	FromWalletId string  `json:"fromWalletId"`
-	ToWalletId   string  `json:"toWalletId"`
-	Amount       float64 `json:"amount"`
+type BalanceOfNFT struct {
+	OwnerWalletId string `json:"ownerWalletId"`
 }
 
-func (s SwapToken) IsValid() error {
-	if s.FromWalletId == "" || s.ToWalletId == "" {
-		return errors.New("From/To wallet id is empty")
+func (b BalanceOfNFT) IsValid() error {
+	if b.OwnerWalletId == "" {
+		return errors.New("owner wallet id is invalid")
 	}
 
-	if s.Amount <= 0 {
-		return errors.New("the swap amount is a negative/zero number")
-	}
 	return nil
 }

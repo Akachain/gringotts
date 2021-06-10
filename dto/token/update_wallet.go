@@ -17,18 +17,25 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package dto
+package token
 
-import "github.com/pkg/errors"
+import (
+	"errors"
+	"github.com/Akachain/gringotts/glossary"
+)
 
-type OwnerNFT struct {
-	NFTTokenId string `json:"nftTokenId"`
+type UpdateWallet struct {
+	WalletId string          `json:"walletId"`
+	Status   glossary.Status `json:"status"`
 }
 
-func (o OwnerNFT) IsValid() error {
-	if o.NFTTokenId == "" {
-		return errors.New("NFT token id is invalid")
+func (u UpdateWallet) IsValid() error {
+	if u.WalletId == "" {
+		return errors.New("wallet id is empty")
 	}
-
-	return nil
+	switch u.Status {
+	case glossary.Active, glossary.InActive:
+		return nil
+	}
+	return errors.New("invalid wallet status")
 }

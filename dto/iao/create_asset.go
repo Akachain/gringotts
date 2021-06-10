@@ -17,28 +17,35 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package dto
+package iao
 
+import "C"
 import "github.com/pkg/errors"
 
-type MintNFT struct {
-	GS1Number     string `json:"gs1Number"`
-	OwnerWalletId string `json:"ownerWalletId"`
-	Metadata      string `json:"metadata"`
+type CreateAsset struct {
+	Name        string `json:"name"`
+	Owner       string `json:"owner"`
+	TokenName   string `json:"tokenName"`
+	TickerToken string `json:"tickerToken"`
+	MaxSupply   string `json:"maxSupply"`
+	TotalValue  string `json:"totalValue"`
+	ExpireDate  string `json:"expireDate"`
 }
 
-func (m MintNFT) IsValid() error {
-	if m.OwnerWalletId == "" {
-		return errors.New("owner wallet id is invalid")
+func (c CreateAsset) IsValid() error {
+	if c.Name == "" || c.Owner == "" {
+		return errors.New("Name/Owner is empty")
+	}
+	if c.TokenName == "" || c.TickerToken == "" {
+		return errors.New("TokenName/TickerToken id is empty")
 	}
 
-	if m.GS1Number == "" {
-		return errors.New("GS1 serial number is invalid")
+	if c.MaxSupply == "" {
+		return errors.New("The max supply of asset token is empty")
 	}
 
-	if m.Metadata == "" {
-		return errors.New("Metadata is invalid")
+	if c.TotalValue == "" {
+		return errors.New("Total value of new token is empty")
 	}
-
 	return nil
 }

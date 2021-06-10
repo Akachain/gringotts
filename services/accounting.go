@@ -20,11 +20,11 @@
 package services
 
 import (
-	"github.com/Akachain/gringotts/dto"
+	"github.com/Akachain/gringotts/dto/token"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
 
 type Accounting interface {
 	GetTx(ctx contractapi.TransactionContextInterface) ([]string, error)
-	CalculateBalance(ctx contractapi.TransactionContextInterface, txIds dto.AccountingBalance) error
+	CalculateBalance(ctx contractapi.TransactionContextInterface, txIds token.AccountingBalance) error
 }

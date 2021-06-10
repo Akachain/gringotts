@@ -22,7 +22,7 @@ package basic
 import (
 	"encoding/json"
 	"github.com/Akachain/akc-go-sdk-v2/mock"
-	"github.com/Akachain/gringotts/dto"
+	"github.com/Akachain/gringotts/dto/token"
 	"github.com/Akachain/gringotts/entity"
 	"github.com/Akachain/gringotts/glossary"
 	"github.com/Akachain/gringotts/glossary/doc"
@@ -60,9 +60,9 @@ func (suite *BaseSCTestSuite) SetupTest() {
 	suite.stub = setupMock()
 
 	// create token type
-	stableToken := dto.CreateTokenType{
-		Name: "Stable",
-		Rate: 0.123,
+	stableToken := token.CreateTokenType{
+		Name:        "Stable",
+		TickerToken: "ST",
 	}
 	paramByte, _ := json.Marshal(stableToken)
 	suite.tokenId = mock.MockInvokeTransaction(suite.T(), suite.stub, [][]byte{[]byte("CreateTokenType"), paramByte})
@@ -70,7 +70,7 @@ func (suite *BaseSCTestSuite) SetupTest() {
 	assert.NotEmpty(suite.T(), suite.tokenId, "Create Token Type return empty")
 
 	// create wallet
-	wallet := dto.CreateWallet{
+	wallet := token.CreateWallet{
 		TokenId: suite.tokenId,
 		Status:  "A",
 	}
@@ -83,9 +83,10 @@ func (suite *BaseSCTestSuite) SetupTest() {
 	assert.NotEmpty(suite.T(), suite.walletToId, "Create to wallet return empty")
 
 	// mint balance for From wallet
-	mintDto := dto.MintToken{
+	mintDto := token.MintToken{
 		WalletId: suite.walletFromId,
-		Amount:   100000,
+		TokenId:  suite.tokenId,
+		Amount:   "100000",
 	}
 	mintByte, _ := json.Marshal(mintDto)
 	mintRes := mock.MockInvokeTransaction(suite.T(), suite.stub, [][]byte{[]byte("Mint"), mintByte})
@@ -96,7 +97,7 @@ func (suite *BaseSCTestSuite) SetupTest() {
 }
 
 func (suite *BaseSCTestSuite) TestTokenBaseSC_CreateWallet() {
-	walletFrom := dto.CreateWallet{
+	walletFrom := token.CreateWallet{
 		TokenId: suite.tokenId,
 		Status:  "A",
 	}
@@ -115,15 +116,15 @@ func (suite *BaseSCTestSuite) TestTokenBaseSC_CreateWallet() {
 	err = json.Unmarshal(state, &walletEntity)
 	assert.Nilf(suite.T(), err, "Parse wallet failed", err)
 	assert.Equal(suite.T(), walletId, walletEntity.Id)
-	assert.Equal(suite.T(), suite.tokenId, walletEntity.TokenId)
 	assert.Equal(suite.T(), glossary.Active, walletEntity.Status)
 }
 
 func (suite *BaseSCTestSuite) TestTokenBaseSC_Transfer() {
-	transferDto := dto.TransferToken{
+	transferDto := token.TransferToken{
 		FromWalletId: suite.walletFromId,
 		ToWalletId:   suite.walletToId,
-		Amount:       100,
+		TokenId:      suite.tokenId,
+		Amount:       "100",
 	}
 	paramByte, _ := json.Marshal(transferDto)
 	transferRes := mock.MockInvokeTransaction(suite.T(), suite.stub, [][]byte{[]byte("Transfer"), paramByte})
@@ -146,7 +147,7 @@ func (suite *BaseSCTestSuite) TestTokenBaseSC_Transfer() {
 }
 
 func (suite *BaseSCTestSuite) TestTokenBaseSC_UpdateWallet() {
-	updateWalletDto := dto.UpdateWallet{
+	updateWalletDto := token.UpdateWallet{
 		WalletId: suite.walletFromId,
 		Status:   glossary.InActive,
 	}
@@ -157,9 +158,9 @@ func (suite *BaseSCTestSuite) TestTokenBaseSC_UpdateWallet() {
 }
 
 func (suite *BaseSCTestSuite) TestTokenBaseSC_Mint() {
-	mintDto := dto.MintToken{
+	mintDto := token.MintToken{
 		WalletId: suite.walletToId,
-		Amount:   200,
+		Amount:   "200",
 	}
 	paramByte, _ := json.Marshal(mintDto)
 	mintRes := mock.MockInvokeTransaction(suite.T(), suite.stub, [][]byte{[]byte("Mint"), paramByte})
@@ -176,9 +177,9 @@ func (suite *BaseSCTestSuite) TestTokenBaseSC_Mint() {
 }
 
 func (suite *BaseSCTestSuite) TestTokenBaseSC_Burn() {
-	burnDto := dto.BurnToken{
+	burnDto := token.BurnToken{
 		WalletId: suite.walletFromId,
-		Amount:   1000,
+		Amount:   "1000",
 	}
 	paramByte, _ := json.Marshal(burnDto)
 	burnRes := mock.MockInvokeTransaction(suite.T(), suite.stub, [][]byte{[]byte("Burn"), paramByte})
@@ -195,9 +196,9 @@ func (suite *BaseSCTestSuite) TestTokenBaseSC_Burn() {
 }
 
 func (suite *BaseSCTestSuite) TestTokenBaseSC_CreateTokenType() {
-	tokenTypeDto := dto.CreateTokenType{
-		Name: "Test Token",
-		Rate: 0.99,
+	tokenTypeDto := token.CreateTokenType{
+		Name:        "Test Token",
+		TickerToken: "TS",
 	}
 	paramByte, _ := json.Marshal(tokenTypeDto)
 	createTokenRes := mock.MockInvokeTransaction(suite.T(), suite.stub, [][]byte{[]byte("CreateTokenType"), paramByte})
@@ -218,7 +219,7 @@ func (suite *BaseSCTestSuite) accountingBalance() {
 	lstTx = strings.ReplaceAll(lstTx, "\"", "")
 	suite.T().Log(lstTx)
 	// accounting
-	accountingDto := dto.AccountingBalance{
+	accountingDto := token.AccountingBalance{
 		TxId: strings.Split(lstTx, ","),
 	}
 	paramByte, _ := json.Marshal(accountingDto)
@@ -227,7 +228,7 @@ func (suite *BaseSCTestSuite) accountingBalance() {
 }
 
 func (suite *BaseSCTestSuite) getBalance(walletId string) string {
-	balanceDto := dto.Balance{
+	balanceDto := token.Balance{
 		WalletId: walletId,
 	}
 	paramByte, _ := json.Marshal(balanceDto)

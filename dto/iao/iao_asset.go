@@ -17,17 +17,28 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package dto
+package iao
 
 import "github.com/pkg/errors"
 
-type BalanceOfNFT struct {
-	OwnerWalletId string `json:"ownerWalletId"`
+type AssetIao struct {
+	AssetId          string  `json:"assetId"`
+	AssetTokenAmount string  `json:"assetTokenAmount"`
+	StartDate        string  `json:"startDate"`
+	EndDate          string  `json:"endDate"`
+	Rate             float64 `json:"rate"`
 }
 
-func (b BalanceOfNFT) IsValid() error {
-	if b.OwnerWalletId == "" {
-		return errors.New("owner wallet id is invalid")
+func (a AssetIao) IsValid() error {
+	if a.AssetId == "" || a.AssetTokenAmount == "" {
+		return errors.New("AssetId/AssetTokenAmount is empty")
+	}
+	if a.StartDate == "" || a.EndDate == "" {
+		return errors.New("StartDate/EndDate id is empty")
+	}
+
+	if a.Rate <= 0 {
+		return errors.New("Rate of asset token must be greater than zero")
 	}
 
 	return nil
