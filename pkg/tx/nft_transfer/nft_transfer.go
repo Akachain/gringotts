@@ -38,7 +38,7 @@ func NewTxNftTransfer() *txNftTransfer {
 	return &txNftTransfer{base.NewTxBase()}
 }
 
-func (t *txNftTransfer) AccountingTx(ctx contractapi.TransactionContextInterface, tx *entity.Transaction, mapBalanceToken map[string]string) (*entity.Transaction, error) {
+func (t *txNftTransfer) AccountingTx(ctx contractapi.TransactionContextInterface, tx *entity.Transaction, mapBalanceToken map[string]*entity.BalanceCache) (*entity.Transaction, error) {
 	// TODO: handle rollback map current balance when sub/add failed
 	txUpdate, err := t.TxHandlerTransfer(ctx, mapBalanceToken, tx)
 	if err != nil {

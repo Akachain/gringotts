@@ -39,7 +39,7 @@ func NewTxBurn() *txBurn {
 	return &txBurn{base.NewTxBase()}
 }
 
-func (t *txBurn) AccountingTx(ctx contractapi.TransactionContextInterface, tx *entity.Transaction, mapBalanceToken map[string]string) (*entity.Transaction, error) {
+func (t *txBurn) AccountingTx(ctx contractapi.TransactionContextInterface, tx *entity.Transaction, mapBalanceToken map[string]*entity.BalanceCache) (*entity.Transaction, error) {
 	if tx.ToWallet != glossary.SystemWallet {
 		glogger.GetInstance().Errorf(ctx, "TxBurn - Transaction (%s): has To wallet Id is not system type", tx.Id)
 		tx.Status = transaction.Rejected

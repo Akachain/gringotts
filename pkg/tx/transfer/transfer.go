@@ -35,6 +35,6 @@ func NewTxTransfer() *txTransfer {
 	}
 }
 
-func (t *txTransfer) AccountingTx(ctx contractapi.TransactionContextInterface, tx *entity.Transaction, mapBalanceToken map[string]string) (*entity.Transaction, error) {
+func (t *txTransfer) AccountingTx(ctx contractapi.TransactionContextInterface, tx *entity.Transaction, mapBalanceToken map[string]*entity.BalanceCache) (*entity.Transaction, error) {
 	return t.TxHandlerTransfer(ctx, mapBalanceToken, tx)
 }

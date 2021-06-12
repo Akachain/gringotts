@@ -21,8 +21,14 @@ package issue
 
 import (
 	"github.com/Akachain/gringotts/entity"
+	"github.com/Akachain/gringotts/glossary"
+	"github.com/Akachain/gringotts/glossary/doc"
+	"github.com/Akachain/gringotts/glossary/transaction"
+	"github.com/Akachain/gringotts/helper"
+	"github.com/Akachain/gringotts/helper/glogger"
 	"github.com/Akachain/gringotts/pkg/tx/base"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
+	"github.com/pkg/errors"
 )
 
 type txIssue struct {
@@ -33,6 +39,48 @@ func NewTxIssue() *txIssue {
 	return &txIssue{base.NewTxBase()}
 }
 
-func (t *txIssue) AccountingTx(ctx contractapi.TransactionContextInterface, tx *entity.Transaction, mapBalanceToken map[string]string) (*entity.Transaction, error) {
-	return t.TxHandlerTransfer(ctx, mapBalanceToken, tx)
+func (t *txIssue) AccountingTx(ctx contractapi.TransactionContextInterface, tx *entity.Transaction, mapBalanceToken map[string]*entity.BalanceCache) (*entity.Transaction, error) {
+	if tx.FromWallet == glossary.SystemWallet || tx.ToWallet == glossary.SystemWallet {
+		glogger.GetInstance().Errorf(ctx, "TxHandler - TxIssue - Transaction (%s) has from/to wallet Id is system type", tx.Id)
+		tx.Status = transaction.Rejected
+		return tx, errors.New("From/To wallet id invalidate")
+	}
+
+	if err := t.SubAmount(ctx, mapBalanceToken, tx.FromWallet, tx.FromTokenId, tx.FromTokenAmount); err != nil {
+		glogger.GetInstance().Errorf(ctx, "TxHandler - TxIssue - Transaction (%s): Unable to sub temp amount of From wallet", tx.Id)
+		tx.Status = transaction.Rejected
+		return tx, errors.WithMessage(err, "Sub balance of from wallet failed")
+	}
+
+	if err := t.AddAmount(ctx, mapBalanceToken, tx.ToWallet, tx.ToTokenId, tx.ToTokenAmount); err != nil {
+		glogger.GetInstance().Errorf(ctx, "TxHandler - TxIssue - Transaction (%s): Unable to add temp amount of To wallet", tx.Id)
+		tx.Status = transaction.Rejected
+		if err := t.RollbackTxHandler(ctx, tx, mapBalanceToken, transaction.SubFromWallet); err != nil {
+			glogger.GetInstance().Errorf(ctx, "TxHandler - TxIssue - Rollback handle transaction (%s) failed with error (%s)", tx.Id, err.Error())
+		}
+		return tx, errors.WithMessage(err, "Add balance of to wallet failed")
+	}
+
+	// update total supply of AT token
+	atToken, err := t.GetTokenType(ctx, tx.ToTokenId)
+	if err != nil {
+		glogger.GetInstance().Errorf(ctx, "TxHandler - TxIssue -Get AT token failed with error (%s)", err.Error())
+		tx.Status = transaction.Rejected
+		return tx, err
+	}
+	totalUpdate, err := helper.AddBalance(atToken.TotalSupply, tx.ToTokenAmount)
+	if err != nil {
+		glogger.GetInstance().Errorf(ctx, "TxHandler - TxIssue - Add total supply failed with error (%s)", err.Error())
+		tx.Status = transaction.Rejected
+		return tx, err
+	}
+	atToken.TotalSupply = totalUpdate
+	if err := t.Repo.Update(ctx, atToken, doc.Tokens, helper.TokenKey(atToken.Id)); err != nil {
+		glogger.GetInstance().Errorf(ctx, "TxHandler - TxIssue - - Update AT token failed with err (%s)", err.Error())
+		tx.Status = transaction.Rejected
+		return tx, err
+	}
+	tx.Status = transaction.Confirmed
+
+	return tx, nil
 }

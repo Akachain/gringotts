@@ -25,5 +25,5 @@ import (
 )
 
 type Handler interface {
-	AccountingTx(ctx contractapi.TransactionContextInterface, transaction *entity.Transaction, mapBalanceToken map[string]string) (*entity.Transaction, error)
+	AccountingTx(ctx contractapi.TransactionContextInterface, transaction *entity.Transaction, mapBalanceToken map[string]*entity.BalanceCache) (*entity.Transaction, error)
 }

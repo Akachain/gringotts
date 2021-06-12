@@ -37,4 +37,5 @@ type Repo interface {
 	GetQueryStringWithPagination(ctx contractapi.TransactionContextInterface, queryString string) (shim.StateQueryIteratorInterface, error)
 	IsExist(ctx contractapi.TransactionContextInterface, docPrefix string, keys []string) (bool, error)
 	GetQueryString(ctx contractapi.TransactionContextInterface, queryString string) (shim.StateQueryIteratorInterface, error)
+	GetAndCheckExist(ctx contractapi.TransactionContextInterface, docPrefix string, keys []string) (bool, interface{}, error)
 }

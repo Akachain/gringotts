@@ -39,7 +39,7 @@ func NewTxMint() *txMint {
 	return &txMint{base.NewTxBase()}
 }
 
-func (t *txMint) AccountingTx(ctx contractapi.TransactionContextInterface, tx *entity.Transaction, mapBalanceToken map[string]string) (*entity.Transaction, error) {
+func (t *txMint) AccountingTx(ctx contractapi.TransactionContextInterface, tx *entity.Transaction, mapBalanceToken map[string]*entity.BalanceCache) (*entity.Transaction, error) {
 	if tx.FromWallet != glossary.SystemWallet {
 		glogger.GetInstance().Errorf(ctx, "TxMint - Transaction (%s): has From wallet Id is not system type", tx.Id)
 		tx.Status = transaction.Rejected

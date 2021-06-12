@@ -104,11 +104,17 @@ func (w *walletService) Update(ctx contractapi.TransactionContextInterface, wall
 func (w *walletService) BalanceOf(ctx contractapi.TransactionContextInterface, walletId string, tokenId string) (string, error) {
 	glogger.GetInstance().Info(ctx, "-----------Wallet Service - BalanceOf-----------")
 
-	balanceToken, err := w.GetBalanceOfToken(ctx, walletId, tokenId)
+	balanceToken, isExisted, err := w.GetBalanceOfToken(ctx, walletId, tokenId)
 	if err != nil {
 		glogger.GetInstance().Errorf(ctx, "BalanceOf - Get wallet failed with error (%v)", err)
 		return "-1", err
 	}
+
+	if !isExisted {
+		glogger.GetInstance().Error(ctx, "BalanceOf -Balance of token do not exist in the system")
+		return "-1", helper.RespError(errorcode.BizUnableGetBalance)
+	}
+
 	glogger.GetInstance().Infof(ctx, "-----------Wallet Service - BalanceOf wallet: (%s)-----------", balanceToken.Balances)
 
 	return balanceToken.Balances, nil
@@ -116,18 +122,13 @@ func (w *walletService) BalanceOf(ctx contractapi.TransactionContextInterface, w
 
 func (w *walletService) EnrollToken(ctx contractapi.TransactionContextInterface, tokenId string, fromWalletId []string, toWalletId []string) error {
 	glogger.GetInstance().Info(ctx, "-----------Wallet Service - EnrollToken-----------")
-	isExisted, err := w.Repo.IsExist(ctx, doc.Enrollments, helper.EnrollmentKey(tokenId))
+	enrollment, isExisted, err := w.GetAndCheckExistEnrollment(ctx, tokenId)
 	if err != nil {
 		glogger.GetInstance().Errorf(ctx, "Wallet Service - Check exit enrollment failed with err (%v)", err)
-		return helper.RespError(errorcode.BizUnableCreateEnrollment)
+		return helper.RespError(errorcode.BizUnableGetEnrollment)
 	}
 
 	if isExisted {
-		enrollment, err := w.GetEnrollment(ctx, tokenId)
-		if err != nil {
-			glogger.GetInstance().Errorf(ctx, "Wallet Service - Get enrollment failed with err (%v)", err)
-			return err
-		}
 		if len(fromWalletId) > 0 && !helper.ArrayContains(fromWalletId, "") {
 			enrollment.FromWalletId = enrollment.FromWalletId + "," + strings.Join(fromWalletId, ",")
 		}

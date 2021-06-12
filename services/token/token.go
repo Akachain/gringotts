@@ -62,6 +62,8 @@ func (t *tokenService) Mint(ctx contractapi.TransactionContextInterface, walletI
 		return err
 	}
 
+	// check total supply with max supply
+
 	// create tx mint token
 	txMint := entity.NewTransaction(ctx)
 	txMint.SpenderWallet = walletId
@@ -93,10 +95,15 @@ func (t *tokenService) Burn(ctx contractapi.TransactionContextInterface, walletI
 	}
 
 	// get balance of token
-	balanceToken, err := t.GetBalanceOfToken(ctx, wallet.Id, tokenId)
+	balanceToken, isExisted, err := t.GetBalanceOfToken(ctx, wallet.Id, tokenId)
 	if err != nil {
 		glogger.GetInstance().Errorf(ctx, "Burn - Get balance of token failed with error (%v)", err)
 		return err
+	}
+
+	if !isExisted {
+		glogger.GetInstance().Error(ctx, "Burn -Balance of token do not exist in the system")
+		return helper.RespError(errorcode.BizUnableGetBalance)
 	}
 
 	// check balance enough to burn
@@ -184,22 +191,45 @@ func (t *tokenService) Issue(ctx contractapi.TransactionContextInterface, wallet
 		return err
 	}
 
-	// check permission to issue new token
-	enrollment, err := t.GetEnrollment(ctx, toTokenId)
+	// check enrollment policy
+	enrollment, isExisted, err := t.GetAndCheckExistEnrollment(ctx, toTokenId)
 	if err != nil {
-		glogger.GetInstance().Errorf(ctx, "Issue - Get enrollment failed with error (%v)", err)
-		return err
+		glogger.GetInstance().Errorf(ctx, "Issue - Check exit enrollment failed with err (%s)", err.Error())
+		return helper.RespError(errorcode.BizUnableGetEnrollment)
 	}
-	if enrollment.FromWalletId != "" {
-		if !strings.Contains(enrollment.FromWalletId, wallet.Id) {
-			glogger.GetInstance().Errorf(ctx, "Issue - From wallet do not have permission issue token (%s)", toTokenId)
-			return helper.RespError(errorcode.BizIssueNotPermission)
+	if isExisted {
+		// check permission to issue new token
+		if enrollment.FromWalletId != "" {
+			if !strings.Contains(enrollment.FromWalletId, wallet.Id) {
+				glogger.GetInstance().Errorf(ctx, "Issue - From wallet do not have permission issue token (%s)", toTokenId)
+				return helper.RespError(errorcode.BizIssueNotPermission)
+			}
+		}
+		if enrollment.ToWalletId != "" {
+			if !strings.Contains(enrollment.ToWalletId, wallet.Id) {
+				glogger.GetInstance().Errorf(ctx, "Issue - To wallet do not have permission issue token (%s)", toTokenId)
+				return helper.RespError(errorcode.BizIssueNotPermission)
+			}
 		}
 	}
-	if enrollment.ToWalletId != "" {
-		if !strings.Contains(enrollment.ToWalletId, wallet.Id) {
-			glogger.GetInstance().Errorf(ctx, "Issue - To wallet do not have permission issue token (%s)", toTokenId)
-			return helper.RespError(errorcode.BizIssueNotPermission)
+
+	// validate total supply of AT token
+	atToken, err := t.GetTokenType(ctx, toTokenId)
+	if err != nil {
+		glogger.GetInstance().Errorf(ctx, "Issue - Get AT token failed with err (%s)", err.Error())
+		return err
+	}
+
+	if atToken.MaxSupply != "" {
+		newTotalSupply, err := helper.AddBalance(atToken.TotalSupply, toTokenAmount)
+		if err != nil {
+			glogger.GetInstance().Errorf(ctx, "Issue - Calculate new total supply failed with err (%s)", err.Error())
+			return helper.RespError(errorcode.BizUnableToIssue)
+		}
+
+		if helper.CompareStringBalance(atToken.MaxSupply, newTotalSupply) < 0 {
+			glogger.GetInstance().Error(ctx, "Issue - Number of new token over the max supply of the token")
+			return helper.RespError(errorcode.BizOverMaxSupply)
 		}
 	}
 
@@ -229,9 +259,14 @@ func (t *tokenService) validateTransfer(ctx contractapi.TransactionContextInterf
 		return err
 	}
 
-	balanceToken, err := t.GetBalanceOfToken(ctx, walletFrom.Id, tokenId)
+	balanceToken, isExisted, err := t.GetBalanceOfToken(ctx, walletFrom.Id, tokenId)
 	if err != nil {
 		return err
+	}
+
+	if !isExisted {
+		glogger.GetInstance().Error(ctx, "ValidateTransfer -Balance of token do not exist in the system")
+		return helper.RespError(errorcode.BizUnableGetBalance)
 	}
 
 	// check balance enough to transfer

@@ -20,6 +20,7 @@
 package base
 
 import (
+	"fmt"
 	"github.com/Akachain/gringotts/entity"
 	"github.com/Akachain/gringotts/errorcode"
 	"github.com/Akachain/gringotts/glossary"
@@ -131,6 +132,25 @@ func (b *Base) GetEnrollment(ctx contractapi.TransactionContextInterface, tokenI
 	return enrollment, nil
 }
 
+func (b *Base) GetAndCheckExistEnrollment(ctx contractapi.TransactionContextInterface, tokenId string) (*entity.Enrollment, bool, error) {
+	isExisted, enrollmentData, err := b.Repo.GetAndCheckExist(ctx, doc.Enrollments, helper.EnrollmentKey(tokenId))
+	if err != nil {
+		glogger.GetInstance().Errorf(ctx, "Base - Get enrollment failed with error  (%s)", err.Error())
+		return nil, false, helper.RespError(errorcode.BizUnableGetEnrollment)
+	}
+
+	if !isExisted {
+		return nil, isExisted, nil
+	}
+
+	enrollment := new(entity.Enrollment)
+	if err = mapstructure.Decode(enrollmentData, &enrollment); err != nil {
+		glogger.GetInstance().Errorf(ctx, "Base - Decode enrollment failed with error  (%s)", err.Error())
+		return nil, isExisted, helper.RespError(errorcode.BizUnableMapDecode)
+	}
+	return enrollment, isExisted, nil
+}
+
 func (b *Base) GetNFT(ctx contractapi.TransactionContextInterface, nftTokenId string) (*entity.NFT, error) {
 	nftData, err := b.Repo.Get(ctx, doc.NftToken, helper.NFTKey(nftTokenId))
 	if err != nil {
@@ -147,19 +167,24 @@ func (b *Base) GetNFT(ctx contractapi.TransactionContextInterface, nftTokenId st
 	return nftToken, nil
 }
 
-func (b *Base) GetBalanceOfToken(ctx contractapi.TransactionContextInterface, walletId string, tokenId string) (*entity.Balance, error) {
-	balanceData, err := b.Repo.Get(ctx, doc.Balances, helper.BalanceKey(walletId, tokenId))
+func (b *Base) GetBalanceOfToken(ctx contractapi.TransactionContextInterface, walletId string, tokenId string) (*entity.Balance, bool, error) {
+	isExisted, balanceData, err := b.Repo.GetAndCheckExist(ctx, doc.Balances, helper.BalanceKey(walletId, tokenId))
 	if err != nil {
 		glogger.GetInstance().Errorf(ctx, "Base - Get balance of token failed with error (%s)", err.Error())
-		return nil, helper.RespError(errorcode.BizUnableGetBalance)
+		return nil, false, helper.RespError(errorcode.BizUnableGetBalance)
+	}
+
+	if !isExisted {
+		glogger.GetInstance().Info(ctx, "Base - Balance of token do not exist in the system")
+		return nil, isExisted, nil
 	}
 
 	balance := new(entity.Balance)
 	if err = mapstructure.Decode(balanceData, &balance); err != nil {
 		glogger.GetInstance().Errorf(ctx, "Base - Decode balance of token failed with error (%s)", err.Error())
-		return nil, helper.RespError(errorcode.BizUnableMapDecode)
+		return nil, isExisted, helper.RespError(errorcode.BizUnableMapDecode)
 	}
-	return balance, nil
+	return balance, isExisted, nil
 }
 
 func (b *Base) ValidatePairWallet(ctx contractapi.TransactionContextInterface, fromWalletId,
@@ -182,58 +207,78 @@ func (b *Base) ValidatePairWallet(ctx contractapi.TransactionContextInterface, f
 
 // AddAmount to add amount of balance token
 func (b *Base) AddAmount(ctx contractapi.TransactionContextInterface,
-	mapCurrentBalance map[string]string, walletId string, tokenId string, amount string) error {
+	mapCurrentBalance map[string]*entity.BalanceCache, walletId string, tokenId string, amount string) error {
 	key := walletId + "_" + tokenId
 	// Load current balance of wallet into memory
 	if _, ok := mapCurrentBalance[key]; !ok {
-		balanceToken, err := b.GetBalanceOfToken(ctx, walletId, tokenId)
+		balanceToken, isExisted, err := b.GetBalanceOfToken(ctx, walletId, tokenId)
 		if err != nil {
 			return err
 		}
-		mapCurrentBalance[key] = balanceToken.Balances
+		balanceCache := new(entity.BalanceCache)
+		if isExisted {
+			balanceCache.IsNew = false
+			balanceCache.BalanceEntity = balanceToken
+			mapCurrentBalance[key] = balanceCache
+		} else {
+			balanceEntity := entity.NewBalance(ctx)
+			balanceEntity.WalletId = walletId
+			balanceEntity.TokenId = tokenId
+			balanceEntity.Balances = "0"
+
+			balanceCache.IsNew = true
+			balanceCache.BalanceEntity = balanceEntity
+			mapCurrentBalance[key] = balanceCache
+		}
 	}
 
 	// update current balance
-	updateCurrentBalance, err := helper.AddBalance(mapCurrentBalance[key], amount)
+	updateCurrentBalance, err := helper.AddBalance(mapCurrentBalance[key].BalanceEntity.Balances, amount)
 	if err != nil {
 		return err
 	}
-	mapCurrentBalance[key] = updateCurrentBalance
+	mapCurrentBalance[key].BalanceEntity.Balances = updateCurrentBalance
 
 	return nil
 }
 
 // SubAmount to sub amount of balance token
 func (b *Base) SubAmount(ctx contractapi.TransactionContextInterface,
-	mapCurrentBalance map[string]string, walletId string, tokenId string, amount string) error {
+	mapCurrentBalance map[string]*entity.BalanceCache, walletId string, tokenId string, amount string) error {
 	key := walletId + "_" + tokenId
 	// Load current balance of wallet into memory
 	if _, ok := mapCurrentBalance[key]; !ok {
-		balanceToken, err := b.GetBalanceOfToken(ctx, walletId, tokenId)
+		balanceToken, isExisted, err := b.GetBalanceOfToken(ctx, walletId, tokenId)
 		if err != nil {
 			return err
 		}
-		mapCurrentBalance[key] = balanceToken.Balances
+		if !isExisted {
+			return errors.New(fmt.Sprintf("Balance of wallet (%s) do not exist in the system", key))
+		}
+		balanceCache := new(entity.BalanceCache)
+		balanceCache.IsNew = false
+		balanceCache.BalanceEntity = balanceToken
+		mapCurrentBalance[key] = balanceCache
 	}
 
 	// checking current balance with amount
-	if helper.CompareStringBalance(mapCurrentBalance[key], amount) < 0 {
+	if helper.CompareStringBalance(mapCurrentBalance[key].BalanceEntity.Balances, amount) < 0 {
 		return errors.Errorf("Wallet (%s) do not have enough balance", key)
 	}
 
 	// update current balance
-	updateCurrentBalance, err := helper.SubBalance(mapCurrentBalance[key], amount)
+	updateCurrentBalance, err := helper.SubBalance(mapCurrentBalance[key].BalanceEntity.Balances, amount)
 	if err != nil {
 		return err
 	}
-	mapCurrentBalance[key] = updateCurrentBalance
+	mapCurrentBalance[key].BalanceEntity.Balances = updateCurrentBalance
 
 	return nil
 }
 
 // RollbackTxHandler to rollback balance of wallet that was updated
 func (b *Base) RollbackTxHandler(ctx contractapi.TransactionContextInterface, tx *entity.Transaction,
-	mapCurrentBalance map[string]string, step transaction.Step) error {
+	mapCurrentBalance map[string]*entity.BalanceCache, step transaction.Step) error {
 	// currently only rollback in case transfer or swap
 	if step == transaction.SubFromWallet {
 		if err := b.AddAmount(ctx, mapCurrentBalance, tx.FromWallet, tx.FromTokenId, tx.FromTokenAmount); err != nil {

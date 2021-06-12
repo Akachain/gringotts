@@ -76,6 +76,8 @@ const (
 	BizUnableCreateIao         ErrorCode = "334"
 	BizUnableGetIao            ErrorCode = "335"
 	BizUnableUpdateAsset       ErrorCode = "336"
+	BizOverMaxSupply           ErrorCode = "337"
+	BizUnableToIssue           ErrorCode = "338"
 )
 
 var mapErrorCode = map[ErrorCode]string{
@@ -120,6 +122,8 @@ var mapErrorCode = map[ErrorCode]string{
 	BizUnableCreateIao:         "Unable to create new iao campaign on the blockchain",
 	BizUnableGetIao:            "Unable to get Iao campaign on the blockchain",
 	BizUnableUpdateAsset:       "Unable to update asset on the blockchain",
+	BizOverMaxSupply:           "New token issue over the max supply",
+	BizUnableToIssue:           "Unable to issue new token on the blockchain",
 }
 
 func (e ErrorCode) Message() string {

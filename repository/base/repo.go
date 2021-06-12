@@ -21,8 +21,10 @@
 package base
 
 import (
+	"encoding/json"
 	"github.com/Akachain/akc-go-sdk-v2/util"
 	"github.com/Akachain/gringotts/glossary"
+	"github.com/Akachain/gringotts/helper/glogger"
 	"github.com/hyperledger/fabric-chaincode-go/shim"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 	"github.com/pkg/errors"
@@ -70,4 +72,35 @@ func (r *repo) IsExist(ctx contractapi.TransactionContextInterface, docPrefix st
 
 func (r *repo) GetQueryString(ctx contractapi.TransactionContextInterface, queryString string) (shim.StateQueryIteratorInterface, error) {
 	return ctx.GetStub().GetQueryResult(queryString)
+}
+
+func (r *repo) GetAndCheckExist(ctx contractapi.TransactionContextInterface, docPrefix string, keys []string) (bool, interface{}, error) {
+	var dataStruct interface{}
+	stub := ctx.GetStub()
+	compositeKey, err := stub.CreateCompositeKey(docPrefix, keys)
+	if err != nil {
+		glogger.GetInstance().Errorf(ctx, "GetAndCheckExist - Create composite key failed with err (%s)", err.Error())
+		return false, nil, errors.WithMessage(err, "Create composite key fail")
+	}
+
+	var bytes []byte
+	bytes, err = stub.GetState(compositeKey)
+	if err != nil {
+		glogger.GetInstance().Errorf(ctx, "GetAndCheckExist - Get document failed with err (%s)", err.Error())
+		return false, nil, errors.WithMessage(err, "Get document fail")
+	}
+
+	if bytes == nil {
+		return false, nil, nil
+	}
+
+	if !util.InterfaceIsNilOrIsZeroOfUnderlyingType(&dataStruct) {
+		err = json.Unmarshal(bytes, &dataStruct)
+		if err != nil {
+			glogger.GetInstance().Errorf(ctx, "GetAndCheckExist - Unmarshal document failed with err (%s)", err.Error())
+			return true, nil, errors.WithMessage(err, "Unmarshal document fail")
+		}
+	}
+
+	return true, dataStruct, nil
 }

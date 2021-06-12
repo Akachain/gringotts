@@ -37,7 +37,7 @@ func NewTxExchange() *txExchange {
 	return &txExchange{base.NewTxBase()}
 }
 
-func (t *txExchange) AccountingTx(ctx contractapi.TransactionContextInterface, tx *entity.Transaction, mapBalanceToken map[string]string) (*entity.Transaction, error) {
+func (t *txExchange) AccountingTx(ctx contractapi.TransactionContextInterface, tx *entity.Transaction, mapBalanceToken map[string]*entity.BalanceCache) (*entity.Transaction, error) {
 	// TODO: handle rollback map current balance when sub/add failed
 	if tx.FromWallet == glossary.SystemWallet || tx.ToWallet == glossary.SystemWallet {
 		glogger.GetInstance().Errorf(ctx, "TxHandler - Exchange - Transaction (%s) has from/to wallet Id is system type", tx.Id)

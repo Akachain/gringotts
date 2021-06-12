@@ -110,7 +110,7 @@ func (t *TokenHandler) Exchange(ctx contractapi.TransactionContextInterface, exc
 
 // Issue to issue new token type form stable token.
 func (t *TokenHandler) Issue(ctx contractapi.TransactionContextInterface, issueDto tokenDto.IssueToken) error {
-	glogger.GetInstance().Info(ctx, "-----------Token Handler - Exchange-----------")
+	glogger.GetInstance().Info(ctx, "-----------Token Handler - Issue-----------")
 
 	// checking dto validate
 	if err := issueDto.IsValid(); err != nil {

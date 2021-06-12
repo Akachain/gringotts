@@ -39,7 +39,7 @@ func NewTxBase() *TxBase {
 	}
 }
 
-func (b TxBase) TxHandlerTransfer(ctx contractapi.TransactionContextInterface, mapBalanceToken map[string]string, tx *entity.Transaction) (*entity.Transaction, error) {
+func (b TxBase) TxHandlerTransfer(ctx contractapi.TransactionContextInterface, mapBalanceToken map[string]*entity.BalanceCache, tx *entity.Transaction) (*entity.Transaction, error) {
 	if tx.FromWallet == glossary.SystemWallet || tx.ToWallet == glossary.SystemWallet {
 		glogger.GetInstance().Errorf(ctx, "TxHandler - Base - Transaction (%s) has from/to wallet Id is system type", tx.Id)
 		tx.Status = transaction.Rejected
