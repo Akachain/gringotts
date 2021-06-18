@@ -42,17 +42,6 @@ func NewWalletService() *walletService {
 func (w *walletService) Create(ctx contractapi.TransactionContextInterface, tokenId string, status glossary.Status) (string, error) {
 	glogger.GetInstance().Info(ctx, "-----------Wallet Service - Create-----------")
 
-	// validate with token type id
-	token, err := w.GetTokenType(ctx, tokenId)
-	if err != nil {
-		glogger.GetInstance().Errorf(ctx, "Create - Get token type failed with error (%v)", err)
-		return "", err
-	}
-	if token.Status != glossary.Active {
-		glogger.GetInstance().Errorf(ctx, "Create - Token has status inactive", err)
-		return "", helper.RespError(errorcode.InvalidParam)
-	}
-
 	// create wallet
 	walletEntity := entity.NewWallet(ctx)
 	walletEntity.Status = status
@@ -83,10 +72,6 @@ func (w *walletService) Update(ctx contractapi.TransactionContextInterface, wall
 	if err != nil {
 		glogger.GetInstance().Errorf(ctx, "Update - Get wallet failed with error (%v)", err)
 		return helper.RespError(errorcode.BizUnableGetWallet)
-	}
-	if wallet.Status != glossary.Active {
-		glogger.GetInstance().Errorf(ctx, "Update - Wallet has status inactive", err)
-		return helper.RespError(errorcode.InvalidParam)
 	}
 
 	wallet.Status = status

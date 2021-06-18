@@ -23,7 +23,7 @@ import "github.com/hyperledger/fabric-contract-api-go/contractapi"
 
 type Iao interface {
 	// CreateAsset to create new asset and token type
-	CreateAsset(ctx contractapi.TransactionContextInterface, name, owner, tokenName, tickerToken, maxSupply, totalValue, expireDate string) (string, error)
+	CreateAsset(ctx contractapi.TransactionContextInterface, code, name, ownerWallet, tokenName, tickerToken, maxSupply, totalValue, documentUrl string) (string, error)
 
 	// CreateIao to create new iao of asset
 	CreateIao(ctx contractapi.TransactionContextInterface, assetId, assetTokenAmount, startDate, endDate string, rate float64) (string, error)

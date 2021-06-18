@@ -20,9 +20,11 @@
 package iao
 
 import (
+	"fmt"
 	"github.com/Akachain/gringotts/entity"
 	"github.com/Akachain/gringotts/errorcode"
 	"github.com/Akachain/gringotts/glossary/doc"
+	"github.com/Akachain/gringotts/glossary/transaction"
 	"github.com/Akachain/gringotts/helper"
 	"github.com/Akachain/gringotts/helper/glogger"
 	"github.com/Akachain/gringotts/services"
@@ -43,7 +45,7 @@ func NewIaoService() services.Iao {
 	}
 }
 
-func (i *iaoService) CreateAsset(ctx contractapi.TransactionContextInterface, name, owner, tokenName, tickerToken, maxSupply, totalValue, expireDate string) (string, error) {
+func (i *iaoService) CreateAsset(ctx contractapi.TransactionContextInterface, code, name, ownerWallet, tokenName, tickerToken, maxSupply, totalValue, documentUrl string) (string, error) {
 	glogger.GetInstance().Info(ctx, "-----------Iao Service - CreateAsset-----------")
 
 	tokenId, err := i.tokenService.CreateType(ctx, tokenName, tickerToken, maxSupply)
@@ -54,9 +56,10 @@ func (i *iaoService) CreateAsset(ctx contractapi.TransactionContextInterface, na
 
 	assetEntity := entity.NewAsset(ctx)
 	assetEntity.Name = name
-	assetEntity.Owner = owner
+	assetEntity.Code = code
+	assetEntity.OwnerWallet = ownerWallet
 	assetEntity.TokenId = tokenId
-	assetEntity.ExpireDate = expireDate
+	assetEntity.Documents = documentUrl
 	assetEntity.TokenAmount = maxSupply
 	assetEntity.TotalValue = totalValue
 	assetEntity.RemainingToken = maxSupply
@@ -65,9 +68,11 @@ func (i *iaoService) CreateAsset(ctx contractapi.TransactionContextInterface, na
 		glogger.GetInstance().Errorf(ctx, "Iao Service - Create asset failed with error (%s)", err.Error())
 		return "", helper.RespError(errorcode.BizUnableCreateAsset)
 	}
-	glogger.GetInstance().Infof(ctx, "-----------Iao Service - CreateAsset succeed (%s)-----------", assetEntity.Id)
 
-	return assetEntity.Id, nil
+	result := fmt.Sprintf("{\"assetId\":\"%s\",\"tokenId\":\"%s\"}", assetEntity.Id, tokenId)
+	glogger.GetInstance().Infof(ctx, "-----------Iao Service - CreateAsset succeed (%s)-----------", result)
+
+	return result, nil
 }
 
 func (i *iaoService) CreateIao(ctx contractapi.TransactionContextInterface, assetId, assetTokenAmount, startDate, endDate string, rate float64) (string, error) {
@@ -87,7 +92,7 @@ func (i *iaoService) CreateIao(ctx contractapi.TransactionContextInterface, asse
 	iaoEntity := entity.NewIao(ctx)
 	iaoEntity.AssetId = assetId
 	iaoEntity.AssetTokenId = assetEntity.TokenId
-	iaoEntity.AssetTokenAmount = assetTokenAmount
+	iaoEntity.AssetTokenAmount = "0"
 	iaoEntity.StableTokenAmount = "0"
 	iaoEntity.StartDate = startDate
 	iaoEntity.EndDate = endDate
@@ -98,15 +103,21 @@ func (i *iaoService) CreateIao(ctx contractapi.TransactionContextInterface, asse
 		return "", helper.RespError(errorcode.BizUnableCreateIao)
 	}
 
-	remainToken, err := helper.SubBalance(assetEntity.RemainingToken, assetTokenAmount)
-	if err != nil {
-		glogger.GetInstance().Errorf(ctx, "Iao Service - Sub amount token of asset failed with err (%s)", err.Error())
-		return "", helper.RespError(errorcode.BizUnableCreateIao)
-	}
-	assetEntity.RemainingToken = remainToken
-	if err := i.Repo.Update(ctx, assetEntity, doc.Asset, helper.AssetKey(assetEntity.Id)); err != nil {
-		glogger.GetInstance().Errorf(ctx, "Iao Service - Update asset failed with error (%s)", err.Error())
-		return "", helper.RespError(errorcode.BizUnableUpdateAsset)
+	// create tx transfer AT
+	txEntity := entity.NewTransaction(ctx)
+	txEntity.SpenderWallet = iaoEntity.Id
+	txEntity.FromWallet = assetEntity.OwnerWallet
+	txEntity.ToWallet = iaoEntity.Id
+	txEntity.FromTokenId = assetEntity.TokenId
+	txEntity.ToTokenId = assetEntity.TokenId
+	txEntity.FromTokenAmount = assetTokenAmount
+	txEntity.ToTokenAmount = assetTokenAmount
+	txEntity.TxType = transaction.IaoDepositAT
+	txEntity.Note = iaoEntity.Id
+
+	if err := i.Repo.Create(ctx, txEntity, doc.Transactions, helper.TransactionKey(txEntity.Id)); err != nil {
+		glogger.GetInstance().Errorf(ctx, "Iao Service - Create transaction failed with error (%s)", err.Error())
+		return "", helper.RespError(errorcode.BizUnableCreateTX)
 	}
 
 	glogger.GetInstance().Infof(ctx, "-----------Iao Service - CreateIao succeed (%s)-----------", iaoEntity.Id)

@@ -45,6 +45,21 @@ func NewBase() *Base {
 	}
 }
 
+func (b *Base) GetIao(ctx contractapi.TransactionContextInterface, iaoId string) (*entity.Iao, error) {
+	iaoData, err := b.Repo.Get(ctx, doc.Iao, helper.IaoKey(iaoId))
+	if err != nil {
+		glogger.GetInstance().Errorf(ctx, "Base - Get IAO (%s) failed with error (%s)", iaoId, err.Error())
+		return nil, helper.RespError(errorcode.BizUnableGetIao)
+	}
+
+	iaoEntity := entity.NewIao()
+	if err = mapstructure.Decode(iaoData, &iaoEntity); err != nil {
+		glogger.GetInstance().Errorf(ctx, "Base - Decode IAO failed with error  (%s)", err.Error())
+		return nil, helper.RespError(errorcode.BizUnableMapDecode)
+	}
+	return iaoEntity, nil
+}
+
 func (b *Base) GetAsset(ctx contractapi.TransactionContextInterface, assetId string) (*entity.Asset, error) {
 	assetData, err := b.Repo.Get(ctx, doc.Asset, helper.AssetKey(assetId))
 	if err != nil {

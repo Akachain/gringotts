@@ -46,7 +46,8 @@ func (i IaoHandler) CreateAsset(ctx contractapi.TransactionContextInterface, ass
 		return "", helper.RespError(errorcode.InvalidParam)
 	}
 
-	return i.iaoService.CreateAsset(ctx, asset.Name, asset.Owner, asset.TokenName, asset.TickerToken, asset.MaxSupply, asset.TotalValue, asset.ExpireDate)
+	return i.iaoService.CreateAsset(ctx, asset.Code, asset.Name, asset.OwnerWallet, asset.TokenName, asset.TickerToken,
+		asset.MaxSupply, asset.TotalValue, asset.DocumentUrl)
 }
 
 func (i IaoHandler) CreateIao(ctx contractapi.TransactionContextInterface, assetIao iaoDto.AssetIao) (string, error) {

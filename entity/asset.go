@@ -27,11 +27,12 @@ import (
 
 type Asset struct {
 	Name           string
-	Owner          string
+	Code           string
+	OwnerWallet    string
 	TokenId        string
 	TokenAmount    string
 	TotalValue     string
-	ExpireDate     string
+	Documents      string
 	RemainingToken string
 	Base           `mapstructure:",squash"`
 }

@@ -23,6 +23,7 @@ import (
 	"github.com/Akachain/gringotts/glossary/transaction"
 	"github.com/Akachain/gringotts/pkg/tx/burn"
 	"github.com/Akachain/gringotts/pkg/tx/exchange"
+	"github.com/Akachain/gringotts/pkg/tx/iao"
 	"github.com/Akachain/gringotts/pkg/tx/issue"
 	"github.com/Akachain/gringotts/pkg/tx/mint"
 	"github.com/Akachain/gringotts/pkg/tx/nft_transfer"
@@ -43,6 +44,8 @@ func GetTxHandler(txType transaction.Type) Handler {
 		return mint.NewTxMint()
 	case transaction.Burn:
 		return burn.NewTxBurn()
+	case transaction.IaoDepositAT:
+		return iao.NewTxDeposit()
 	default:
 		return nil
 	}

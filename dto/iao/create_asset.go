@@ -22,18 +22,19 @@ package iao
 import "github.com/pkg/errors"
 
 type CreateAsset struct {
+	Code        string `json:"code"`
 	Name        string `json:"name"`
-	Owner       string `json:"owner"`
+	OwnerWallet string `json:"ownerWallet"`
 	TokenName   string `json:"tokenName"`
 	TickerToken string `json:"tickerToken"`
 	MaxSupply   string `json:"maxSupply"`
 	TotalValue  string `json:"totalValue"`
-	ExpireDate  string `json:"expireDate"`
+	DocumentUrl string `json:"documentUrl"`
 }
 
 func (c CreateAsset) IsValid() error {
-	if c.Name == "" || c.Owner == "" {
-		return errors.New("Name/Owner is empty")
+	if c.Code == "" || c.Name == "" || c.OwnerWallet == "" {
+		return errors.New("Code/Name/OwnerWallet is empty")
 	}
 	if c.TokenName == "" || c.TickerToken == "" {
 		return errors.New("TokenName/TickerToken id is empty")
