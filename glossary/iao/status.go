@@ -23,6 +23,7 @@ type Status string
 
 const (
 	New      Status = "New"
+	Open            = "Open"
 	Done            = "Done"
 	Canceled        = "Canceled"
 )

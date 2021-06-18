@@ -22,6 +22,7 @@ package iao
 import (
 	"github.com/Akachain/gringotts/entity"
 	"github.com/Akachain/gringotts/glossary/doc"
+	"github.com/Akachain/gringotts/glossary/iao"
 	"github.com/Akachain/gringotts/glossary/transaction"
 	"github.com/Akachain/gringotts/helper"
 	"github.com/Akachain/gringotts/helper/glogger"
@@ -64,6 +65,7 @@ func (t *txDeposit) AccountingTx(ctx contractapi.TransactionContextInterface, tx
 	}
 
 	iaoEntity.AssetTokenAmount = assetTokenUpdate
+	iaoEntity.Status = iao.Open
 	iaoEntity.UpdatedAt = helper.TimestampISO(txTime.Seconds)
 
 	if err := t.Repo.Update(ctx, iaoEntity, doc.Iao, helper.IaoKey(iaoEntity.Id)); err != nil {
