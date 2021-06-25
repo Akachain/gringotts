@@ -17,34 +17,16 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package helper
+package sidechain
 
 import (
-	"encoding/json"
-	"fmt"
-	"github.com/Akachain/gringotts/glossary"
-	"golang.org/x/crypto/sha3"
-	"sort"
+	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
-// GenerateID return id of docs base on document prefix name and Fabric transaction ID
-// This way, each document in the state database will have this type of ID format:
-func GenerateID(docPrefix string, txID string) string {
-	h := sha3.New256()
-	h.Write([]byte(docPrefix + txID))
-	shaString := fmt.Sprintf("%x", h.Sum(nil))
-
-	return shaString[len(shaString)-glossary.IdLength:]
-}
-
-// ArrayContains return true if array contain search string, otherwise return fail
-func ArrayContains(s []string, searchString string) bool {
-	i := sort.SearchStrings(s, searchString)
-	return i < len(s) && s[i] == searchString
-}
-
-// MarshalStruct return string marshall of struct
-func MarshalStruct(data interface{}) string {
-	dataByte, _ := json.Marshal(data)
-	return string(dataByte)
+func TestSideName_IsValidate(t *testing.T) {
+	input := "asda"
+	inputName := SideName(input)
+	t.Log(inputName)
+	assert.False(t, inputName.IsValidate())
 }

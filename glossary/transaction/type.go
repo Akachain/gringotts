@@ -22,13 +22,14 @@ package transaction
 type Type string
 
 const (
-	Deposit      Type = "Deposit"
-	Withdraw          = "Withdraw"
-	Transfer          = "Transfer"
-	Mint              = "Mint"
-	Burn              = "Burn"
-	Exchange          = "Exchange"
-	Issue             = "Issue"
-	TransferNft       = "TransferNft"
-	IaoDepositAT      = "IaoDepositAT"
+	Deposit           Type = "Deposit"
+	Withdraw               = "Withdraw"
+	Transfer               = "Transfer"
+	Mint                   = "Mint"
+	Burn                   = "Burn"
+	Exchange               = "Exchange"
+	Issue                  = "Issue"
+	TransferNft            = "TransferNft"
+	IaoDepositAT           = "IaoDepositAT"
+	SideChainTransfer      = "SideChainTransfer"
 )

@@ -20,6 +20,7 @@
 package services
 
 import (
+	"github.com/Akachain/gringotts/glossary/sidechain"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
 
@@ -31,6 +32,9 @@ type Token interface {
 
 	// TransferWithNote same with Transfer function but add note in the transaction
 	TransferWithNote(ctx contractapi.TransactionContextInterface, fromWalletId, toWalletId, tokenId, amount, note string) (string, error)
+
+	// TransferSideChain to transfer token from main chain to side chain of wallet
+	TransferSideChain(ctx contractapi.TransactionContextInterface, walletId, tokenId string, fromChain, toChain sidechain.SideName, amount string) error
 
 	// Mint to init token in the system
 	Mint(ctx contractapi.TransactionContextInterface, walletId, tokenId, amount string) error

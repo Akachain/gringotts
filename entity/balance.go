@@ -21,6 +21,7 @@ package entity
 
 import (
 	"github.com/Akachain/gringotts/glossary/doc"
+	"github.com/Akachain/gringotts/glossary/sidechain"
 	"github.com/Akachain/gringotts/helper"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
@@ -32,14 +33,23 @@ type Balance struct {
 	Base     `mapstructure:",squash"`
 }
 
-func NewBalance(ctx ...contractapi.TransactionContextInterface) *Balance {
+func NewBalance(sideChain sidechain.SideName, ctx ...contractapi.TransactionContextInterface) *Balance {
 	if len(ctx) <= 0 {
 		return &Balance{}
 	}
 	txTime, _ := ctx[0].GetStub().GetTxTimestamp()
+	var prefix string
+	switch sideChain {
+	case sidechain.Spot:
+		prefix = doc.SpotBalances
+	case sidechain.Iao:
+		prefix = doc.IaoBalances
+	default:
+		prefix = doc.ExchangeBalances
+	}
 	return &Balance{
 		Base: Base{
-			Id:           helper.GenerateID(doc.Balances, ctx[0].GetStub().GetTxID()),
+			Id:           helper.GenerateID(prefix, ctx[0].GetStub().GetTxID()),
 			CreatedAt:    helper.TimestampISO(txTime.Seconds),
 			UpdatedAt:    helper.TimestampISO(txTime.Seconds),
 			BlockChainId: ctx[0].GetStub().GetTxID(),

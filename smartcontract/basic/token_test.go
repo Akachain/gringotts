@@ -26,6 +26,7 @@ import (
 	"github.com/Akachain/gringotts/entity"
 	"github.com/Akachain/gringotts/glossary"
 	"github.com/Akachain/gringotts/glossary/doc"
+	"github.com/Akachain/gringotts/glossary/sidechain"
 	"github.com/Akachain/gringotts/helper"
 	"github.com/hyperledger/fabric-chaincode-go/shimtest"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
@@ -169,6 +170,29 @@ func (suite *BaseSCTestSuite) TestTokenBaseSC_Transfer() {
 	suite.T().Log(balanceOfToWallet)
 	assert.NotEmptyf(suite.T(), balanceOfToWallet, "Get balance of To wallet return error", balanceOfToWallet)
 	assert.Equal(suite.T(), "78900", balanceOfToWallet, "Sub balance of To wallet failed")
+}
+
+func (suite *BaseSCTestSuite) TestTokenBaseSC_TransferSideChain() {
+	transferDto := token.TransferSideChain{
+		WalletId:  suite.walletFromId,
+		TokenId:   suite.STToken,
+		FromChain: sidechain.Spot,
+		ToChain:   sidechain.Iao,
+		Amount:    "78900",
+	}
+	paramByte, _ := json.Marshal(transferDto)
+	transferRes := mock.MockInvokeTransaction(suite.T(), suite.stub, [][]byte{[]byte("TransferSideChain"), paramByte})
+	suite.T().Log(transferRes)
+	assert.Emptyf(suite.T(), transferRes, "Create wallet return error", transferRes)
+
+	// accounting balance
+	suite.accountingBalance()
+
+	// get check balance
+	balanceOfFromWallet := suite.getBalance(suite.walletFromId, suite.STToken)
+	suite.T().Log(balanceOfFromWallet)
+	assert.NotEmptyf(suite.T(), balanceOfFromWallet, "Get balance of From wallet return empty", balanceOfFromWallet)
+	assert.Equal(suite.T(), "600000", balanceOfFromWallet, "Sub balance of From wallet failed")
 }
 
 func (suite *BaseSCTestSuite) TestTokenBaseSC_UpdateWallet() {

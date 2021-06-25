@@ -24,6 +24,7 @@ import (
 	"github.com/Akachain/gringotts/errorcode"
 	"github.com/Akachain/gringotts/glossary"
 	"github.com/Akachain/gringotts/glossary/doc"
+	"github.com/Akachain/gringotts/glossary/sidechain"
 	"github.com/Akachain/gringotts/helper"
 	"github.com/Akachain/gringotts/helper/glogger"
 	"github.com/Akachain/gringotts/services/base"
@@ -51,11 +52,11 @@ func (w *walletService) Create(ctx contractapi.TransactionContextInterface, toke
 	}
 
 	// init stable balance of wallet when create new wallet
-	balanceEntity := entity.NewBalance(ctx)
+	balanceEntity := entity.NewBalance(sidechain.Spot, ctx)
 	balanceEntity.WalletId = walletEntity.Id
 	balanceEntity.TokenId = tokenId
 	balanceEntity.Balances = "0"
-	if err := w.Repo.Create(ctx, balanceEntity, doc.Balances, helper.BalanceKey(walletEntity.Id, tokenId)); err != nil {
+	if err := w.Repo.Create(ctx, balanceEntity, doc.SpotBalances, helper.BalanceKey(walletEntity.Id, tokenId)); err != nil {
 		glogger.GetInstance().Errorf(ctx, "Create - Init balance of stable token failed with error (%v)", err)
 		return "", helper.RespError(errorcode.BizUnableCreateBalance)
 	}

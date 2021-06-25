@@ -24,6 +24,7 @@ import (
 	"github.com/Akachain/gringotts/errorcode"
 	"github.com/Akachain/gringotts/glossary"
 	"github.com/Akachain/gringotts/glossary/doc"
+	"github.com/Akachain/gringotts/glossary/sidechain"
 	"github.com/Akachain/gringotts/glossary/transaction"
 	"github.com/Akachain/gringotts/helper"
 	"github.com/Akachain/gringotts/helper/glogger"
@@ -51,6 +52,37 @@ func (t *tokenService) TransferWithNote(ctx contractapi.TransactionContextInterf
 func (t *tokenService) Transfer(ctx contractapi.TransactionContextInterface, fromWalletId, toWalletId, tokenId, amount string) (string, error) {
 	glogger.GetInstance().Info(ctx, "-----------Token Service - Transfer-----------")
 	return t.transferToken(ctx, fromWalletId, toWalletId, tokenId, amount, "")
+}
+
+func (t *tokenService) TransferSideChain(ctx contractapi.TransactionContextInterface, walletId, tokenId string,
+	fromChain, toChain sidechain.SideName, amount string) error {
+	glogger.GetInstance().Info(ctx, "-----------Token Service - TransferSideChain-----------")
+
+	if err := t.validateTransfer(ctx, walletId, walletId, tokenId, amount); err != nil {
+		glogger.GetInstance().Errorf(ctx, "TransferSideChain - Validation transfer failed with error (%v)", err)
+		return err
+	}
+
+	note := fromChain + "_" + toChain
+	// create new transfer transaction
+	txEntity := entity.NewTransaction(ctx)
+	txEntity.SpenderWallet = walletId
+	txEntity.FromWallet = walletId
+	txEntity.ToWallet = walletId
+	txEntity.FromTokenId = tokenId
+	txEntity.ToTokenId = tokenId
+	txEntity.FromTokenAmount = amount
+	txEntity.ToTokenAmount = amount
+	txEntity.TxType = transaction.SideChainTransfer
+	txEntity.Note = string(note)
+
+	if err := t.Repo.Create(ctx, txEntity, doc.Transactions, helper.TransactionKey(txEntity.Id)); err != nil {
+		glogger.GetInstance().Errorf(ctx, "TransferSideChain - Create transfer transaction failed with error (%v)", err)
+		return helper.RespError(errorcode.BizUnableCreateTX)
+	}
+	glogger.GetInstance().Infof(ctx, "-----------Token Service - TransferSideChain succeed (%s)-----------", txEntity.Id)
+
+	return nil
 }
 
 func (t *tokenService) Mint(ctx contractapi.TransactionContextInterface, walletId, tokenId, amount string) error {

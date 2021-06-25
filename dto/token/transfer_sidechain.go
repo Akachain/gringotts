@@ -17,34 +17,44 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package helper
+package token
 
 import (
-	"encoding/json"
-	"fmt"
-	"github.com/Akachain/gringotts/glossary"
-	"golang.org/x/crypto/sha3"
-	"sort"
+	"github.com/Akachain/gringotts/glossary/sidechain"
+	"github.com/Akachain/gringotts/helper"
+	"github.com/pkg/errors"
 )
 
-// GenerateID return id of docs base on document prefix name and Fabric transaction ID
-// This way, each document in the state database will have this type of ID format:
-func GenerateID(docPrefix string, txID string) string {
-	h := sha3.New256()
-	h.Write([]byte(docPrefix + txID))
-	shaString := fmt.Sprintf("%x", h.Sum(nil))
-
-	return shaString[len(shaString)-glossary.IdLength:]
+type TransferSideChain struct {
+	WalletId  string             `json:"fromWalletId"`
+	TokenId   string             `json:"tokenId"`
+	FromChain sidechain.SideName `json:"fromChain"`
+	ToChain   sidechain.SideName `json:"toChain"`
+	Amount    string             `json:"amount"`
 }
 
-// ArrayContains return true if array contain search string, otherwise return fail
-func ArrayContains(s []string, searchString string) bool {
-	i := sort.SearchStrings(s, searchString)
-	return i < len(s) && s[i] == searchString
+func (t TransferSideChain) IsValid() error {
+	if t.WalletId == "" {
+		return errors.New("Wallet Id is empty")
+	}
+	if t.TokenId == "" {
+		return errors.New("Token id is empty")
+	}
+
+	if t.FromChain.IsValidate() {
+		return errors.New("From chain name is invalidate")
+	}
+
+	if t.ToChain.IsValidate() {
+		return errors.New("To chain name is invalidate")
+	}
+
+	if helper.CompareStringBalance(t.Amount, "0") <= 0 {
+		return errors.New("Amount is zero or negative number")
+	}
+	return nil
 }
 
-// MarshalStruct return string marshall of struct
-func MarshalStruct(data interface{}) string {
-	dataByte, _ := json.Marshal(data)
-	return string(dataByte)
+func (t *TransferSideChain) String() string {
+	return helper.MarshalStruct(t)
 }

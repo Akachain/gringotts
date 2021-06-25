@@ -79,6 +79,10 @@ func (b *baseToken) CreateTokenType(ctx contractapi.TransactionContextInterface,
 	return b.tokenHandler.CreateTokenType(ctx, createTokenTypeDto)
 }
 
+func (b *baseToken) TransferSideChain(ctx contractapi.TransactionContextInterface, transferChain token.TransferSideChain) error {
+	return b.tokenHandler.TransferSideChain(ctx, transferChain)
+}
+
 // API healthcheck
 func (b *baseToken) CreateHealthCheck(ctx contractapi.TransactionContextInterface, arg string) (string, error) {
 	return b.healthCheckHandler.CreateHealthCheck(ctx)

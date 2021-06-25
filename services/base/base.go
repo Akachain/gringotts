@@ -25,6 +25,7 @@ import (
 	"github.com/Akachain/gringotts/errorcode"
 	"github.com/Akachain/gringotts/glossary"
 	"github.com/Akachain/gringotts/glossary/doc"
+	"github.com/Akachain/gringotts/glossary/sidechain"
 	"github.com/Akachain/gringotts/glossary/transaction"
 	"github.com/Akachain/gringotts/helper"
 	"github.com/Akachain/gringotts/helper/glogger"
@@ -183,7 +184,7 @@ func (b *Base) GetNFT(ctx contractapi.TransactionContextInterface, nftTokenId st
 }
 
 func (b *Base) GetBalanceOfToken(ctx contractapi.TransactionContextInterface, walletId string, tokenId string) (*entity.Balance, bool, error) {
-	isExisted, balanceData, err := b.Repo.GetAndCheckExist(ctx, doc.Balances, helper.BalanceKey(walletId, tokenId))
+	isExisted, balanceData, err := b.Repo.GetAndCheckExist(ctx, doc.SpotBalances, helper.BalanceKey(walletId, tokenId))
 	if err != nil {
 		glogger.GetInstance().Errorf(ctx, "Base - Get balance of token failed with error (%s)", err.Error())
 		return nil, false, helper.RespError(errorcode.BizUnableGetBalance)
@@ -236,7 +237,7 @@ func (b *Base) AddAmount(ctx contractapi.TransactionContextInterface,
 			balanceCache.BalanceEntity = balanceToken
 			mapCurrentBalance[key] = balanceCache
 		} else {
-			balanceEntity := entity.NewBalance(ctx)
+			balanceEntity := entity.NewBalance(sidechain.Spot, ctx)
 			balanceEntity.WalletId = walletId
 			balanceEntity.TokenId = tokenId
 			balanceEntity.Balances = "0"
