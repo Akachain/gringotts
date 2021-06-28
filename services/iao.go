@@ -19,7 +19,10 @@
 
 package services
 
-import "github.com/hyperledger/fabric-contract-api-go/contractapi"
+import (
+	"github.com/Akachain/gringotts/dto/iao"
+	"github.com/hyperledger/fabric-contract-api-go/contractapi"
+)
 
 type Iao interface {
 	// CreateAsset to create new asset and token type
@@ -27,4 +30,7 @@ type Iao interface {
 
 	// CreateIao to create new iao of asset
 	CreateIao(ctx contractapi.TransactionContextInterface, assetId, assetTokenAmount, startDate, endDate string, rate float64) (string, error)
+
+	// BuyBatchAsset to handle multiple request buy asset
+	BuyBatchAsset(ctx contractapi.TransactionContextInterface, req []iao.BuyAsset) error
 }

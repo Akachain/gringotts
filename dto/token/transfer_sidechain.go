@@ -41,11 +41,11 @@ func (t TransferSideChain) IsValid() error {
 		return errors.New("Token id is empty")
 	}
 
-	if t.FromChain.IsValidate() {
+	if !t.FromChain.IsValidate() {
 		return errors.New("From chain name is invalidate")
 	}
 
-	if t.ToChain.IsValidate() {
+	if !t.ToChain.IsValidate() {
 		return errors.New("To chain name is invalidate")
 	}
 

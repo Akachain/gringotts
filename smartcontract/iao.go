@@ -32,5 +32,5 @@ type Iao interface {
 	CreateIao(ctx contractapi.TransactionContextInterface, assetIao iao.AssetIao) (string, error)
 
 	// BuyAssetToken investor call to buy asset token
-	BuyAssetToken(ctx contractapi.TransactionContextInterface, asset iao.BuyAsset) error
+	BuyAssetToken(ctx contractapi.TransactionContextInterface, asset iao.BuyBatchAsset) error
 }

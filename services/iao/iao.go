@@ -21,6 +21,7 @@ package iao
 
 import (
 	"fmt"
+	"github.com/Akachain/gringotts/dto/iao"
 	"github.com/Akachain/gringotts/entity"
 	"github.com/Akachain/gringotts/errorcode"
 	"github.com/Akachain/gringotts/glossary/doc"
@@ -123,4 +124,10 @@ func (i *iaoService) CreateIao(ctx contractapi.TransactionContextInterface, asse
 	glogger.GetInstance().Infof(ctx, "-----------Iao Service - CreateIao succeed (%s)-----------", iaoEntity.Id)
 
 	return iaoEntity.Id, nil
+}
+
+func (i *iaoService) BuyBatchAsset(ctx contractapi.TransactionContextInterface, req []iao.BuyAsset) error {
+	//
+
+	return nil
 }

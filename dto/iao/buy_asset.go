@@ -19,9 +19,22 @@
 
 package iao
 
+import "github.com/pkg/errors"
+
 type BuyAsset struct {
 	IaoId    string `json:"iaoId"`
 	WalletId string `json:"walletId"`
 	TokenId  string `json:"tokenId"`
 	Funds    string `json:"funds"`
+}
+
+type BuyBatchAsset struct {
+	Requests []BuyAsset `json:"requests"`
+}
+
+func (b BuyBatchAsset) IsValid() error {
+	if len(b.Requests) <= 0 {
+		return errors.New("Input invalidate")
+	}
+	return nil
 }

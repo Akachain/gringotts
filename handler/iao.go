@@ -61,3 +61,15 @@ func (i IaoHandler) CreateIao(ctx contractapi.TransactionContextInterface, asset
 
 	return i.iaoService.CreateIao(ctx, assetIao.AssetId, assetIao.AssetTokenAmount, assetIao.StartDate, assetIao.EndDate, assetIao.Rate)
 }
+
+func (i IaoHandler) BuyBatchAsset(ctx contractapi.TransactionContextInterface, batchAsset iaoDto.BuyBatchAsset) error {
+	glogger.GetInstance().Info(ctx, "-----------Iao Handler - BuyBatchAsset-----------")
+
+	// checking dto validate
+	if err := batchAsset.IsValid(); err != nil {
+		glogger.GetInstance().Errorf(ctx, "IaoHandler - BuyBatchAsset Input invalidate %v", err)
+		return helper.RespError(errorcode.InvalidParam)
+	}
+
+	return i.iaoService.BuyBatchAsset(ctx, batchAsset.Requests)
+}

@@ -23,7 +23,7 @@ type SideName string
 
 const (
 	Spot     SideName = "Spot"
-	Iao               = "SideChain"
+	Iao               = "Iao"
 	Exchange          = "Exchange"
 )
 
