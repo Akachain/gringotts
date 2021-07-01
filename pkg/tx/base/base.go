@@ -22,6 +22,7 @@ package base
 import (
 	"github.com/Akachain/gringotts/entity"
 	"github.com/Akachain/gringotts/glossary"
+	"github.com/Akachain/gringotts/glossary/doc"
 	"github.com/Akachain/gringotts/glossary/transaction"
 	"github.com/Akachain/gringotts/helper/glogger"
 	"github.com/Akachain/gringotts/services/base"
@@ -46,13 +47,13 @@ func (b TxBase) TxHandlerTransfer(ctx contractapi.TransactionContextInterface, m
 		return tx, errors.New("From/To wallet id invalidate")
 	}
 
-	if err := b.SubAmount(ctx, mapBalanceToken, tx.FromWallet, tx.FromTokenId, tx.FromTokenAmount); err != nil {
+	if err := b.SubAmount(ctx, mapBalanceToken, doc.SpotBalances, tx.FromWallet, tx.FromTokenId, tx.FromTokenAmount); err != nil {
 		glogger.GetInstance().Errorf(ctx, "TxHandler - Base - Transaction (%s): Unable to sub temp amount of From wallet", tx.Id)
 		tx.Status = transaction.Rejected
 		return tx, errors.WithMessage(err, "Sub balance of from wallet failed")
 	}
 
-	if err := b.AddAmount(ctx, mapBalanceToken, tx.ToWallet, tx.FromTokenId, tx.ToTokenAmount); err != nil {
+	if err := b.AddAmount(ctx, mapBalanceToken, doc.SpotBalances, tx.ToWallet, tx.FromTokenId, tx.ToTokenAmount); err != nil {
 		glogger.GetInstance().Errorf(ctx, "TxHandler - Base - Transaction (%s): Unable to add temp amount of To wallet", tx.Id)
 		tx.Status = transaction.Rejected
 		if err := b.RollbackTxHandler(ctx, tx, mapBalanceToken, transaction.SubFromWallet); err != nil {

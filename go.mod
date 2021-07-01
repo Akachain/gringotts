@@ -5,7 +5,7 @@ go 1.15
 replace golang.org/x/sys => github.com/golang/sys v0.0.0-20210124154548-22da62e12c0c
 
 require (
-	github.com/Akachain/akc-go-sdk-v2 v1.0.1
+	github.com/Akachain/akc-go-sdk-v2 v1.0.2
 	github.com/davecgh/go-spew v1.1.1
 	github.com/google/addlicense v0.0.0-20210428195630-6d92264d7170 // indirect
 	github.com/hyperledger/fabric v2.1.1+incompatible

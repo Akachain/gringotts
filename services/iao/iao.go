@@ -20,6 +20,7 @@
 package iao
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/Akachain/gringotts/dto/iao"
 	"github.com/Akachain/gringotts/entity"
@@ -32,6 +33,7 @@ import (
 	"github.com/Akachain/gringotts/services/base"
 	"github.com/Akachain/gringotts/services/token"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
+	"strconv"
 )
 
 type iaoService struct {
@@ -76,7 +78,7 @@ func (i *iaoService) CreateAsset(ctx contractapi.TransactionContextInterface, co
 	return result, nil
 }
 
-func (i *iaoService) CreateIao(ctx contractapi.TransactionContextInterface, assetId, assetTokenAmount, startDate, endDate string, rate float64) (string, error) {
+func (i *iaoService) CreateIao(ctx contractapi.TransactionContextInterface, assetId, assetTokenAmount, startDate, endDate string, rate int64) (string, error) {
 	glogger.GetInstance().Info(ctx, "-----------Iao Service - CreateIao-----------")
 
 	assetEntity, err := i.GetAsset(ctx, assetId)
@@ -126,8 +128,159 @@ func (i *iaoService) CreateIao(ctx contractapi.TransactionContextInterface, asse
 	return iaoEntity.Id, nil
 }
 
-func (i *iaoService) BuyBatchAsset(ctx contractapi.TransactionContextInterface, req []iao.BuyAsset) error {
-	//
+func (i *iaoService) BuyBatchAsset(ctx contractapi.TransactionContextInterface, batchReq []iao.BuyAsset) (string, error) {
+	// calculate hash and check cache
+	stringInput, _ := json.Marshal(batchReq)
+	inputHash := helper.CalculateHash(string(stringInput))
+	cacheEntity, isExisted, err := i.GetBuyIaoCache(ctx, inputHash)
+	if err != nil {
+		return "", err
+	}
 
+	if isExisted {
+		return cacheEntity.Result, nil
+	}
+
+	// cache iao
+	iaoMap := make(map[string]*entity.Iao, 0)
+	balanceMap := make(map[string]*entity.BalanceCache, len(batchReq))
+	resultHandle := make([]iao.ResultHandle, 0, len(batchReq))
+	investorMap := make([]*entity.InvestorBook, 0, len(batchReq))
+
+	for index, req := range batchReq {
+		res := req.CloneToResult()
+		iaoEntity, err := i.getIaoInfo(ctx, iaoMap, req.IaoId)
+		if err != nil {
+			glogger.GetInstance().Errorf(ctx, "BuyBatchAsset - Handle req (%s) failed get IAO", req.ReqId, err.Error())
+			res.Status = transaction.Rejected
+			resultHandle = append(resultHandle, res)
+			continue
+		}
+		if helper.CompareStringBalance(iaoEntity.RemainingAssetToken, "0") <= 0 {
+			glogger.GetInstance().Errorf(ctx, "BuyBatchAsset - Handle req (%s) remaining of iao is zero", req.ReqId)
+			res.Status = transaction.Rejected
+			resultHandle = append(resultHandle, res)
+			// TODO: return not continue for optimize
+			continue
+		}
+
+		var numberATBuy string
+		if iaoEntity.RemainingAssetToken >= req.NumberAT {
+			numberATBuy = req.NumberAT
+		} else {
+			numberATBuy = iaoEntity.RemainingAssetToken
+		}
+
+		stableToken, err := helper.MulBalance(numberATBuy, iaoEntity.Rate)
+		if err != nil {
+			glogger.GetInstance().Errorf(ctx, "BuyBatchAsset - Handle req (%s) failed to calculate stable token", req.ReqId)
+			res.Status = transaction.Rejected
+			resultHandle = append(resultHandle, res)
+			continue
+		}
+
+		err = i.SubAmount(ctx, balanceMap, doc.IaoBalances, req.WalletId, req.TokenId, stableToken)
+		if err != nil {
+			glogger.GetInstance().Errorf(ctx, "BuyBatchAsset - Handle req (%s) failed get Balance", req.ReqId, err.Error())
+			res.Status = transaction.Rejected
+			resultHandle = append(resultHandle, res)
+			continue
+		}
+
+		updateATRemain, _ := helper.SubBalance(iaoEntity.RemainingAssetToken, numberATBuy)
+		updateST, _ := helper.AddBalance(iaoEntity.StableTokenAmount, stableToken)
+		iaoEntity.RemainingAssetToken = updateATRemain
+		iaoEntity.StableTokenAmount = updateST
+		iaoMap[iaoEntity.Id] = iaoEntity
+
+		res.Status = transaction.Confirmed
+		res.NumberATFilled = numberATBuy
+		resultHandle = append(resultHandle, res)
+
+		investorBookId := helper.GenerateID(doc.InvestorBook, req.ReqId+strconv.Itoa(index))
+		investorBook := entity.NewInvestorBook(ctx)
+		investorBook.IaoId = req.IaoId
+		investorBook.WalletId = req.WalletId
+		investorBook.AssetTokenAmount = req.NumberAT
+		investorBook.StableTokenAmount = stableToken
+		investorBook.Id = investorBookId
+		investorMap = append(investorMap, investorBook)
+	}
+
+	resultJson, _ := json.Marshal(resultHandle)
+
+	// update balance
+	if err := i.UpdateBalance(ctx, balanceMap); err != nil {
+		return "", err
+	}
+	// update iao
+	if err := i.updateIao(ctx, iaoMap); err != nil {
+		return "", err
+	}
+
+	// insert investor book
+	if err := i.insertInvestorBook(ctx, investorMap); err != nil {
+		return "", err
+	}
+
+	buyCache := entity.NewIaoCache(ctx)
+	buyCache.Hash = inputHash
+	buyCache.Result = string(resultJson)
+	if err := i.Repo.Create(ctx, buyCache, doc.BuyIaoCache, helper.ResultCacheKey(buyCache.Hash)); err != nil {
+		glogger.GetInstance().Errorf(ctx, "BuyBatchAsset - Create cache buy Iao failed with err (%v)", err.Error())
+		return "", helper.RespError(errorcode.BizUnableUpdateIao)
+	}
+
+	return string(resultJson), nil
+}
+
+func (i *iaoService) getIaoInfo(ctx contractapi.TransactionContextInterface, iaoMap map[string]*entity.Iao, iaoId string) (*entity.Iao, error) {
+	if _, ok := iaoMap[iaoId]; !ok {
+		iaoEntity, err := i.GetIao(ctx, iaoId)
+		if err != nil {
+			return nil, err
+		}
+
+		iaoMap[iaoEntity.Id] = iaoEntity
+	}
+
+	return iaoMap[iaoId], nil
+}
+
+func (i *iaoService) getBalanceWalletInfo(ctx contractapi.TransactionContextInterface, balanceMap map[string]*entity.Balance,
+	walletId, tokenId string) (*entity.Balance, error) {
+	if _, ok := balanceMap[walletId]; !ok {
+		balanceEntity, err := i.GetBalanceOfToken(ctx, doc.IaoBalances, walletId, tokenId)
+		if err != nil {
+			return nil, err
+		}
+		balanceMap[walletId] = balanceEntity
+	}
+
+	return balanceMap[walletId], nil
+}
+
+// updateIao update remaining token of IAO after handle transaction
+func (i *iaoService) updateIao(ctx contractapi.TransactionContextInterface, iaoMap map[string]*entity.Iao) error {
+	txTime, _ := ctx.GetStub().GetTxTimestamp()
+	for _, itemIao := range iaoMap {
+		itemIao.UpdatedAt = helper.TimestampISO(txTime.Seconds)
+		if err := i.Repo.Update(ctx, itemIao, doc.Iao, helper.IaoKey(itemIao.Id)); err != nil {
+			glogger.GetInstance().Errorf(ctx, "UpdateIao - Update Iao (%s) failed with err (%v)", itemIao.Id, err.Error())
+			return helper.RespError(errorcode.BizUnableUpdateIao)
+		}
+		glogger.GetInstance().Debugf(ctx, "UpdateIao - Update Iao (%s) succeed", itemIao.Id)
+	}
+
+	return nil
+}
+
+func (i *iaoService) insertInvestorBook(ctx contractapi.TransactionContextInterface, lstInvestorBook []*entity.InvestorBook) error {
+	for _, investorBook := range lstInvestorBook {
+		if err := i.Repo.Create(ctx, investorBook, doc.InvestorBook, helper.InvestorBookKey(investorBook.Id)); err != nil {
+			glogger.GetInstance().Errorf(ctx, "UpdateIao - Update Iao (%s) failed with err (%v)", investorBook.Id, err.Error())
+			return helper.RespError(errorcode.BizUnableCreateInvestorBook)
+		}
+	}
 	return nil
 }

@@ -17,20 +17,31 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package smartcontract
+package entity
 
 import (
-	"github.com/Akachain/gringotts/dto/iao"
+	"github.com/Akachain/gringotts/glossary/doc"
+	"github.com/Akachain/gringotts/helper"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
 
-type Iao interface {
-	// CreateAsset to create new asset and token type
-	CreateAsset(ctx contractapi.TransactionContextInterface, asset iao.CreateAsset) (string, error)
+type BuyIaoCache struct {
+	Hash   string
+	Result string
+	Base   `mapstructure:",squash"`
+}
 
-	// CreateIao to create new iao for asset. It will return address of Iao to investor buy asset token
-	CreateIao(ctx contractapi.TransactionContextInterface, assetIao iao.AssetIao) (string, error)
-
-	// BuyAssetToken investor call to buy asset token
-	BuyAssetToken(ctx contractapi.TransactionContextInterface, asset iao.BuyBatchAsset) (string, error)
+func NewIaoCache(ctx ...contractapi.TransactionContextInterface) *BuyIaoCache {
+	if len(ctx) <= 0 {
+		return &BuyIaoCache{}
+	}
+	txTime, _ := ctx[0].GetStub().GetTxTimestamp()
+	return &BuyIaoCache{
+		Base: Base{
+			Id:           helper.GenerateID(doc.BuyIaoCache, ctx[0].GetStub().GetTxID()),
+			CreatedAt:    helper.TimestampISO(txTime.Seconds),
+			UpdatedAt:    helper.TimestampISO(txTime.Seconds),
+			BlockChainId: ctx[0].GetStub().GetTxID(),
+		},
+	}
 }

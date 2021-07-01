@@ -25,11 +25,9 @@ import (
 	"github.com/Akachain/gringotts/glossary/doc"
 	"github.com/Akachain/gringotts/glossary/sidechain"
 	"github.com/Akachain/gringotts/glossary/transaction"
-	"github.com/Akachain/gringotts/helper"
 	"github.com/Akachain/gringotts/helper/glogger"
 	"github.com/Akachain/gringotts/pkg/tx/base"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
-	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
 	"strings"
 )
@@ -52,66 +50,33 @@ func (t *txSideChainTransfer) AccountingTx(ctx contractapi.TransactionContextInt
 	}
 
 	lstNameChain := strings.Split(tx.Note, "_")
-	if err := t.SubAmount(ctx, mapBalanceToken, tx.FromWallet, tx.FromTokenId, tx.FromTokenAmount); err != nil {
-		glogger.GetInstance().Errorf(ctx, "TxSideChainTransfer- Transaction (%s): Unable to sub temp amount of From wallet", tx.Id)
+	if err := t.SubAmount(ctx, mapBalanceToken, t.getDomain(lstNameChain[0]), tx.FromWallet, tx.FromTokenId, tx.FromTokenAmount); err != nil {
+		glogger.GetInstance().Errorf(ctx, "TxSideChainTransfer - Transaction (%s): Unable to sub temp amount of From wallet", tx.Id)
 		tx.Status = transaction.Rejected
 		return tx, errors.WithMessage(err, "Sub balance of from wallet failed")
 	}
 
-	isExisted, balanceData, err := t.Repo.GetAndCheckExist(ctx, doc.IaoBalances, helper.BalanceKey(tx.ToWallet, tx.ToTokenId))
-	if err != nil {
-		glogger.GetInstance().Errorf(ctx, "TxSideChainTransfer - Get balance of token failed with error (%s)", err.Error())
-		if err := t.RollbackTxHandler(ctx, tx, mapBalanceToken, transaction.SubFromWallet); err != nil {
-			glogger.GetInstance().Errorf(ctx, "TxSideChainTransfer - Rollback handle transaction (%s) failed with error (%s)", tx.Id, err.Error())
-		}
+	if err := t.AddAmount(ctx, mapBalanceToken, t.getDomain(lstNameChain[1]), tx.ToWallet, tx.FromTokenId, tx.ToTokenAmount); err != nil {
+		glogger.GetInstance().Errorf(ctx, "TxSideChainTransfer - Transaction (%s): Unable to add temp amount of To wallet", tx.Id)
 		tx.Status = transaction.Rejected
-		return tx, errors.WithMessage(err, "Get balance of to wallet failed")
-	}
-
-	if isExisted {
-		balanceToWallet := new(entity.Balance)
-		if err = mapstructure.Decode(balanceData, &balanceToWallet); err != nil {
-			glogger.GetInstance().Errorf(ctx, "TxSideChainTransfer - Decode balance of token failed with error (%s)", err.Error())
-			if err := t.RollbackTxHandler(ctx, tx, mapBalanceToken, transaction.SubFromWallet); err != nil {
-				glogger.GetInstance().Errorf(ctx, "TxSideChainTransfer - Rollback handle transaction (%s) failed with error (%s)", tx.Id, err.Error())
-			}
-			tx.Status = transaction.Rejected
-			return tx, errors.WithMessage(err, "Get balance of to wallet failed")
-		}
-		updateBalance, err := helper.AddBalance(balanceToWallet.Balances, tx.ToTokenAmount)
-		if err != nil {
-			glogger.GetInstance().Errorf(ctx, "TxSideChainTransfer - Get balance of token failed with error (%s)", err.Error())
-			if err := t.RollbackTxHandler(ctx, tx, mapBalanceToken, transaction.SubFromWallet); err != nil {
-				glogger.GetInstance().Errorf(ctx, "TxSideChainTransfer - Rollback handle transaction (%s) failed with error (%s)", tx.Id, err.Error())
-			}
-			tx.Status = transaction.Rejected
-			return tx, errors.WithMessage(err, "Add balance of to wallet failed")
-		}
-		balanceToWallet.Balances = updateBalance
-		if err := t.Repo.Update(ctx, balanceToWallet, doc.IaoBalances, helper.BalanceKey(tx.ToWallet, tx.ToTokenId)); err != nil {
-			glogger.GetInstance().Errorf(ctx, "TxSideChainTransfer - Update balance failed with err (%s)", err.Error())
-			if err := t.RollbackTxHandler(ctx, tx, mapBalanceToken, transaction.SubFromWallet); err != nil {
-				glogger.GetInstance().Errorf(ctx, "TxSideChainTransfer - Rollback handle transaction (%s) failed with error (%s)", tx.Id, err.Error())
-			}
-			tx.Status = transaction.Rejected
-			return tx, err
-		}
-	}
-
-	balanceEntity := entity.NewBalance(sidechain.SideName(lstNameChain[1]), ctx)
-	balanceEntity.WalletId = tx.ToWallet
-	balanceEntity.TokenId = tx.ToTokenId
-	balanceEntity.Balances = tx.ToTokenAmount
-
-	if err := t.Repo.Create(ctx, balanceEntity, doc.IaoBalances, helper.BalanceKey(tx.ToWallet, tx.ToTokenId)); err != nil {
-		glogger.GetInstance().Errorf(ctx, "TxSideChainTransfer - Create balance failed with err (%s)", err.Error())
 		if err := t.RollbackTxHandler(ctx, tx, mapBalanceToken, transaction.SubFromWallet); err != nil {
-			glogger.GetInstance().Errorf(ctx, "TxSideChainTransfer - Rollback handle transaction (%s) failed with error (%s)", tx.Id, err.Error())
+			glogger.GetInstance().Errorf(ctx, "TxSideChainTransfer - Rollback handle transaction (%s) failed with error (%v)", tx.Id, err)
 		}
-		tx.Status = transaction.Rejected
-		return tx, err
+		return tx, errors.WithMessage(err, "Add balance of to wallet failed")
 	}
+
 	tx.Status = transaction.Confirmed
 
 	return tx, nil
+}
+
+func (t *txSideChainTransfer) getDomain(sideName string) string {
+	switch sideName {
+	case sidechain.Iao:
+		return doc.IaoBalances
+	case sidechain.Exchange:
+		return doc.ExchangeBalances
+	default:
+		return doc.SpotBalances
+	}
 }

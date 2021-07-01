@@ -66,6 +66,21 @@ func SubBalance(currentBalance string, amount string) (string, error) {
 	return curBalanceUnit.String(), nil
 }
 
+// MulBalance mul current balance with amount
+func MulBalance(currentBalance string, amount int64) (string, error) {
+	if amount <= 0 {
+		return "", errors.New("invalidate amount")
+	}
+
+	// convert balance to akc unit
+	curBalanceUnit := unit.NewBalanceUnitFromString(currentBalance)
+
+	if err := curBalanceUnit.MulBalance(amount); err != nil {
+		return "", err
+	}
+	return curBalanceUnit.String(), nil
+}
+
 // CompareStringBalance to compare between current balance and amount.
 // Amount is string type.
 // Return 1 if current balance greater than amount. Otherwise return -1

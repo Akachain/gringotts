@@ -29,6 +29,7 @@ type InvestorBook struct {
 	IaoId             string
 	WalletId          string
 	StableTokenAmount string
+	AssetTokenAmount  string
 	Base              `mapstructure:",squash"`
 }
 

@@ -118,31 +118,10 @@ func (a *accountingService) CalculateBalance(ctx contractapi.TransactionContextI
 	}
 
 	// Update balance of wallet after calculate total balance update of wallet
-	if err := a.updateBalance(ctx, mapCurrentBalance); err != nil {
+	if err := a.UpdateBalance(ctx, mapCurrentBalance); err != nil {
 		return err
 	}
 
-	return nil
-}
-
-// updateBalance to update balance of wallet after handle transaction
-func (a *accountingService) updateBalance(ctx contractapi.TransactionContextInterface, mapCurrentBalance map[string]*entity.BalanceCache) error {
-	txTime, _ := ctx.GetStub().GetTxTimestamp()
-	for key, balanceItem := range mapCurrentBalance {
-		if balanceItem.IsNew {
-			if err := a.Repo.Create(ctx, balanceItem.BalanceEntity, doc.SpotBalances, helper.BalanceKey(balanceItem.BalanceEntity.WalletId, balanceItem.BalanceEntity.TokenId)); err != nil {
-				glogger.GetInstance().Errorf(ctx, "updateBalance - Create new balance of wallet (%s) failed with err (%s)", key, err.Error())
-				return helper.RespError(errorcode.BizUnableCreateBalance)
-			}
-		} else {
-			balanceItem.BalanceEntity.UpdatedAt = helper.TimestampISO(txTime.Seconds)
-			if err := a.Repo.Update(ctx, balanceItem.BalanceEntity, doc.SpotBalances, helper.BalanceKey(balanceItem.BalanceEntity.WalletId, balanceItem.BalanceEntity.TokenId)); err != nil {
-				glogger.GetInstance().Errorf(ctx, "updateBalance - Update balance of wallet (%s) failed with err (%s)", key, err.Error())
-				return helper.RespError(errorcode.BizUnableUpdateBalance)
-			}
-		}
-		glogger.GetInstance().Infof(ctx, "WalletId (%s) - Balances update succeed", key)
-	}
 	return nil
 }
 

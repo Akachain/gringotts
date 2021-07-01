@@ -22,11 +22,11 @@ package iao
 import "github.com/pkg/errors"
 
 type AssetIao struct {
-	AssetId          string  `json:"assetId"`
-	AssetTokenAmount string  `json:"assetTokenAmount"`
-	StartDate        string  `json:"startDate"`
-	EndDate          string  `json:"endDate"`
-	Rate             float64 `json:"rate"`
+	AssetId          string `json:"assetId"`
+	AssetTokenAmount string `json:"assetTokenAmount"`
+	StartDate        string `json:"startDate"`
+	EndDate          string `json:"endDate"`
+	Rate             int64  `json:"rate"`
 }
 
 func (a AssetIao) IsValid() error {

@@ -21,5 +21,6 @@ package entity
 
 type BalanceCache struct {
 	IsNew         bool
+	Domain        string
 	BalanceEntity *Balance
 }

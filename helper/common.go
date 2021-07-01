@@ -48,3 +48,10 @@ func MarshalStruct(data interface{}) string {
 	dataByte, _ := json.Marshal(data)
 	return string(dataByte)
 }
+
+// CalculateHash return hash 256 of string input
+func CalculateHash(input string) string {
+	h := sha3.New256()
+	h.Write([]byte(input))
+	return fmt.Sprintf("%x", h.Sum(nil))
+}

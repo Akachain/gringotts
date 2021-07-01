@@ -90,15 +90,10 @@ func (w *walletService) Update(ctx contractapi.TransactionContextInterface, wall
 func (w *walletService) BalanceOf(ctx contractapi.TransactionContextInterface, walletId string, tokenId string) (string, error) {
 	glogger.GetInstance().Info(ctx, "-----------Wallet Service - BalanceOf-----------")
 
-	balanceToken, isExisted, err := w.GetBalanceOfToken(ctx, walletId, tokenId)
+	balanceToken, err := w.GetBalanceOfToken(ctx, doc.SpotBalances, walletId, tokenId)
 	if err != nil {
 		glogger.GetInstance().Errorf(ctx, "BalanceOf - Get wallet failed with error (%v)", err)
 		return "-1", err
-	}
-
-	if !isExisted {
-		glogger.GetInstance().Error(ctx, "BalanceOf -Balance of token do not exist in the system")
-		return "-1", helper.RespError(errorcode.BizUnableGetBalance)
 	}
 
 	glogger.GetInstance().Infof(ctx, "-----------Wallet Service - BalanceOf wallet: (%s)-----------", balanceToken.Balances)

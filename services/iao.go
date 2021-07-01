@@ -29,8 +29,8 @@ type Iao interface {
 	CreateAsset(ctx contractapi.TransactionContextInterface, code, name, ownerWallet, tokenName, tickerToken, maxSupply, totalValue, documentUrl string) (string, error)
 
 	// CreateIao to create new iao of asset
-	CreateIao(ctx contractapi.TransactionContextInterface, assetId, assetTokenAmount, startDate, endDate string, rate float64) (string, error)
+	CreateIao(ctx contractapi.TransactionContextInterface, assetId, assetTokenAmount, startDate, endDate string, rate int64) (string, error)
 
 	// BuyBatchAsset to handle multiple request buy asset
-	BuyBatchAsset(ctx contractapi.TransactionContextInterface, req []iao.BuyAsset) error
+	BuyBatchAsset(ctx contractapi.TransactionContextInterface, req []iao.BuyAsset) (string, error)
 }

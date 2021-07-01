@@ -51,7 +51,7 @@ func (t *txDeposit) AccountingTx(ctx contractapi.TransactionContextInterface, tx
 		return tx, err
 	}
 
-	if err := t.SubAmount(ctx, mapBalanceToken, tx.FromWallet, tx.FromTokenId, tx.FromTokenAmount); err != nil {
+	if err := t.SubAmount(ctx, mapBalanceToken, doc.SpotBalances, tx.FromWallet, tx.FromTokenId, tx.FromTokenAmount); err != nil {
 		glogger.GetInstance().Errorf(ctx, "Iao TxTransfer - Transaction (%s): Unable to sub temp amount of From wallet", tx.Id)
 		tx.Status = transaction.Rejected
 		return tx, errors.WithMessage(err, "Sub balance of from wallet failed")
@@ -65,6 +65,7 @@ func (t *txDeposit) AccountingTx(ctx contractapi.TransactionContextInterface, tx
 	}
 
 	iaoEntity.AssetTokenAmount = assetTokenUpdate
+	iaoEntity.RemainingAssetToken = assetTokenUpdate
 	iaoEntity.Status = iao.Open
 	iaoEntity.UpdatedAt = helper.TimestampISO(txTime.Seconds)
 

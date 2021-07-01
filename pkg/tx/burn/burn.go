@@ -66,7 +66,7 @@ func (t *txBurn) AccountingTx(ctx contractapi.TransactionContextInterface, tx *e
 		return tx, errors.New("Unable to decrease total of token on the blockchain")
 	}
 
-	if err := t.SubAmount(ctx, mapBalanceToken, tx.FromWallet, tx.FromTokenId, tx.FromTokenAmount); err != nil {
+	if err := t.SubAmount(ctx, mapBalanceToken, doc.SpotBalances, tx.FromWallet, tx.FromTokenId, tx.FromTokenAmount); err != nil {
 		glogger.GetInstance().Errorf(ctx, "TxBurn - Transaction (%s): add balance failed (%s)", tx.Id, err.Error())
 		tx.Status = transaction.Rejected
 		return tx, errors.New("Sub balance of to wallet failed")

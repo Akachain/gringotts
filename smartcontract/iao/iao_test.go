@@ -21,12 +21,14 @@ package iao
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/Akachain/akc-go-sdk-v2/mock"
 	"github.com/Akachain/gringotts/dto/iao"
 	"github.com/Akachain/gringotts/dto/token"
 	"github.com/Akachain/gringotts/entity"
 	"github.com/Akachain/gringotts/glossary"
 	"github.com/Akachain/gringotts/glossary/doc"
+	"github.com/Akachain/gringotts/glossary/sidechain"
 	"github.com/Akachain/gringotts/helper"
 	"github.com/Akachain/gringotts/smartcontract"
 	"github.com/Akachain/gringotts/smartcontract/basic"
@@ -68,7 +70,7 @@ func setupMock() (*mock.MockStubExtend, error) {
 	stub.SetCouchDBConfiguration(db)
 
 	// Process indexes
-	err = db.ProcessIndexesForChaincodeDeploy("indexPendingTx.json", "../../META-INF/statedb/couchdb/indexes/indexPendingTx.json")
+	err = db.ProcessIndexesForChaincodeDeploy("../../META-INF/statedb/couchdb/indexes/indexPendingTx.json")
 	if err != nil {
 		return nil, err
 
@@ -83,6 +85,7 @@ type IaoSCTestSuite struct {
 	STToken      string
 	ATToken      string
 	AssetId      string
+	IaoId        string
 	stub         *mock.MockStubExtend
 }
 
@@ -134,6 +137,58 @@ func (suite *IaoSCTestSuite) TestIAOSC_CreateAsset() {
 }
 
 func (suite *IaoSCTestSuite) TestIAO_CreateIAO() {
+	suite.createIao()
+}
+
+func (suite *IaoSCTestSuite) TestIAO_BuyIAO() {
+	// transfer side chain
+	transferDto := token.TransferSideChain{
+		WalletId:  suite.walletFromId,
+		TokenId:   suite.STToken,
+		FromChain: sidechain.Spot,
+		ToChain:   sidechain.Iao,
+		Amount:    "78900",
+	}
+	paramByte, _ := json.Marshal(transferDto)
+	transferRes := mock.MockInvokeTransaction(suite.T(), suite.stub, [][]byte{[]byte("TransferSideChain"), paramByte})
+	suite.T().Log(transferRes)
+	assert.Emptyf(suite.T(), transferRes, "Create wallet return error", transferRes)
+
+	// accounting balance
+	suite.accountingBalance()
+
+	// creat IAO
+	suite.createIao()
+
+	lstReq := make([]iao.BuyAsset, 0)
+	i := 1
+	for i > 0 {
+		buyIao := iao.BuyAsset{
+			ReqId:    "123321",
+			IaoId:    suite.IaoId,
+			WalletId: suite.walletFromId,
+			TokenId:  suite.STToken,
+			NumberAT: "1",
+		}
+		lstReq = append(lstReq, buyIao)
+		i--
+	}
+
+	batchBuyIao := iao.BuyBatchAsset{Requests: lstReq}
+	paramByte, _ = json.Marshal(batchBuyIao)
+	suite.T().Log(string(paramByte))
+	buyIaoResp := mock.MockInvokeTransaction(suite.T(), suite.stub, [][]byte{[]byte("BuyAssetToken"), paramByte})
+	suite.T().Log(buyIaoResp)
+	assert.NotEmpty(suite.T(), buyIaoResp, "Buy asset return empty")
+
+	// multiple invoke
+	buyIaoRespSecond := mock.MockInvokeTransaction(suite.T(), suite.stub, [][]byte{[]byte("BuyAssetToken"), paramByte})
+	suite.T().Log(buyIaoRespSecond)
+	assert.NotEmpty(suite.T(), buyIaoResp, "Buy Asset return empty")
+	assert.Equal(suite.T(), buyIaoResp, buyIaoRespSecond, "Multiple invoke not same resp")
+}
+
+func (suite *IaoSCTestSuite) createIao() {
 	// create new asset
 	suite.createNewAsset()
 
@@ -157,14 +212,15 @@ func (suite *IaoSCTestSuite) TestIAO_CreateIAO() {
 	assetIaoDto := iao.AssetIao{
 		AssetId:          suite.AssetId,
 		AssetTokenAmount: "8900",
-		StartDate:        string(time.Now().Unix()),
-		EndDate:          string(time.Now().Unix()),
-		Rate:             1.2,
+		StartDate:        fmt.Sprint(time.Now().Unix()),
+		EndDate:          fmt.Sprint(time.Now().Unix()),
+		Rate:             1,
 	}
 	paramByte, _ = json.Marshal(assetIaoDto)
 	iaoRes := mock.MockInvokeTransaction(suite.T(), suite.stub, [][]byte{[]byte("CreateIao"), paramByte})
 	suite.T().Log(iaoRes)
 	assert.NotEmptyf(suite.T(), iaoRes, "Create wallet return error", iaoRes)
+	suite.IaoId = iaoRes
 
 	// accounting balance
 	suite.accountingBalance()

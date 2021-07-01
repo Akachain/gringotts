@@ -36,4 +36,5 @@ const (
 	Iao              = "Iao"
 	InvestorBook     = "InvestorBook"
 	Asset            = "Asset"
+	BuyIaoCache      = "BuyIaoCache"
 )

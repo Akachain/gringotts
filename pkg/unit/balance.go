@@ -82,3 +82,12 @@ func (b *BalanceUnit) SubBalance(amount *BalanceUnit) error {
 	b.Sub(b.Int, amount.Int)
 	return nil
 }
+
+// MulBalance mul amount into current balance
+func (b *BalanceUnit) MulBalance(amount int64) error {
+	if amount <= 0 {
+		return errors.New("invalidate amount")
+	}
+	b.Mul(b.Int, big.NewInt(amount))
+	return nil
+}

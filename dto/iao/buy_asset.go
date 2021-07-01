@@ -19,13 +19,23 @@
 
 package iao
 
-import "github.com/pkg/errors"
+import (
+	"github.com/Akachain/gringotts/glossary/transaction"
+	"github.com/pkg/errors"
+)
 
 type BuyAsset struct {
+	ReqId    string `json:"reqId"`
 	IaoId    string `json:"iaoId"`
 	WalletId string `json:"walletId"`
 	TokenId  string `json:"tokenId"`
-	Funds    string `json:"funds"`
+	NumberAT string `json:"numberAT"`
+}
+
+type ResultHandle struct {
+	Status         transaction.Status `json:"status"`
+	NumberATFilled string             `json:"numberATFilled"`
+	ReqId          string             `json:"reqId"`
 }
 
 type BuyBatchAsset struct {
@@ -37,4 +47,10 @@ func (b BuyBatchAsset) IsValid() error {
 		return errors.New("Input invalidate")
 	}
 	return nil
+}
+
+func (b BuyAsset) CloneToResult() ResultHandle {
+	return ResultHandle{
+		ReqId: b.ReqId,
+	}
 }

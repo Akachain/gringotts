@@ -127,15 +127,10 @@ func (t *tokenService) Burn(ctx contractapi.TransactionContextInterface, walletI
 	}
 
 	// get balance of token
-	balanceToken, isExisted, err := t.GetBalanceOfToken(ctx, wallet.Id, tokenId)
+	balanceToken, err := t.GetBalanceOfToken(ctx, doc.SpotBalances, wallet.Id, tokenId)
 	if err != nil {
 		glogger.GetInstance().Errorf(ctx, "Burn - Get balance of token failed with error (%v)", err)
 		return err
-	}
-
-	if !isExisted {
-		glogger.GetInstance().Error(ctx, "Burn -Balance of token do not exist in the system")
-		return helper.RespError(errorcode.BizUnableGetBalance)
 	}
 
 	// check balance enough to burn
@@ -291,14 +286,9 @@ func (t *tokenService) validateTransfer(ctx contractapi.TransactionContextInterf
 		return err
 	}
 
-	balanceToken, isExisted, err := t.GetBalanceOfToken(ctx, walletFrom.Id, tokenId)
+	balanceToken, err := t.GetBalanceOfToken(ctx, doc.SpotBalances, walletFrom.Id, tokenId)
 	if err != nil {
 		return err
-	}
-
-	if !isExisted {
-		glogger.GetInstance().Error(ctx, "ValidateTransfer -Balance of token do not exist in the system")
-		return helper.RespError(errorcode.BizUnableGetBalance)
 	}
 
 	// check balance enough to transfer
