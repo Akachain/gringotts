@@ -129,6 +129,7 @@ func (i *iaoService) CreateIao(ctx contractapi.TransactionContextInterface, asse
 }
 
 func (i *iaoService) BuyBatchAsset(ctx contractapi.TransactionContextInterface, batchReq []iao.BuyAsset) (string, error) {
+	glogger.GetInstance().Info(ctx, "Start BuyBatchAsset")
 	// calculate hash and check cache
 	stringInput, _ := json.Marshal(batchReq)
 	inputHash := helper.CalculateHash(string(stringInput))
@@ -230,6 +231,7 @@ func (i *iaoService) BuyBatchAsset(ctx contractapi.TransactionContextInterface, 
 		glogger.GetInstance().Errorf(ctx, "BuyBatchAsset - Create cache buy Iao failed with err (%v)", err.Error())
 		return "", helper.RespError(errorcode.BizUnableUpdateIao)
 	}
+	glogger.GetInstance().Info(ctx, "End BuyBatchAsset")
 
 	return string(resultJson), nil
 }
