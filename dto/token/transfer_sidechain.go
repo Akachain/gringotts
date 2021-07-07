@@ -17,20 +17,44 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package smartcontract
+package token
 
 import (
-	"github.com/Akachain/gringotts/dto/iao"
-	"github.com/hyperledger/fabric-contract-api-go/contractapi"
+	"github.com/Akachain/gringotts/glossary/sidechain"
+	"github.com/Akachain/gringotts/helper"
+	"github.com/pkg/errors"
 )
 
-type Iao interface {
-	// CreateAsset to create new asset and token type
-	CreateAsset(ctx contractapi.TransactionContextInterface, asset iao.CreateAsset) (string, error)
+type TransferSideChain struct {
+	WalletId  string             `json:"fromWalletId"`
+	TokenId   string             `json:"tokenId"`
+	FromChain sidechain.SideName `json:"fromChain"`
+	ToChain   sidechain.SideName `json:"toChain"`
+	Amount    string             `json:"amount"`
+}
 
-	// CreateIao to create new iao for asset. It will return address of Iao to investor buy asset token
-	CreateIao(ctx contractapi.TransactionContextInterface, assetIao iao.AssetIao) (string, error)
+func (t TransferSideChain) IsValid() error {
+	if t.WalletId == "" {
+		return errors.New("Wallet Id is empty")
+	}
+	if t.TokenId == "" {
+		return errors.New("Token id is empty")
+	}
 
-	// BuyAssetToken investor call to buy asset token
-	BuyAssetToken(ctx contractapi.TransactionContextInterface, asset iao.BuyBatchAsset) (string, error)
+	if !t.FromChain.IsValidate() {
+		return errors.New("From chain name is invalidate")
+	}
+
+	if !t.ToChain.IsValidate() {
+		return errors.New("To chain name is invalidate")
+	}
+
+	if helper.CompareStringBalance(t.Amount, "0") <= 0 {
+		return errors.New("Amount is zero or negative number")
+	}
+	return nil
+}
+
+func (t *TransferSideChain) String() string {
+	return helper.MarshalStruct(t)
 }

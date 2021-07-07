@@ -20,6 +20,7 @@
 package helper
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/Akachain/gringotts/glossary"
 	"golang.org/x/crypto/sha3"
@@ -40,4 +41,17 @@ func GenerateID(docPrefix string, txID string) string {
 func ArrayContains(s []string, searchString string) bool {
 	i := sort.SearchStrings(s, searchString)
 	return i < len(s) && s[i] == searchString
+}
+
+// MarshalStruct return string marshall of struct
+func MarshalStruct(data interface{}) string {
+	dataByte, _ := json.Marshal(data)
+	return string(dataByte)
+}
+
+// CalculateHash return hash 256 of string input
+func CalculateHash(input string) string {
+	h := sha3.New256()
+	h.Write([]byte(input))
+	return fmt.Sprintf("%x", h.Sum(nil))
 }

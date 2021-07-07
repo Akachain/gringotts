@@ -17,51 +17,66 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package base
+package sidechain_transfer
 
 import (
 	"github.com/Akachain/gringotts/entity"
 	"github.com/Akachain/gringotts/glossary"
 	"github.com/Akachain/gringotts/glossary/doc"
+	"github.com/Akachain/gringotts/glossary/sidechain"
 	"github.com/Akachain/gringotts/glossary/transaction"
 	"github.com/Akachain/gringotts/helper/glogger"
-	"github.com/Akachain/gringotts/services/base"
+	"github.com/Akachain/gringotts/pkg/tx/base"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 	"github.com/pkg/errors"
+	"strings"
 )
 
-type TxBase struct {
-	*base.Base
+type txSideChainTransfer struct {
+	*base.TxBase
 }
 
-func NewTxBase() *TxBase {
-	return &TxBase{
-		base.NewBase(),
+func NewTxSideChainTransfer() *txSideChainTransfer {
+	return &txSideChainTransfer{
+		base.NewTxBase(),
 	}
 }
 
-func (b TxBase) TxHandlerTransfer(ctx contractapi.TransactionContextInterface, mapBalanceToken map[string]*entity.BalanceCache, tx *entity.Transaction) (*entity.Transaction, error) {
+func (t *txSideChainTransfer) AccountingTx(ctx contractapi.TransactionContextInterface, tx *entity.Transaction, mapBalanceToken map[string]*entity.BalanceCache) (*entity.Transaction, error) {
 	if tx.FromWallet == glossary.SystemWallet || tx.ToWallet == glossary.SystemWallet {
-		glogger.GetInstance().Errorf(ctx, "TxHandler - Base - Transaction (%s) has from/to wallet Id is system type", tx.Id)
+		glogger.GetInstance().Errorf(ctx, "TxSideChainTransfer - Transaction (%s) has from/to wallet Id is system type", tx.Id)
 		tx.Status = transaction.Rejected
 		return tx, errors.New("From/To wallet id invalidate")
 	}
 
-	if err := b.SubAmount(ctx, mapBalanceToken, doc.SpotBalances, tx.FromWallet, tx.FromTokenId, tx.FromTokenAmount); err != nil {
-		glogger.GetInstance().Errorf(ctx, "TxHandler - Base - Transaction (%s): Unable to sub temp amount of From wallet", tx.Id)
+	lstNameChain := strings.Split(tx.Note, "_")
+	if err := t.SubAmount(ctx, mapBalanceToken, t.getDomain(lstNameChain[0]), tx.FromWallet, tx.FromTokenId, tx.FromTokenAmount); err != nil {
+		glogger.GetInstance().Errorf(ctx, "TxSideChainTransfer - Transaction (%s): Unable to sub temp amount of From wallet", tx.Id)
 		tx.Status = transaction.Rejected
 		return tx, errors.WithMessage(err, "Sub balance of from wallet failed")
 	}
 
-	if err := b.AddAmount(ctx, mapBalanceToken, doc.SpotBalances, tx.ToWallet, tx.FromTokenId, tx.ToTokenAmount); err != nil {
-		glogger.GetInstance().Errorf(ctx, "TxHandler - Base - Transaction (%s): Unable to add temp amount of To wallet", tx.Id)
+	if err := t.AddAmount(ctx, mapBalanceToken, t.getDomain(lstNameChain[1]), tx.ToWallet, tx.FromTokenId, tx.ToTokenAmount); err != nil {
+		glogger.GetInstance().Errorf(ctx, "TxSideChainTransfer - Transaction (%s): Unable to add temp amount of To wallet", tx.Id)
 		tx.Status = transaction.Rejected
-		if err := b.RollbackTxHandler(ctx, tx, mapBalanceToken, transaction.SubFromWallet); err != nil {
-			glogger.GetInstance().Errorf(ctx, "TxHandler - Base - Rollback handle transaction (%s) failed with error (%v)", tx.Id, err)
+		if err := t.RollbackTxHandler(ctx, tx, mapBalanceToken, transaction.SubFromWallet); err != nil {
+			glogger.GetInstance().Errorf(ctx, "TxSideChainTransfer - Rollback handle transaction (%s) failed with error (%v)", tx.Id, err)
 		}
 		return tx, errors.WithMessage(err, "Add balance of to wallet failed")
 	}
 
 	tx.Status = transaction.Confirmed
+
 	return tx, nil
+}
+
+func (t *txSideChainTransfer) getDomain(sideName string) string {
+	switch sideName {
+	case sidechain.Iao:
+		return doc.IaoBalances
+	case sidechain.Exchange:
+		return doc.ExchangeBalances
+	default:
+		return doc.SpotBalances
+	}
 }

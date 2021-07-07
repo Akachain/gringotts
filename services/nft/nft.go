@@ -23,6 +23,7 @@ import (
 	"github.com/Akachain/gringotts/entity"
 	"github.com/Akachain/gringotts/errorcode"
 	"github.com/Akachain/gringotts/glossary/doc"
+	"github.com/Akachain/gringotts/glossary/sidechain"
 	"github.com/Akachain/gringotts/glossary/transaction"
 	"github.com/Akachain/gringotts/helper"
 	"github.com/Akachain/gringotts/helper/glogger"
@@ -62,11 +63,11 @@ func (n *nftService) Mint(ctx contractapi.TransactionContextInterface, gs1Number
 	}
 
 	// create balance
-	balanceEntity := entity.NewBalance(ctx)
+	balanceEntity := entity.NewBalance(sidechain.Spot, ctx)
 	balanceEntity.WalletId = ownerWalletId
 	balanceEntity.TokenId = nftEntity.Id
 	balanceEntity.Balances = "1"
-	if err := n.Repo.Create(ctx, balanceEntity, doc.Balances, helper.BalanceKey(ownerWalletId, doc.NftToken, nftEntity.Id)); err != nil {
+	if err := n.Repo.Create(ctx, balanceEntity, doc.SpotBalances, helper.BalanceKey(ownerWalletId, doc.NftToken, nftEntity.Id)); err != nil {
 		glogger.GetInstance().Errorf(ctx, "Create - Init balance of stable token failed with error (%v)", err)
 		return "", helper.RespError(errorcode.BizUnableCreateBalance)
 	}

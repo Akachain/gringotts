@@ -1,7 +1,7 @@
 bazil.org/fuse v0.0.0-20160811212531-371fbbdaa898/go.mod h1:Xbm+BRKSBEpa4q4hTSxohYNQpsxXPbPry4JJWOB3LB8=
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
-github.com/Akachain/akc-go-sdk-v2 v1.0.1 h1:FX2IyKrUAfUdrPz1p2wmLjzXLauxHisGIW2lo0RRWYU=
-github.com/Akachain/akc-go-sdk-v2 v1.0.1/go.mod h1:DwRmajMY1qjnUhA6oGpmIl+/dFUlba3BCc9AfM7QZ6U=
+github.com/Akachain/akc-go-sdk-v2 v1.0.2 h1:7KbP43dfoPkiokdit4XUh77a/mNjB9+g/EwiLuZeQOw=
+github.com/Akachain/akc-go-sdk-v2 v1.0.2/go.mod h1:DwRmajMY1qjnUhA6oGpmIl+/dFUlba3BCc9AfM7QZ6U=
 github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78 h1:w+iIsaOQNcT7OZ575w+acHgRric5iCyQh+xv+KJ4HB8=
 github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78/go.mod h1:LmzpDX56iTiv29bbRTIsUNlaFfuhWRQBWjQdVyAevI8=
 github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=

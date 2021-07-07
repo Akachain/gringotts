@@ -67,3 +67,13 @@ func AssetKey(assetId string) []string {
 func IaoKey(iaoId string) []string {
 	return []string{iaoId}
 }
+
+// InvestorBookKey return list key of Investor Book will be compose in couch db key
+func InvestorBookKey(investorId string) []string {
+	return []string{investorId}
+}
+
+// ResultCacheKey return list key of cache will be compose in couch db key
+func ResultCacheKey(cacheId string) []string {
+	return []string{cacheId}
+}

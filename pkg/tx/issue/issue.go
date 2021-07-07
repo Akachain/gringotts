@@ -46,13 +46,13 @@ func (t *txIssue) AccountingTx(ctx contractapi.TransactionContextInterface, tx *
 		return tx, errors.New("From/To wallet id invalidate")
 	}
 
-	if err := t.SubAmount(ctx, mapBalanceToken, tx.FromWallet, tx.FromTokenId, tx.FromTokenAmount); err != nil {
+	if err := t.SubAmount(ctx, mapBalanceToken, doc.SpotBalances, tx.FromWallet, tx.FromTokenId, tx.FromTokenAmount); err != nil {
 		glogger.GetInstance().Errorf(ctx, "TxHandler - TxIssue - Transaction (%s): Unable to sub temp amount of From wallet", tx.Id)
 		tx.Status = transaction.Rejected
 		return tx, errors.WithMessage(err, "Sub balance of from wallet failed")
 	}
 
-	if err := t.AddAmount(ctx, mapBalanceToken, tx.ToWallet, tx.ToTokenId, tx.ToTokenAmount); err != nil {
+	if err := t.AddAmount(ctx, mapBalanceToken, doc.SpotBalances, tx.ToWallet, tx.ToTokenId, tx.ToTokenAmount); err != nil {
 		glogger.GetInstance().Errorf(ctx, "TxHandler - TxIssue - Transaction (%s): Unable to add temp amount of To wallet", tx.Id)
 		tx.Status = transaction.Rejected
 		if err := t.RollbackTxHandler(ctx, tx, mapBalanceToken, transaction.SubFromWallet); err != nil {

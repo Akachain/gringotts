@@ -24,7 +24,6 @@ import (
 	"github.com/Akachain/gringotts/handler"
 	"github.com/Akachain/gringotts/smartcontract"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
-	"github.com/pkg/errors"
 )
 
 type iaoSc struct {
@@ -43,6 +42,6 @@ func (i *iaoSc) CreateIao(ctx contractapi.TransactionContextInterface, assetIao 
 	return i.iaoHandler.CreateIao(ctx, assetIao)
 }
 
-func (i *iaoSc) BuyAssetToken(ctx contractapi.TransactionContextInterface, asset iao.BuyAsset) error {
-	return errors.New("implement me")
+func (i *iaoSc) BuyAssetToken(ctx contractapi.TransactionContextInterface, batchAsset iao.BuyBatchAsset) (string, error) {
+	return i.iaoHandler.BuyBatchAsset(ctx, batchAsset)
 }

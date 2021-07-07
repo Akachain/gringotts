@@ -66,7 +66,7 @@ func (t *txMint) AccountingTx(ctx contractapi.TransactionContextInterface, tx *e
 		return tx, errors.New("Unable to increase total of token on the blockchain")
 	}
 
-	if err := t.AddAmount(ctx, mapBalanceToken, tx.ToWallet, tx.ToTokenId, tx.ToTokenAmount); err != nil {
+	if err := t.AddAmount(ctx, mapBalanceToken, doc.SpotBalances, tx.ToWallet, tx.ToTokenId, tx.ToTokenAmount); err != nil {
 		glogger.GetInstance().Errorf(ctx, "TxMint - Transaction (%s): add balance failed (%s)", tx.Id, err.Error())
 		tx.Status = transaction.Rejected
 		return tx, errors.New("Add balance of to wallet failed")

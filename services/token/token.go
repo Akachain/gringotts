@@ -24,6 +24,7 @@ import (
 	"github.com/Akachain/gringotts/errorcode"
 	"github.com/Akachain/gringotts/glossary"
 	"github.com/Akachain/gringotts/glossary/doc"
+	"github.com/Akachain/gringotts/glossary/sidechain"
 	"github.com/Akachain/gringotts/glossary/transaction"
 	"github.com/Akachain/gringotts/helper"
 	"github.com/Akachain/gringotts/helper/glogger"
@@ -51,6 +52,37 @@ func (t *tokenService) TransferWithNote(ctx contractapi.TransactionContextInterf
 func (t *tokenService) Transfer(ctx contractapi.TransactionContextInterface, fromWalletId, toWalletId, tokenId, amount string) (string, error) {
 	glogger.GetInstance().Info(ctx, "-----------Token Service - Transfer-----------")
 	return t.transferToken(ctx, fromWalletId, toWalletId, tokenId, amount, "")
+}
+
+func (t *tokenService) TransferSideChain(ctx contractapi.TransactionContextInterface, walletId, tokenId string,
+	fromChain, toChain sidechain.SideName, amount string) error {
+	glogger.GetInstance().Info(ctx, "-----------Token Service - TransferSideChain-----------")
+
+	if err := t.validateTransfer(ctx, walletId, walletId, tokenId, amount); err != nil {
+		glogger.GetInstance().Errorf(ctx, "TransferSideChain - Validation transfer failed with error (%v)", err)
+		return err
+	}
+
+	note := fromChain + "_" + toChain
+	// create new transfer transaction
+	txEntity := entity.NewTransaction(ctx)
+	txEntity.SpenderWallet = walletId
+	txEntity.FromWallet = walletId
+	txEntity.ToWallet = walletId
+	txEntity.FromTokenId = tokenId
+	txEntity.ToTokenId = tokenId
+	txEntity.FromTokenAmount = amount
+	txEntity.ToTokenAmount = amount
+	txEntity.TxType = transaction.SideChainTransfer
+	txEntity.Note = string(note)
+
+	if err := t.Repo.Create(ctx, txEntity, doc.Transactions, helper.TransactionKey(txEntity.Id)); err != nil {
+		glogger.GetInstance().Errorf(ctx, "TransferSideChain - Create transfer transaction failed with error (%v)", err)
+		return helper.RespError(errorcode.BizUnableCreateTX)
+	}
+	glogger.GetInstance().Infof(ctx, "-----------Token Service - TransferSideChain succeed (%s)-----------", txEntity.Id)
+
+	return nil
 }
 
 func (t *tokenService) Mint(ctx contractapi.TransactionContextInterface, walletId, tokenId, amount string) error {
@@ -95,15 +127,10 @@ func (t *tokenService) Burn(ctx contractapi.TransactionContextInterface, walletI
 	}
 
 	// get balance of token
-	balanceToken, isExisted, err := t.GetBalanceOfToken(ctx, wallet.Id, tokenId)
+	balanceToken, err := t.GetBalanceOfToken(ctx, doc.SpotBalances, wallet.Id, tokenId)
 	if err != nil {
 		glogger.GetInstance().Errorf(ctx, "Burn - Get balance of token failed with error (%v)", err)
 		return err
-	}
-
-	if !isExisted {
-		glogger.GetInstance().Error(ctx, "Burn -Balance of token do not exist in the system")
-		return helper.RespError(errorcode.BizUnableGetBalance)
 	}
 
 	// check balance enough to burn
@@ -259,14 +286,9 @@ func (t *tokenService) validateTransfer(ctx contractapi.TransactionContextInterf
 		return err
 	}
 
-	balanceToken, isExisted, err := t.GetBalanceOfToken(ctx, walletFrom.Id, tokenId)
+	balanceToken, err := t.GetBalanceOfToken(ctx, doc.SpotBalances, walletFrom.Id, tokenId)
 	if err != nil {
 		return err
-	}
-
-	if !isExisted {
-		glogger.GetInstance().Error(ctx, "ValidateTransfer -Balance of token do not exist in the system")
-		return helper.RespError(errorcode.BizUnableGetBalance)
 	}
 
 	// check balance enough to transfer

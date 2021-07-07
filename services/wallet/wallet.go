@@ -24,6 +24,7 @@ import (
 	"github.com/Akachain/gringotts/errorcode"
 	"github.com/Akachain/gringotts/glossary"
 	"github.com/Akachain/gringotts/glossary/doc"
+	"github.com/Akachain/gringotts/glossary/sidechain"
 	"github.com/Akachain/gringotts/helper"
 	"github.com/Akachain/gringotts/helper/glogger"
 	"github.com/Akachain/gringotts/services/base"
@@ -51,11 +52,11 @@ func (w *walletService) Create(ctx contractapi.TransactionContextInterface, toke
 	}
 
 	// init stable balance of wallet when create new wallet
-	balanceEntity := entity.NewBalance(ctx)
+	balanceEntity := entity.NewBalance(sidechain.Spot, ctx)
 	balanceEntity.WalletId = walletEntity.Id
 	balanceEntity.TokenId = tokenId
 	balanceEntity.Balances = "0"
-	if err := w.Repo.Create(ctx, balanceEntity, doc.Balances, helper.BalanceKey(walletEntity.Id, tokenId)); err != nil {
+	if err := w.Repo.Create(ctx, balanceEntity, doc.SpotBalances, helper.BalanceKey(walletEntity.Id, tokenId)); err != nil {
 		glogger.GetInstance().Errorf(ctx, "Create - Init balance of stable token failed with error (%v)", err)
 		return "", helper.RespError(errorcode.BizUnableCreateBalance)
 	}
@@ -89,15 +90,10 @@ func (w *walletService) Update(ctx contractapi.TransactionContextInterface, wall
 func (w *walletService) BalanceOf(ctx contractapi.TransactionContextInterface, walletId string, tokenId string) (string, error) {
 	glogger.GetInstance().Info(ctx, "-----------Wallet Service - BalanceOf-----------")
 
-	balanceToken, isExisted, err := w.GetBalanceOfToken(ctx, walletId, tokenId)
+	balanceToken, err := w.GetBalanceOfToken(ctx, doc.SpotBalances, walletId, tokenId)
 	if err != nil {
 		glogger.GetInstance().Errorf(ctx, "BalanceOf - Get wallet failed with error (%v)", err)
 		return "-1", err
-	}
-
-	if !isExisted {
-		glogger.GetInstance().Error(ctx, "BalanceOf -Balance of token do not exist in the system")
-		return "-1", helper.RespError(errorcode.BizUnableGetBalance)
 	}
 
 	glogger.GetInstance().Infof(ctx, "-----------Wallet Service - BalanceOf wallet: (%s)-----------", balanceToken.Balances)

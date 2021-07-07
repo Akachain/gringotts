@@ -120,3 +120,16 @@ func (t *TokenHandler) Issue(ctx contractapi.TransactionContextInterface, issueD
 
 	return t.tokenService.Issue(ctx, issueDto.WalletId, issueDto.FromTokenId, issueDto.ToTokenId, issueDto.FromTokenAmount, issueDto.ToTokenAmount)
 }
+
+func (t *TokenHandler) TransferSideChain(ctx contractapi.TransactionContextInterface, transferChain tokenDto.TransferSideChain) error {
+	glogger.GetInstance().Info(ctx, "-----------Token Handler - Exchange-----------")
+	glogger.GetInstance().Infof(ctx, "TokenHandler - Input (%s)", transferChain.String())
+
+	// checking dto validate
+	if err := transferChain.IsValid(); err != nil {
+		glogger.GetInstance().Errorf(ctx, "TokenHandler - Exchange Input invalidate %v", err)
+		return helper.RespError(errorcode.InvalidParam)
+	}
+
+	return t.tokenService.TransferSideChain(ctx, transferChain.WalletId, transferChain.TokenId, transferChain.FromChain, transferChain.ToChain, transferChain.Amount)
+}

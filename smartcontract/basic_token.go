@@ -65,4 +65,7 @@ type BasicToken interface {
 
 	// EnrollToken to register wallet policy use to issue new token
 	EnrollToken(ctx contractapi.TransactionContextInterface, enrollmentDto token.Enrollment) error
+
+	// TransferSideChain to transfer token from main chain to side chain
+	TransferSideChain(ctx contractapi.TransactionContextInterface, transferChain token.TransferSideChain) error
 }

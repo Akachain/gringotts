@@ -17,20 +17,20 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package smartcontract
+package sidechain
 
-import (
-	"github.com/Akachain/gringotts/dto/iao"
-	"github.com/hyperledger/fabric-contract-api-go/contractapi"
+type SideName string
+
+const (
+	Spot     SideName = "Spot"
+	Iao               = "Iao"
+	Exchange          = "Exchange"
 )
 
-type Iao interface {
-	// CreateAsset to create new asset and token type
-	CreateAsset(ctx contractapi.TransactionContextInterface, asset iao.CreateAsset) (string, error)
-
-	// CreateIao to create new iao for asset. It will return address of Iao to investor buy asset token
-	CreateIao(ctx contractapi.TransactionContextInterface, assetIao iao.AssetIao) (string, error)
-
-	// BuyAssetToken investor call to buy asset token
-	BuyAssetToken(ctx contractapi.TransactionContextInterface, asset iao.BuyBatchAsset) (string, error)
+func (s SideName) IsValidate() bool {
+	switch s {
+	case Spot, Iao, Exchange:
+		return true
+	}
+	return false
 }
