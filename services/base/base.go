@@ -44,6 +44,24 @@ func NewBase() *Base {
 		Repo: base.NewRepository(),
 	}
 }
+func (b *Base) GetInvestorBook(ctx contractapi.TransactionContextInterface, investorId string) (*entity.InvestorBook, error) {
+	isExisted, investorBookData, err := b.Repo.GetAndCheckExist(ctx, doc.InvestorBook, helper.InvestorBookKey(investorId))
+	if err != nil {
+		glogger.GetInstance().Errorf(ctx, "Base - Get Investor Book (%s) failed with error (%s)", investorId, err.Error())
+		return nil, helper.RespError(errorcode.BizUnableGetInvestorBook)
+	}
+
+	if !isExisted {
+		return nil, nil
+	}
+
+	investorBookEntity := entity.NewInvestorBook()
+	if err = mapstructure.Decode(investorBookData, &investorBookEntity); err != nil {
+		glogger.GetInstance().Errorf(ctx, "Base - Decode Investor Book failed with error  (%s)", err.Error())
+		return nil, helper.RespError(errorcode.BizUnableMapDecode)
+	}
+	return investorBookEntity, nil
+}
 
 func (b *Base) GetBuyIaoCache(ctx contractapi.TransactionContextInterface, buyIaoId string) (*entity.BuyIaoCache, bool, error) {
 	isExisted, buyIaoData, err := b.Repo.GetAndCheckExist(ctx, doc.BuyIaoCache, helper.ResultCacheKey(buyIaoId))

@@ -45,5 +45,7 @@ func NewInvestorBook(ctx ...contractapi.TransactionContextInterface) *InvestorBo
 			UpdatedAt:    helper.TimestampISO(txTime.Seconds),
 			BlockChainId: ctx[0].GetStub().GetTxID(),
 		},
+		AssetTokenAmount:  "0",
+		StableTokenAmount: "0",
 	}
 }

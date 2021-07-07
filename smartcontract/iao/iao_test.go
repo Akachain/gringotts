@@ -161,7 +161,7 @@ func (suite *IaoSCTestSuite) TestIAO_BuyIAO() {
 	suite.createIao()
 
 	lstReq := make([]iao.BuyAsset, 0)
-	i := 1
+	i := 3000
 	for i > 0 {
 		buyIao := iao.BuyAsset{
 			ReqId:    "123321",

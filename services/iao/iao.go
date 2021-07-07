@@ -33,7 +33,6 @@ import (
 	"github.com/Akachain/gringotts/services/base"
 	"github.com/Akachain/gringotts/services/token"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
-	"strconv"
 )
 
 type iaoService struct {
@@ -146,9 +145,9 @@ func (i *iaoService) BuyBatchAsset(ctx contractapi.TransactionContextInterface, 
 	iaoMap := make(map[string]*entity.Iao, 0)
 	balanceMap := make(map[string]*entity.BalanceCache, len(batchReq))
 	resultHandle := make([]iao.ResultHandle, 0, len(batchReq))
-	investorMap := make([]*entity.InvestorBook, 0, len(batchReq))
+	investorMap := make(map[string]*entity.InvestorBook, len(batchReq))
 
-	for index, req := range batchReq {
+	for _, req := range batchReq {
 		res := req.CloneToResult()
 		iaoEntity, err := i.getIaoInfo(ctx, iaoMap, req.IaoId)
 		if err != nil {
@@ -188,6 +187,12 @@ func (i *iaoService) BuyBatchAsset(ctx contractapi.TransactionContextInterface, 
 			continue
 		}
 
+		if err := i.addInvestorBook(ctx, investorMap, req, stableToken); err != nil {
+			glogger.GetInstance().Errorf(ctx, "BuyBatchAsset - Handle req (%s) failed get create investor book", req.ReqId, err.Error())
+			res.Status = transaction.Rejected
+			resultHandle = append(resultHandle, res)
+			continue
+		}
 		updateATRemain, _ := helper.SubBalance(iaoEntity.RemainingAssetToken, numberATBuy)
 		updateST, _ := helper.AddBalance(iaoEntity.StableTokenAmount, stableToken)
 		iaoEntity.RemainingAssetToken = updateATRemain
@@ -197,15 +202,6 @@ func (i *iaoService) BuyBatchAsset(ctx contractapi.TransactionContextInterface, 
 		res.Status = transaction.Confirmed
 		res.NumberATFilled = numberATBuy
 		resultHandle = append(resultHandle, res)
-
-		investorBookId := helper.GenerateID(doc.InvestorBook, req.ReqId+strconv.Itoa(index))
-		investorBook := entity.NewInvestorBook(ctx)
-		investorBook.IaoId = req.IaoId
-		investorBook.WalletId = req.WalletId
-		investorBook.AssetTokenAmount = req.NumberAT
-		investorBook.StableTokenAmount = stableToken
-		investorBook.Id = investorBookId
-		investorMap = append(investorMap, investorBook)
 	}
 
 	resultJson, _ := json.Marshal(resultHandle)
@@ -277,12 +273,49 @@ func (i *iaoService) updateIao(ctx contractapi.TransactionContextInterface, iaoM
 	return nil
 }
 
-func (i *iaoService) insertInvestorBook(ctx contractapi.TransactionContextInterface, lstInvestorBook []*entity.InvestorBook) error {
-	for _, investorBook := range lstInvestorBook {
-		if err := i.Repo.Create(ctx, investorBook, doc.InvestorBook, helper.InvestorBookKey(investorBook.Id)); err != nil {
+func (i *iaoService) insertInvestorBook(ctx contractapi.TransactionContextInterface, investorBookMap map[string]*entity.InvestorBook) error {
+	for _, investorBook := range investorBookMap {
+		if err := i.Repo.Update(ctx, investorBook, doc.InvestorBook, helper.InvestorBookKey(investorBook.WalletId)); err != nil {
 			glogger.GetInstance().Errorf(ctx, "UpdateIao - Update Iao (%s) failed with err (%v)", investorBook.Id, err.Error())
 			return helper.RespError(errorcode.BizUnableCreateInvestorBook)
 		}
 	}
+	return nil
+}
+
+func (i *iaoService) addInvestorBook(ctx contractapi.TransactionContextInterface,
+	investorBookMap map[string]*entity.InvestorBook, req iao.BuyAsset, amountST string) (err error) {
+	var investorBookEntity *entity.InvestorBook
+	if _, ok := investorBookMap[req.WalletId]; !ok {
+		investorBookEntity, err = i.GetInvestorBook(ctx, req.WalletId)
+		if err != nil {
+			return err
+		}
+
+		if investorBookEntity == nil {
+			investorBookId := helper.GenerateID(doc.InvestorBook, req.ReqId)
+			investorBookEntity = entity.NewInvestorBook(ctx)
+			investorBookEntity.IaoId = req.IaoId
+			investorBookEntity.WalletId = req.WalletId
+			investorBookEntity.Id = investorBookId
+		}
+	} else {
+		investorBookEntity = investorBookMap[req.WalletId]
+	}
+
+	balanceAT, err := helper.AddBalance(investorBookEntity.AssetTokenAmount, req.NumberAT)
+	if err != nil {
+		return err
+	}
+
+	balanceST, err := helper.AddBalance(investorBookEntity.StableTokenAmount, amountST)
+	if err != nil {
+		return err
+	}
+	investorBookEntity.AssetTokenAmount = balanceAT
+	investorBookEntity.StableTokenAmount = balanceST
+
+	investorBookMap[req.WalletId] = investorBookEntity
+
 	return nil
 }
