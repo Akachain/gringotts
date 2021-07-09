@@ -58,7 +58,7 @@ func (t *tokenService) TransferSideChain(ctx contractapi.TransactionContextInter
 	fromChain, toChain sidechain.SideName, amount string) error {
 	glogger.GetInstance().Info(ctx, "-----------Token Service - TransferSideChain-----------")
 
-	if err := t.validateTransfer(ctx, walletId, walletId, tokenId, amount); err != nil {
+	if err := t.validateTransfer(ctx, walletId, walletId); err != nil {
 		glogger.GetInstance().Errorf(ctx, "TransferSideChain - Validation transfer failed with error (%v)", err)
 		return err
 	}
@@ -120,24 +120,24 @@ func (t *tokenService) Burn(ctx contractapi.TransactionContextInterface, walletI
 	glogger.GetInstance().Info(ctx, "-----------Token Service - Burn-----------")
 
 	// validate burn wallet exist
-	wallet, err := t.GetActiveWallet(ctx, walletId)
+	_, err := t.GetActiveWallet(ctx, walletId)
 	if err != nil {
 		glogger.GetInstance().Errorf(ctx, "Burn - Get wallet mint failed with error (%v)", err)
 		return err
 	}
 
 	// get balance of token
-	balanceToken, err := t.GetBalanceOfToken(ctx, doc.SpotBalances, wallet.Id, tokenId)
-	if err != nil {
-		glogger.GetInstance().Errorf(ctx, "Burn - Get balance of token failed with error (%v)", err)
-		return err
-	}
-
-	// check balance enough to burn
-	if helper.CompareStringBalance(balanceToken.Balances, amount) < 0 {
-		glogger.GetInstance().Error(ctx, "Burn - Wallet balance is insufficient", err)
-		return helper.RespError(errorcode.BizBalanceNotEnough)
-	}
+	//balanceToken, err := t.GetBalanceOfToken(ctx, doc.SpotBalances, wallet.Id, tokenId)
+	//if err != nil {
+	//	glogger.GetInstance().Errorf(ctx, "Burn - Get balance of token failed with error (%v)", err)
+	//	return err
+	//}
+	//
+	//// check balance enough to burn
+	//if helper.CompareStringBalance(balanceToken.Balances, amount) < 0 {
+	//	glogger.GetInstance().Error(ctx, "Burn - Wallet balance is insufficient", err)
+	//	return helper.RespError(errorcode.BizBalanceNotEnough)
+	//}
 
 	// create tx burn token
 	txBurn := entity.NewTransaction(ctx)
@@ -280,27 +280,26 @@ func (t *tokenService) Issue(ctx contractapi.TransactionContextInterface, wallet
 	return nil
 }
 
-func (t *tokenService) validateTransfer(ctx contractapi.TransactionContextInterface, fromWalletId, toWalletId, tokenId, amount string) error {
-	walletFrom, _, err := t.ValidatePairWallet(ctx, fromWalletId, toWalletId)
-	if err != nil {
+func (t *tokenService) validateTransfer(ctx contractapi.TransactionContextInterface, fromWalletId, toWalletId string) error {
+	if _, _, err := t.ValidatePairWallet(ctx, fromWalletId, toWalletId); err != nil {
 		return err
 	}
 
-	balanceToken, err := t.GetBalanceOfToken(ctx, doc.SpotBalances, walletFrom.Id, tokenId)
-	if err != nil {
-		return err
-	}
+	//balanceToken, err := t.GetBalanceOfToken(ctx, doc.SpotBalances, walletFrom.Id, tokenId)
+	//if err != nil {
+	//	return err
+	//}
 
 	// check balance enough to transfer
-	if helper.CompareStringBalance(balanceToken.Balances, amount) < 0 {
-		glogger.GetInstance().Error(ctx, "ValidateTransfer - Balance of from wallet is insufficient")
-		return helper.RespError(errorcode.BizBalanceNotEnough)
-	}
+	//if helper.CompareStringBalance(balanceToken.Balances, amount) < 0 {
+	//	glogger.GetInstance().Error(ctx, "ValidateTransfer - Balance of from wallet is insufficient")
+	//	return helper.RespError(errorcode.BizBalanceNotEnough)
+	//}
 	return nil
 }
 
 func (t *tokenService) transferToken(ctx contractapi.TransactionContextInterface, fromWalletId, toWalletId, tokenId, amount, note string) (string, error) {
-	if err := t.validateTransfer(ctx, fromWalletId, toWalletId, tokenId, amount); err != nil {
+	if err := t.validateTransfer(ctx, fromWalletId, toWalletId); err != nil {
 		glogger.GetInstance().Errorf(ctx, "Transfer - Validation transfer failed with error (%v)", err)
 		return "", err
 	}

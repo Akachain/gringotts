@@ -275,7 +275,7 @@ func (i *iaoService) updateIao(ctx contractapi.TransactionContextInterface, iaoM
 
 func (i *iaoService) insertInvestorBook(ctx contractapi.TransactionContextInterface, investorBookMap map[string]*entity.InvestorBook) error {
 	for _, investorBook := range investorBookMap {
-		if err := i.Repo.Update(ctx, investorBook, doc.InvestorBook, helper.InvestorBookKey(investorBook.WalletId)); err != nil {
+		if err := i.Repo.Update(ctx, investorBook, doc.InvestorBook, helper.InvestorBookKey(investorBook.WalletId, investorBook.IaoId)); err != nil {
 			glogger.GetInstance().Errorf(ctx, "UpdateIao - Update Iao (%s) failed with err (%v)", investorBook.Id, err.Error())
 			return helper.RespError(errorcode.BizUnableCreateInvestorBook)
 		}
@@ -286,8 +286,9 @@ func (i *iaoService) insertInvestorBook(ctx contractapi.TransactionContextInterf
 func (i *iaoService) addInvestorBook(ctx contractapi.TransactionContextInterface,
 	investorBookMap map[string]*entity.InvestorBook, req iao.BuyAsset, amountST string) (err error) {
 	var investorBookEntity *entity.InvestorBook
-	if _, ok := investorBookMap[req.WalletId]; !ok {
-		investorBookEntity, err = i.GetInvestorBook(ctx, req.WalletId)
+	key := req.IaoId + "_" + req.WalletId
+	if _, ok := investorBookMap[key]; !ok {
+		investorBookEntity, err = i.GetInvestorBook(ctx, req.WalletId, req.IaoId)
 		if err != nil {
 			return err
 		}
@@ -300,7 +301,7 @@ func (i *iaoService) addInvestorBook(ctx contractapi.TransactionContextInterface
 			investorBookEntity.Id = investorBookId
 		}
 	} else {
-		investorBookEntity = investorBookMap[req.WalletId]
+		investorBookEntity = investorBookMap[key]
 	}
 
 	balanceAT, err := helper.AddBalance(investorBookEntity.AssetTokenAmount, req.NumberAT)
@@ -315,7 +316,7 @@ func (i *iaoService) addInvestorBook(ctx contractapi.TransactionContextInterface
 	investorBookEntity.AssetTokenAmount = balanceAT
 	investorBookEntity.StableTokenAmount = balanceST
 
-	investorBookMap[req.WalletId] = investorBookEntity
+	investorBookMap[key] = investorBookEntity
 
 	return nil
 }
