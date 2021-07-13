@@ -43,3 +43,6 @@ const StringUnitBase = 10
 
 // NftExchange work around to distinguish transfer token using for exchange nft
 const NftExchange = "NftExchange"
+
+// NumberWorker use to bulk put state
+const NumberWorker = 20

@@ -25,6 +25,7 @@ import (
 	"github.com/Akachain/gringotts/dto/iao"
 	"github.com/Akachain/gringotts/entity"
 	"github.com/Akachain/gringotts/errorcode"
+	"github.com/Akachain/gringotts/glossary"
 	"github.com/Akachain/gringotts/glossary/doc"
 	"github.com/Akachain/gringotts/glossary/transaction"
 	"github.com/Akachain/gringotts/helper"
@@ -33,6 +34,8 @@ import (
 	"github.com/Akachain/gringotts/services/base"
 	"github.com/Akachain/gringotts/services/token"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
+	"github.com/panjf2000/ants/v2"
+	"sync"
 )
 
 type iaoService struct {
@@ -129,6 +132,7 @@ func (i *iaoService) CreateIao(ctx contractapi.TransactionContextInterface, asse
 
 func (i *iaoService) BuyBatchAsset(ctx contractapi.TransactionContextInterface, batchReq []iao.BuyAsset) (string, error) {
 	glogger.GetInstance().Info(ctx, "Start BuyBatchAsset")
+	var wg sync.WaitGroup
 	// calculate hash and check cache
 	stringInput, _ := json.Marshal(batchReq)
 	inputHash := helper.CalculateHash(string(stringInput))
@@ -204,28 +208,65 @@ func (i *iaoService) BuyBatchAsset(ctx contractapi.TransactionContextInterface, 
 		resultHandle = append(resultHandle, res)
 	}
 
+	// log create Read/Write Set
+	glogger.GetInstance().Info(ctx, "Start Create Read/Write")
+	respErrors := make(chan error)
+	wgDone := make(chan bool)
+
 	resultJson, _ := json.Marshal(resultHandle)
 
-	// update balance
-	if err := i.UpdateBalance(ctx, balanceMap); err != nil {
-		return "", err
-	}
 	// update iao
 	if err := i.updateIao(ctx, iaoMap); err != nil {
 		return "", err
 	}
 
-	// insert investor book
-	if err := i.insertInvestorBook(ctx, investorMap); err != nil {
-		return "", err
+	// update balance
+	poolBalance, err := ants.NewPoolWithFunc(glossary.NumberWorker, func(input interface{}) {
+		err := i.AsyncUpdateBalance(ctx, input)
+		if err != nil {
+			glogger.GetInstance().Errorf(ctx, "BuyBatchAsset - Update balance failed with err (%s)", err.Error())
+			respErrors <- err
+		}
+		wg.Done()
+	})
+	defer poolBalance.Release()
+	for _, balanceCache := range balanceMap {
+		wg.Add(1)
+		_ = poolBalance.Invoke(balanceCache)
 	}
 
-	buyCache := entity.NewIaoCache(ctx)
-	buyCache.Hash = inputHash
-	buyCache.Result = string(resultJson)
-	if err := i.Repo.Create(ctx, buyCache, doc.BuyIaoCache, helper.ResultCacheKey(buyCache.Hash)); err != nil {
-		glogger.GetInstance().Errorf(ctx, "BuyBatchAsset - Create cache buy Iao failed with err (%v)", err.Error())
-		return "", helper.RespError(errorcode.BizUnableUpdateIao)
+	// insert investor book
+	pooInvestorBook, err := ants.NewPoolWithFunc(glossary.NumberWorker, func(input interface{}) {
+		err := i.insertInvestorBook(ctx, input)
+		if err != nil {
+			glogger.GetInstance().Errorf(ctx, "BuyBatchAsset - Insert investor book failed with err (%s)", err.Error())
+			respErrors <- err
+		}
+		wg.Done()
+	})
+	defer pooInvestorBook.Release()
+	for _, investorBook := range investorMap {
+		wg.Add(1)
+		_ = pooInvestorBook.Invoke(investorBook)
+	}
+	go func() {
+		wg.Wait()
+		close(wgDone)
+	}()
+
+	select {
+	case <-wgDone:
+		buyCache := entity.NewIaoCache(ctx)
+		buyCache.Hash = inputHash
+		buyCache.Result = string(resultJson)
+		if err := i.Repo.Create(ctx, buyCache, doc.BuyIaoCache, helper.ResultCacheKey(buyCache.Hash)); err != nil {
+			glogger.GetInstance().Errorf(ctx, "BuyBatchAsset - Create cache buy Iao failed with err (%v)", err.Error())
+			return "", helper.RespError(errorcode.BizUnableUpdateIao)
+		}
+	case err := <-respErrors:
+		close(respErrors)
+		glogger.GetInstance().Errorf(ctx, "BuyBatchAsset - Handle buy Iao failed with err (%v)", err.Error())
+		return "", err
 	}
 	glogger.GetInstance().Info(ctx, "End BuyBatchAsset")
 
@@ -273,12 +314,11 @@ func (i *iaoService) updateIao(ctx contractapi.TransactionContextInterface, iaoM
 	return nil
 }
 
-func (i *iaoService) insertInvestorBook(ctx contractapi.TransactionContextInterface, investorBookMap map[string]*entity.InvestorBook) error {
-	for _, investorBook := range investorBookMap {
-		if err := i.Repo.Update(ctx, investorBook, doc.InvestorBook, helper.InvestorBookKey(investorBook.WalletId, investorBook.IaoId)); err != nil {
-			glogger.GetInstance().Errorf(ctx, "UpdateIao - Update Iao (%s) failed with err (%v)", investorBook.Id, err.Error())
-			return helper.RespError(errorcode.BizUnableCreateInvestorBook)
-		}
+func (i *iaoService) insertInvestorBook(ctx contractapi.TransactionContextInterface, input interface{}) error {
+	investorBook := input.(*entity.InvestorBook)
+	if err := i.Repo.Update(ctx, investorBook, doc.InvestorBook, helper.InvestorBookKey(investorBook.WalletId, investorBook.IaoId)); err != nil {
+		glogger.GetInstance().Errorf(ctx, "UpdateIao - Update Iao (%s) failed with err (%v)", investorBook.Id, err.Error())
+		return helper.RespError(errorcode.BizUnableCreateInvestorBook)
 	}
 	return nil
 }
