@@ -69,8 +69,8 @@ func IaoKey(iaoId string) []string {
 }
 
 // InvestorBookKey return list key of Investor Book will be compose in couch db key
-func InvestorBookKey(investorId string, iaoId string) []string {
-	return []string{iaoId, investorId}
+func InvestorBookKey(iaoId string, txId string) []string {
+	return []string{iaoId, txId}
 }
 
 // ResultCacheKey return list key of cache will be compose in couch db key
