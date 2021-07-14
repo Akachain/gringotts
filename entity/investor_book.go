@@ -21,16 +21,22 @@ package entity
 
 import (
 	"github.com/Akachain/gringotts/glossary/doc"
+	"github.com/Akachain/gringotts/glossary/iao"
 	"github.com/Akachain/gringotts/helper"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
 
+type InvestorBuyIao struct {
+	WalletId          string `json:"walletId"`
+	StableTokenAmount string `json:"stableTokenAmount"`
+	AssetTokenAmount  string `json:"assetTokenAmount"`
+}
+
 type InvestorBook struct {
-	IaoId             string
-	WalletId          string
-	StableTokenAmount string
-	AssetTokenAmount  string
-	Base              `mapstructure:",squash"`
+	IaoId    string
+	Investor string
+	Status   iao.InvestorBookStatus
+	Base     `mapstructure:",squash"`
 }
 
 func NewInvestorBook(ctx ...contractapi.TransactionContextInterface) *InvestorBook {
@@ -45,5 +51,6 @@ func NewInvestorBook(ctx ...contractapi.TransactionContextInterface) *InvestorBo
 			UpdatedAt:    helper.TimestampISO(txTime.Seconds),
 			BlockChainId: ctx[0].GetStub().GetTxID(),
 		},
+		Status: iao.NotDistributed,
 	}
 }

@@ -82,6 +82,7 @@ const (
 	BizUnableCreateInvestorBook ErrorCode = "340"
 	BizUnableCreateBuyCache     ErrorCode = "341"
 	BizUnableGetBuyCache        ErrorCode = "342"
+	BizUnableGetInvestorBook    ErrorCode = "343"
 )
 
 var mapErrorCode = map[ErrorCode]string{
@@ -132,6 +133,7 @@ var mapErrorCode = map[ErrorCode]string{
 	BizUnableCreateInvestorBook: "Unable to create new Investor Book on the blockchain",
 	BizUnableCreateBuyCache:     "Unable to create buy iao cache on the blockchain",
 	BizUnableGetBuyCache:        "Unable to get buy iao cache on the blockchain",
+	BizUnableGetInvestorBook:    "Unable to get investor book on the blockchain",
 }
 
 func (e ErrorCode) Message() string {

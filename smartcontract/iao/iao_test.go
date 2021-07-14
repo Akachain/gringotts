@@ -161,7 +161,7 @@ func (suite *IaoSCTestSuite) TestIAO_BuyIAO() {
 	suite.createIao()
 
 	lstReq := make([]iao.BuyAsset, 0)
-	i := 1
+	i := 3000
 	for i > 0 {
 		buyIao := iao.BuyAsset{
 			ReqId:    "123321",
@@ -176,7 +176,7 @@ func (suite *IaoSCTestSuite) TestIAO_BuyIAO() {
 
 	batchBuyIao := iao.BuyBatchAsset{Requests: lstReq}
 	paramByte, _ = json.Marshal(batchBuyIao)
-	suite.T().Log(string(paramByte))
+	//suite.T().Log(string(paramByte))
 	buyIaoResp := mock.MockInvokeTransaction(suite.T(), suite.stub, [][]byte{[]byte("BuyAssetToken"), paramByte})
 	suite.T().Log(buyIaoResp)
 	assert.NotEmpty(suite.T(), buyIaoResp, "Buy asset return empty")
