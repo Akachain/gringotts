@@ -73,3 +73,15 @@ func (i IaoHandler) BuyBatchAsset(ctx contractapi.TransactionContextInterface, b
 
 	return i.iaoService.BuyBatchAsset(ctx, batchAsset.Requests)
 }
+
+func (i IaoHandler) UpdateStatusIao(ctx contractapi.TransactionContextInterface, updateIao iaoDto.UpdateIao) error {
+	glogger.GetInstance().Info(ctx, "-----------Iao Handler - UpdateStatusIao-----------")
+
+	// checking dto validate
+	if err := updateIao.IsValid(); err != nil {
+		glogger.GetInstance().Errorf(ctx, "IaoHandler - UpdateStatusIao Input invalidate %v", err)
+		return helper.RespError(errorcode.InvalidParam)
+	}
+
+	return i.iaoService.UpdateStatusIao(ctx, updateIao.IaoId, updateIao.Status)
+}

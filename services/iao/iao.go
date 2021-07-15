@@ -233,6 +233,26 @@ func (i *iaoService) BuyBatchAsset(ctx contractapi.TransactionContextInterface, 
 	return string(resultJson), nil
 }
 
+func (i *iaoService) UpdateStatusIao(ctx contractapi.TransactionContextInterface, iaoId string, status statusIao.Status) error {
+	txTime, _ := ctx.GetStub().GetTxTimestamp()
+	iaoEntity, err := i.GetIao(ctx, iaoId)
+	if err != nil {
+		glogger.GetInstance().Errorf(ctx, "UpdateStatus - GetIao failed with err (%s)", err.Error())
+		return err
+	}
+
+	if iaoEntity.Status != status {
+		iaoEntity.UpdatedAt = helper.TimestampISO(txTime.Seconds)
+		iaoEntity.Status = status
+		if err := i.Repo.Update(ctx, iaoEntity, doc.Iao, helper.IaoKey(iaoEntity.Id)); err != nil {
+			glogger.GetInstance().Errorf(ctx, "UpdateStatus - Update Iao (%s) failed with err (%v)", err.Error())
+			return helper.RespError(errorcode.BizUnableUpdateIao)
+		}
+	}
+
+	return nil
+}
+
 func (i *iaoService) getIaoInfo(ctx contractapi.TransactionContextInterface, iaoMap map[string]*entity.Iao, iaoId string) (*entity.Iao, error) {
 	if _, ok := iaoMap[iaoId]; !ok {
 		iaoEntity, err := i.GetIao(ctx, iaoId)

@@ -19,9 +19,23 @@
 
 package iao
 
-type InvestorBookStatus string
-
-const (
-	NotDistributed InvestorBookStatus = "NotDistributed"
-	Distributed                       = "Distributed"
+import (
+	statusIao "github.com/Akachain/gringotts/glossary/iao"
+	"github.com/pkg/errors"
 )
+
+type UpdateIao struct {
+	IaoId  string           `json:"iaoId"`
+	Status statusIao.Status `json:"status"`
+}
+
+func (u UpdateIao) IsValid() error {
+	if u.IaoId == "" {
+		return errors.New("IaoId is empty")
+	}
+	if !u.Status.IsValidate() {
+		return errors.New("Status is invalidate")
+	}
+
+	return nil
+}

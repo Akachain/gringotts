@@ -22,8 +22,18 @@ package iao
 type Status string
 
 const (
-	New      Status = "New"
-	Open            = "Open"
-	Done            = "Done"
-	Canceled        = "Canceled"
+	New          Status = "New"
+	Open                = "Open"
+	Distributing        = "Distributing"
+	Done                = "Done"
+	Canceling           = "Canceling"
+	Canceled            = "Canceled"
 )
+
+func (s Status) IsValidate() bool {
+	switch s {
+	case New, Open, Distributing, Done, Canceling, Canceled:
+		return true
+	}
+	return false
+}
