@@ -256,10 +256,15 @@ func (i *iaoService) UpdateStatusIao(ctx contractapi.TransactionContextInterface
 func (i *iaoService) FinalizeIao(ctx contractapi.TransactionContextInterface, lstInvestorBook []string) error {
 	mapInvestor := make(map[string]entity.InvestorBuyIao, 0)
 	for _, key := range lstInvestorBook {
-		investorBook, err := i.GetInvestorBook(ctx, key)
+		compositeKey := strings.Split(key, "_")
+		investorBook, err := i.GetInvestorBook(ctx, compositeKey[2], compositeKey[3])
 		if err != nil {
 			return err
 		}
+		if investorBook.Status != statusIao.NotDistributed {
+			glogger.GetInstance().Errorf(ctx, "FinalizeIao - Investor Book (%s) have status invalidate", key)
+		}
+
 		var lstInvestor []entity.InvestorBuyIao
 		err = json.Unmarshal([]byte(investorBook.Investor), &lstInvestor)
 		if err != nil {
@@ -286,7 +291,7 @@ func (i *iaoService) FinalizeIao(ctx contractapi.TransactionContextInterface, ls
 
 		// update status of investor book
 		investorBook.Status = statusIao.Distributed
-		if err := i.Repo.Update(ctx, investorBook, doc.InvestorBook, []string{key}); err != nil {
+		if err := i.Repo.Update(ctx, investorBook, doc.InvestorBook, helper.InvestorBookKey(compositeKey[2], compositeKey[3])); err != nil {
 			glogger.GetInstance().Errorf(ctx, "FinalizeIao - Update Investor book (%s) failed with err (%v)", key, err.Error())
 			return helper.RespError(errorcode.BizUnableUpdateInvestorBook)
 		}
