@@ -49,3 +49,7 @@ func (i *iaoSc) BuyAssetToken(ctx contractapi.TransactionContextInterface, batch
 func (i *iaoSc) UpdateStatusIao(ctx contractapi.TransactionContextInterface, updateIao iao.UpdateIao) error {
 	return i.iaoHandler.UpdateStatusIao(ctx, updateIao)
 }
+
+func (i *iaoSc) FinalizeIao(ctx contractapi.TransactionContextInterface, finishIao iao.FinishIao) error {
+	return i.iaoHandler.FinalizeIao(ctx, finishIao)
+}

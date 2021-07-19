@@ -28,6 +28,8 @@ import (
 
 type InvestorBuyIao struct {
 	WalletId          string `json:"walletId"`
+	AssetTokenId      string `json:"assetTokenId"`
+	StableTokenId     string `json:"stableTokenId"`
 	StableTokenAmount string `json:"stableTokenAmount"`
 	AssetTokenAmount  string `json:"assetTokenAmount"`
 }

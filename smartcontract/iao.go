@@ -36,4 +36,7 @@ type Iao interface {
 
 	// BuyAssetToken investor call to buy asset token
 	BuyAssetToken(ctx contractapi.TransactionContextInterface, asset iao.BuyBatchAsset) (string, error)
+
+	// FinalizeIao to finish iao and distribute AT to investor
+	FinalizeIao(ctx contractapi.TransactionContextInterface, finishIao iao.FinishIao) error
 }

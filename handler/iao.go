@@ -85,3 +85,15 @@ func (i IaoHandler) UpdateStatusIao(ctx contractapi.TransactionContextInterface,
 
 	return i.iaoService.UpdateStatusIao(ctx, updateIao.IaoId, updateIao.Status)
 }
+
+func (i IaoHandler) FinalizeIao(ctx contractapi.TransactionContextInterface, finishIao iaoDto.FinishIao) error {
+	glogger.GetInstance().Info(ctx, "-----------Iao Handler - FinalizeIao-----------")
+
+	// checking dto validate
+	if err := finishIao.IsValid(); err != nil {
+		glogger.GetInstance().Errorf(ctx, "IaoHandler - FinalizeIao Input invalidate %v", err)
+		return helper.RespError(errorcode.InvalidParam)
+	}
+
+	return i.iaoService.FinalizeIao(ctx, finishIao.InvestorBookId)
+}

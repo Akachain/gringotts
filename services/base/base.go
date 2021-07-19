@@ -44,15 +44,11 @@ func NewBase() *Base {
 		Repo: base.NewRepository(),
 	}
 }
-func (b *Base) GetInvestorBook(ctx contractapi.TransactionContextInterface, investorId, iaoId string) (*entity.InvestorBook, error) {
-	isExisted, investorBookData, err := b.Repo.GetAndCheckExist(ctx, doc.InvestorBook, helper.InvestorBookKey(investorId, iaoId))
+func (b *Base) GetInvestorBook(ctx contractapi.TransactionContextInterface, key string) (*entity.InvestorBook, error) {
+	investorBookData, err := b.Repo.Get(ctx, doc.InvestorBook, []string{key})
 	if err != nil {
-		glogger.GetInstance().Errorf(ctx, "Base - Get Investor Book (%s) failed with error (%s)", investorId, err.Error())
+		glogger.GetInstance().Errorf(ctx, "Base - Get Investor Book (%s) failed with error (%s)", key, err.Error())
 		return nil, helper.RespError(errorcode.BizUnableGetInvestorBook)
-	}
-
-	if !isExisted {
-		return nil, nil
 	}
 
 	investorBookEntity := entity.NewInvestorBook()

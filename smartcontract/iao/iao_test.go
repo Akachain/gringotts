@@ -188,6 +188,54 @@ func (suite *IaoSCTestSuite) TestIAO_BuyIAO() {
 	assert.Equal(suite.T(), buyIaoResp, buyIaoRespSecond, "Multiple invoke not same resp")
 }
 
+func (suite *IaoSCTestSuite) TestIAO_FinishIAO() {
+	// transfer side chain
+	transferDto := token.TransferSideChain{
+		WalletId:  suite.walletFromId,
+		TokenId:   suite.STToken,
+		FromChain: sidechain.Spot,
+		ToChain:   sidechain.Iao,
+		Amount:    "78900",
+	}
+	paramByte, _ := json.Marshal(transferDto)
+	transferRes := mock.MockInvokeTransaction(suite.T(), suite.stub, [][]byte{[]byte("TransferSideChain"), paramByte})
+	suite.T().Log(transferRes)
+	assert.Emptyf(suite.T(), transferRes, "Create wallet return error", transferRes)
+
+	// accounting balance
+	suite.accountingBalance()
+
+	// creat IAO
+	suite.createIao()
+
+	lstReq := make([]iao.BuyAsset, 0)
+	i := 3000
+	for i > 0 {
+		buyIao := iao.BuyAsset{
+			ReqId:    "123321",
+			IaoId:    suite.IaoId,
+			WalletId: suite.walletFromId,
+			TokenId:  suite.STToken,
+			NumberAT: "1",
+		}
+		lstReq = append(lstReq, buyIao)
+		i--
+	}
+
+	batchBuyIao := iao.BuyBatchAsset{Requests: lstReq}
+	paramByte, _ = json.Marshal(batchBuyIao)
+	//suite.T().Log(string(paramByte))
+	buyIaoResp := mock.MockInvokeTransaction(suite.T(), suite.stub, [][]byte{[]byte("BuyAssetToken"), paramByte})
+	suite.T().Log(buyIaoResp)
+	assert.NotEmpty(suite.T(), buyIaoResp, "Buy asset return empty")
+
+	// multiple invoke
+	buyIaoRespSecond := mock.MockInvokeTransaction(suite.T(), suite.stub, [][]byte{[]byte("BuyAssetToken"), paramByte})
+	suite.T().Log(buyIaoRespSecond)
+	assert.NotEmpty(suite.T(), buyIaoResp, "Buy Asset return empty")
+	assert.Equal(suite.T(), buyIaoResp, buyIaoRespSecond, "Multiple invoke not same resp")
+}
+
 func (suite *IaoSCTestSuite) createIao() {
 	// create new asset
 	suite.createNewAsset()

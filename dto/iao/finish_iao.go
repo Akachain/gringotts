@@ -17,20 +17,18 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package transaction
+package iao
 
-type Type string
+import "github.com/pkg/errors"
 
-const (
-	Deposit           Type = "Deposit"
-	Withdraw               = "Withdraw"
-	Transfer               = "Transfer"
-	Mint                   = "Mint"
-	Burn                   = "Burn"
-	Exchange               = "Exchange"
-	Issue                  = "Issue"
-	TransferNft            = "TransferNft"
-	IaoDepositAT           = "IaoDepositAT"
-	SideChainTransfer      = "SideChainTransfer"
-	DistributionAT         = "DistributionAT"
-)
+type FinishIao struct {
+	InvestorBookId []string `json:"investorBookId"`
+}
+
+func (f FinishIao) IsValid() error {
+	if f.InvestorBookId == nil || len(f.InvestorBookId) <= 0 {
+		return errors.New("list investor book is invalid")
+	}
+
+	return nil
+}

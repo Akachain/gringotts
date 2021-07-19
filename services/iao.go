@@ -37,4 +37,7 @@ type Iao interface {
 
 	// BuyBatchAsset to handle multiple request buy asset
 	BuyBatchAsset(ctx contractapi.TransactionContextInterface, req []iao.BuyAsset) (string, error)
+
+	// FinalizeIao to finish IAO and distribute AT to investor
+	FinalizeIao(ctx contractapi.TransactionContextInterface, iaoId []string) error
 }
