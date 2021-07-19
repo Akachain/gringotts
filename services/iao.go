@@ -40,4 +40,7 @@ type Iao interface {
 
 	// FinalizeIao to finish IAO and distribute AT to investor
 	FinalizeIao(ctx contractapi.TransactionContextInterface, iaoId []string) error
+
+	// CancelIao to cancel iao and return ST to investor
+	CancelIao(ctx contractapi.TransactionContextInterface, lstInvestorBook []string) error
 }

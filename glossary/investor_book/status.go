@@ -17,21 +17,12 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package transaction
+package investor_book
 
-type Type string
+type Status string
 
 const (
-	Deposit           Type = "Deposit"
-	Withdraw               = "Withdraw"
-	Transfer               = "Transfer"
-	Mint                   = "Mint"
-	Burn                   = "Burn"
-	Exchange               = "Exchange"
-	Issue                  = "Issue"
-	TransferNft            = "TransferNft"
-	IaoDepositAT           = "IaoDepositAT"
-	SideChainTransfer      = "SideChainTransfer"
-	DistributionAT         = "DistributionAT"
-	ReturnST               = "ReturnST"
+	NotDistributed Status = "NotDistributed"
+	Distributed           = "Distributed"
+	Canceled              = "Canceled"
 )

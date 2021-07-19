@@ -53,3 +53,7 @@ func (i *iaoSc) UpdateStatusIao(ctx contractapi.TransactionContextInterface, upd
 func (i *iaoSc) FinalizeIao(ctx contractapi.TransactionContextInterface, finishIao iao.FinishIao) error {
 	return i.iaoHandler.FinalizeIao(ctx, finishIao)
 }
+
+func (i *iaoSc) CancelIao(ctx contractapi.TransactionContextInterface, finishIao iao.FinishIao) error {
+	return i.iaoHandler.CancelIao(ctx, finishIao)
+}

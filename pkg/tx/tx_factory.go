@@ -51,6 +51,8 @@ func GetTxHandler(txType transaction.Type) Handler {
 		return sidechain_transfer.NewTxSideChainTransfer()
 	case transaction.DistributionAT:
 		return iao.NewTxDistribution()
+	case transaction.ReturnST:
+		return iao.NewTxReturn()
 	default:
 		return nil
 	}

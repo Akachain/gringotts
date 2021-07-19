@@ -19,9 +19,33 @@
 
 package iao
 
-type InvestorBookStatus string
-
-const (
-	NotDistributed InvestorBookStatus = "NotDistributed"
-	Distributed                       = "Distributed"
+import (
+	"github.com/Akachain/gringotts/entity"
+	"github.com/Akachain/gringotts/glossary/doc"
+	"github.com/Akachain/gringotts/glossary/transaction"
+	"github.com/Akachain/gringotts/helper/glogger"
+	"github.com/Akachain/gringotts/pkg/tx/base"
+	"github.com/hyperledger/fabric-contract-api-go/contractapi"
+	"github.com/pkg/errors"
 )
+
+type txReturn struct {
+	*base.TxBase
+}
+
+func NewTxReturn() *txReturn {
+	return &txReturn{
+		base.NewTxBase(),
+	}
+}
+
+func (t *txReturn) AccountingTx(ctx contractapi.TransactionContextInterface, tx *entity.Transaction, mapBalanceToken map[string]*entity.BalanceCache) (*entity.Transaction, error) {
+	if err := t.AddAmount(ctx, mapBalanceToken, doc.SpotBalances, tx.ToWallet, tx.ToTokenId, tx.ToTokenAmount); err != nil {
+		glogger.GetInstance().Errorf(ctx, "TxReturn - Transaction (%s): Unable to add temp amount of To wallet", tx.Id)
+		tx.Status = transaction.Rejected
+		return tx, errors.WithMessage(err, "Add balance of to wallet failed")
+	}
+	tx.Status = transaction.Confirmed
+
+	return tx, nil
+}
