@@ -195,7 +195,19 @@ func (suite *IaoSCTestSuite) TestIAO_FinishIAO() {
 	//suite.T().Log(string(paramByte))
 	buyIaoResp := mock.MockInvokeTransaction(suite.T(), suite.stub, [][]byte{[]byte("FinalizeIao"), paramByte})
 	suite.T().Log(buyIaoResp)
-	assert.Empty(suite.T(), buyIaoResp, "Buy asset return error")
+	assert.Empty(suite.T(), buyIaoResp, "Finish asset return error")
+
+	suite.accountingBalance()
+}
+
+func (suite *IaoSCTestSuite) TestIAO_CancelIAO() {
+	ids := "_InvestorBook_9d2cab0a55f2760c6f063f4a5090692ed6b2b192_da0ae6b9-c61a-4d82-bd1d-15a7f1bf8e87_"
+	finishDto := iao.FinishIao{InvestorBookId: []string{ids}}
+	paramByte, _ := json.Marshal(finishDto)
+	//suite.T().Log(string(paramByte))
+	buyIaoResp := mock.MockInvokeTransaction(suite.T(), suite.stub, [][]byte{[]byte("CancelIao"), paramByte})
+	suite.T().Log(buyIaoResp)
+	assert.Empty(suite.T(), buyIaoResp, "Cancel asset return error")
 
 	suite.accountingBalance()
 }
