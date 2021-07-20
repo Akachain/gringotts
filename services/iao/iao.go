@@ -27,6 +27,7 @@ import (
 	"github.com/Akachain/gringotts/errorcode"
 	"github.com/Akachain/gringotts/glossary/doc"
 	statusIao "github.com/Akachain/gringotts/glossary/iao"
+	"github.com/Akachain/gringotts/glossary/investor_book"
 	"github.com/Akachain/gringotts/glossary/transaction"
 	"github.com/Akachain/gringotts/helper"
 	"github.com/Akachain/gringotts/helper/glogger"
@@ -190,7 +191,7 @@ func (i *iaoService) BuyBatchAsset(ctx contractapi.TransactionContextInterface, 
 			continue
 		}
 
-		if err := i.addInvestorBook(investorMap, req, stableToken); err != nil {
+		if err := i.addInvestorBook(investorMap, req, stableToken, iaoEntity.AssetTokenId); err != nil {
 			glogger.GetInstance().Errorf(ctx, "BuyBatchAsset - Handle req (%s) failed get create investor book", req.ReqId, err.Error())
 			res.Status = transaction.Rejected
 			resultHandle = append(resultHandle, res)
@@ -231,6 +232,154 @@ func (i *iaoService) BuyBatchAsset(ctx contractapi.TransactionContextInterface, 
 	glogger.GetInstance().Info(ctx, "End BuyBatchAsset")
 
 	return string(resultJson), nil
+}
+
+func (i *iaoService) UpdateStatusIao(ctx contractapi.TransactionContextInterface, iaoId string, status statusIao.Status) error {
+	txTime, _ := ctx.GetStub().GetTxTimestamp()
+	iaoEntity, err := i.GetIao(ctx, iaoId)
+	if err != nil {
+		glogger.GetInstance().Errorf(ctx, "UpdateStatus - GetIao failed with err (%s)", err.Error())
+		return err
+	}
+
+	if iaoEntity.Status != status {
+		iaoEntity.UpdatedAt = helper.TimestampISO(txTime.Seconds)
+		iaoEntity.Status = status
+		if err := i.Repo.Update(ctx, iaoEntity, doc.Iao, helper.IaoKey(iaoEntity.Id)); err != nil {
+			glogger.GetInstance().Errorf(ctx, "UpdateStatus - Update Iao (%s) failed with err (%v)", err.Error())
+			return helper.RespError(errorcode.BizUnableUpdateIao)
+		}
+	}
+
+	return nil
+}
+
+func (i *iaoService) FinalizeIao(ctx contractapi.TransactionContextInterface, lstInvestorBook []string) error {
+	mapInvestor := make(map[string]entity.InvestorBuyIao, 0)
+	for _, key := range lstInvestorBook {
+		compositeKey := strings.Split(key, "_")
+		investorBook, err := i.GetInvestorBook(ctx, compositeKey[2], compositeKey[3])
+		if err != nil {
+			return err
+		}
+		if investorBook.Status != investor_book.NotDistributed {
+			glogger.GetInstance().Errorf(ctx, "FinalizeIao - Investor Book (%s) have status invalidate", key)
+		}
+
+		var lstInvestor []entity.InvestorBuyIao
+		err = json.Unmarshal([]byte(investorBook.Investor), &lstInvestor)
+		if err != nil {
+			glogger.GetInstance().Errorf(ctx, "FinalizeIao - Unmarshal investor failed with err (%s)", err.Error())
+			return err
+		}
+
+		// calculate at token of investor
+		for _, buyIao := range lstInvestor {
+			keyMap := investorBook.IaoId + "_" + buyIao.WalletId
+			if _, ok := mapInvestor[keyMap]; !ok {
+				mapInvestor[keyMap] = buyIao
+			} else {
+				currentInvestor := mapInvestor[keyMap]
+				balanceAT, err := helper.AddBalance(currentInvestor.AssetTokenAmount, buyIao.AssetTokenAmount)
+				if err != nil {
+					glogger.GetInstance().Errorf(ctx, "FinalizeIao - Sum AT balance failed with err (%s)", err.Error())
+					return err
+				}
+				currentInvestor.AssetTokenAmount = balanceAT
+				mapInvestor[keyMap] = currentInvestor
+			}
+		}
+
+		// update status of investor book
+		investorBook.Status = investor_book.Distributed
+		if err := i.Repo.Update(ctx, investorBook, doc.InvestorBook, helper.InvestorBookKey(compositeKey[2], compositeKey[3])); err != nil {
+			glogger.GetInstance().Errorf(ctx, "FinalizeIao - Update Investor book (%s) failed with err (%v)", key, err.Error())
+			return helper.RespError(errorcode.BizUnableUpdateInvestorBook)
+		}
+	}
+
+	for keyMap, investor := range mapInvestor {
+		iaoCompositeKey := strings.Split(keyMap, "_")
+		txEntity := entity.NewTransaction(ctx)
+		txEntity.SpenderWallet = iaoCompositeKey[0]
+		txEntity.FromWallet = iaoCompositeKey[0]
+		txEntity.ToWallet = investor.WalletId
+		txEntity.FromTokenId = investor.AssetTokenId
+		txEntity.ToTokenId = investor.AssetTokenId
+		txEntity.FromTokenAmount = investor.AssetTokenAmount
+		txEntity.ToTokenAmount = investor.AssetTokenAmount
+		txEntity.TxType = transaction.DistributionAT
+		if err := i.Repo.Update(ctx, txEntity, doc.Transactions, helper.TransactionKey(txEntity.Id)); err != nil {
+			glogger.GetInstance().Errorf(ctx, "FinalizeIao - Create distribution AT  failed with err (%v)", err.Error())
+			return helper.RespError(errorcode.BizUnableUpdateInvestorBook)
+		}
+	}
+
+	return nil
+}
+
+func (i *iaoService) CancelIao(ctx contractapi.TransactionContextInterface, lstInvestorBook []string) error {
+	mapInvestor := make(map[string]entity.InvestorBuyIao, 0)
+	for _, key := range lstInvestorBook {
+		compositeKey := strings.Split(key, "_")
+		investorBook, err := i.GetInvestorBook(ctx, compositeKey[2], compositeKey[3])
+		if err != nil {
+			return err
+		}
+		if investorBook.Status != investor_book.NotDistributed {
+			glogger.GetInstance().Errorf(ctx, "CancelIao - Investor Book (%s) have status invalidate", key)
+		}
+
+		var lstInvestor []entity.InvestorBuyIao
+		err = json.Unmarshal([]byte(investorBook.Investor), &lstInvestor)
+		if err != nil {
+			glogger.GetInstance().Errorf(ctx, "CancelIao - Unmarshal investor failed with err (%s)", err.Error())
+			return err
+		}
+
+		// calculate at token of investor
+		for _, buyIao := range lstInvestor {
+			keyMap := investorBook.IaoId + "_" + buyIao.WalletId
+			if _, ok := mapInvestor[keyMap]; !ok {
+				mapInvestor[keyMap] = buyIao
+			} else {
+				currentInvestor := mapInvestor[keyMap]
+				balanceAT, err := helper.AddBalance(currentInvestor.StableTokenAmount, buyIao.StableTokenAmount)
+				if err != nil {
+					glogger.GetInstance().Errorf(ctx, "CancelIao - Sum ST balance failed with err (%s)", err.Error())
+					return err
+				}
+				currentInvestor.StableTokenAmount = balanceAT
+				mapInvestor[keyMap] = currentInvestor
+			}
+		}
+
+		// update status of investor book
+		investorBook.Status = investor_book.Canceled
+		if err := i.Repo.Update(ctx, investorBook, doc.InvestorBook, helper.InvestorBookKey(compositeKey[2], compositeKey[3])); err != nil {
+			glogger.GetInstance().Errorf(ctx, "CancelIao - Update Investor book (%s) failed with err (%v)", key, err.Error())
+			return helper.RespError(errorcode.BizUnableUpdateInvestorBook)
+		}
+	}
+
+	for keyMap, investor := range mapInvestor {
+		iaoCompositeKey := strings.Split(keyMap, "_")
+		txEntity := entity.NewTransaction(ctx)
+		txEntity.SpenderWallet = iaoCompositeKey[0]
+		txEntity.FromWallet = iaoCompositeKey[0]
+		txEntity.ToWallet = investor.WalletId
+		txEntity.FromTokenId = investor.StableTokenId
+		txEntity.ToTokenId = investor.StableTokenId
+		txEntity.FromTokenAmount = investor.StableTokenAmount
+		txEntity.ToTokenAmount = investor.StableTokenAmount
+		txEntity.TxType = transaction.ReturnST
+		if err := i.Repo.Update(ctx, txEntity, doc.Transactions, helper.TransactionKey(txEntity.Id)); err != nil {
+			glogger.GetInstance().Errorf(ctx, "CancelIao - Create distribution AT  failed with err (%v)", err.Error())
+			return helper.RespError(errorcode.BizUnableUpdateInvestorBook)
+		}
+	}
+
+	return nil
 }
 
 func (i *iaoService) getIaoInfo(ctx contractapi.TransactionContextInterface, iaoMap map[string]*entity.Iao, iaoId string) (*entity.Iao, error) {
@@ -289,7 +438,7 @@ func (i *iaoService) insertInvestorBook(ctx contractapi.TransactionContextInterf
 		investorBookEntity := entity.NewInvestorBook(ctx)
 		investorBookEntity.Investor = string(strJsonInvestor)
 		investorBookEntity.IaoId = key
-		investorBookEntity.Status = statusIao.NotDistributed
+		investorBookEntity.Status = investor_book.NotDistributed
 
 		if err := i.Repo.Update(ctx, investorBookEntity, doc.InvestorBook, helper.InvestorBookKey(investorBookEntity.IaoId, ctx.GetStub().GetTxID())); err != nil {
 			glogger.GetInstance().Errorf(ctx, "UpdateIao - Update Iao (%s) failed with err (%v)", investorBookEntity.IaoId, err.Error())
@@ -299,12 +448,14 @@ func (i *iaoService) insertInvestorBook(ctx contractapi.TransactionContextInterf
 	return nil
 }
 
-func (i *iaoService) addInvestorBook(investorBookMap map[string]*entity.InvestorBuyIao, req iao.BuyAsset, amountST string) (err error) {
+func (i *iaoService) addInvestorBook(investorBookMap map[string]*entity.InvestorBuyIao, req iao.BuyAsset, amountST, assetTokenId string) (err error) {
 	var investor *entity.InvestorBuyIao
 	key := req.IaoId + "_" + req.WalletId
 	if _, ok := investorBookMap[key]; !ok {
 		investor = new(entity.InvestorBuyIao)
 		investor.WalletId = req.WalletId
+		investor.AssetTokenId = assetTokenId
+		investor.StableTokenId = req.TokenId
 		investor.AssetTokenAmount = "0"
 		investor.StableTokenAmount = "0"
 

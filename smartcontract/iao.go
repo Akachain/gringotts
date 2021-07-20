@@ -31,6 +31,15 @@ type Iao interface {
 	// CreateIao to create new iao for asset. It will return address of Iao to investor buy asset token
 	CreateIao(ctx contractapi.TransactionContextInterface, assetIao iao.AssetIao) (string, error)
 
+	// UpdateStatusIao to update status of IAO
+	UpdateStatusIao(ctx contractapi.TransactionContextInterface, updateIao iao.UpdateIao) error
+
 	// BuyAssetToken investor call to buy asset token
 	BuyAssetToken(ctx contractapi.TransactionContextInterface, asset iao.BuyBatchAsset) (string, error)
+
+	// FinalizeIao to finish iao and distribute AT to investor
+	FinalizeIao(ctx contractapi.TransactionContextInterface, finishIao iao.FinishIao) error
+
+	// CancelIao to cancel iao and return ST to investor
+	CancelIao(ctx contractapi.TransactionContextInterface, finishIao iao.FinishIao) error
 }

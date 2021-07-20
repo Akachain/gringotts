@@ -17,30 +17,25 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package services
+package iao
 
 import (
-	"github.com/Akachain/gringotts/dto/iao"
 	statusIao "github.com/Akachain/gringotts/glossary/iao"
-	"github.com/hyperledger/fabric-contract-api-go/contractapi"
+	"github.com/pkg/errors"
 )
 
-type Iao interface {
-	// CreateAsset to create new asset and token type
-	CreateAsset(ctx contractapi.TransactionContextInterface, code, name, ownerWallet, tokenName, tickerToken, maxSupply, totalValue, documentUrl string) (string, error)
+type UpdateIao struct {
+	IaoId  string           `json:"iaoId"`
+	Status statusIao.Status `json:"status"`
+}
 
-	// CreateIao to create new iao of asset
-	CreateIao(ctx contractapi.TransactionContextInterface, assetId, assetTokenAmount, startDate, endDate string, rate int64) (string, error)
+func (u UpdateIao) IsValid() error {
+	if u.IaoId == "" {
+		return errors.New("IaoId is empty")
+	}
+	if !u.Status.IsValidate() {
+		return errors.New("Status is invalidate")
+	}
 
-	// UpdateStatusIao to update status of IAO
-	UpdateStatusIao(ctx contractapi.TransactionContextInterface, iaoId string, status statusIao.Status) error
-
-	// BuyBatchAsset to handle multiple request buy asset
-	BuyBatchAsset(ctx contractapi.TransactionContextInterface, req []iao.BuyAsset) (string, error)
-
-	// FinalizeIao to finish IAO and distribute AT to investor
-	FinalizeIao(ctx contractapi.TransactionContextInterface, iaoId []string) error
-
-	// CancelIao to cancel iao and return ST to investor
-	CancelIao(ctx contractapi.TransactionContextInterface, lstInvestorBook []string) error
+	return nil
 }

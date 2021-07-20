@@ -45,3 +45,15 @@ func (i *iaoSc) CreateIao(ctx contractapi.TransactionContextInterface, assetIao 
 func (i *iaoSc) BuyAssetToken(ctx contractapi.TransactionContextInterface, batchAsset iao.BuyBatchAsset) (string, error) {
 	return i.iaoHandler.BuyBatchAsset(ctx, batchAsset)
 }
+
+func (i *iaoSc) UpdateStatusIao(ctx contractapi.TransactionContextInterface, updateIao iao.UpdateIao) error {
+	return i.iaoHandler.UpdateStatusIao(ctx, updateIao)
+}
+
+func (i *iaoSc) FinalizeIao(ctx contractapi.TransactionContextInterface, finishIao iao.FinishIao) error {
+	return i.iaoHandler.FinalizeIao(ctx, finishIao)
+}
+
+func (i *iaoSc) CancelIao(ctx contractapi.TransactionContextInterface, finishIao iao.FinishIao) error {
+	return i.iaoHandler.CancelIao(ctx, finishIao)
+}

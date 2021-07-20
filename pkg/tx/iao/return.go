@@ -17,42 +17,35 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package entity
+package iao
 
 import (
+	"github.com/Akachain/gringotts/entity"
 	"github.com/Akachain/gringotts/glossary/doc"
-	"github.com/Akachain/gringotts/glossary/investor_book"
-	"github.com/Akachain/gringotts/helper"
+	"github.com/Akachain/gringotts/glossary/transaction"
+	"github.com/Akachain/gringotts/helper/glogger"
+	"github.com/Akachain/gringotts/pkg/tx/base"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
+	"github.com/pkg/errors"
 )
 
-type InvestorBuyIao struct {
-	WalletId          string `json:"walletId"`
-	AssetTokenId      string `json:"assetTokenId"`
-	StableTokenId     string `json:"stableTokenId"`
-	StableTokenAmount string `json:"stableTokenAmount"`
-	AssetTokenAmount  string `json:"assetTokenAmount"`
+type txReturn struct {
+	*base.TxBase
 }
 
-type InvestorBook struct {
-	IaoId    string
-	Investor string
-	Status   investor_book.InvestorBookStatus
-	Base     `mapstructure:",squash"`
+func NewTxReturn() *txReturn {
+	return &txReturn{
+		base.NewTxBase(),
+	}
 }
 
-func NewInvestorBook(ctx ...contractapi.TransactionContextInterface) *InvestorBook {
-	if len(ctx) <= 0 {
-		return &InvestorBook{}
+func (t *txReturn) AccountingTx(ctx contractapi.TransactionContextInterface, tx *entity.Transaction, mapBalanceToken map[string]*entity.BalanceCache) (*entity.Transaction, error) {
+	if err := t.AddAmount(ctx, mapBalanceToken, doc.SpotBalances, tx.ToWallet, tx.ToTokenId, tx.ToTokenAmount); err != nil {
+		glogger.GetInstance().Errorf(ctx, "TxReturn - Transaction (%s): Unable to add temp amount of To wallet", tx.Id)
+		tx.Status = transaction.Rejected
+		return tx, errors.WithMessage(err, "Add balance of to wallet failed")
 	}
-	txTime, _ := ctx[0].GetStub().GetTxTimestamp()
-	return &InvestorBook{
-		Base: Base{
-			Id:           helper.GenerateID(doc.InvestorBook, ctx[0].GetStub().GetTxID()),
-			CreatedAt:    helper.TimestampISO(txTime.Seconds),
-			UpdatedAt:    helper.TimestampISO(txTime.Seconds),
-			BlockChainId: ctx[0].GetStub().GetTxID(),
-		},
-		Status: investor_book.NotDistributed,
-	}
+	tx.Status = transaction.Confirmed
+
+	return tx, nil
 }

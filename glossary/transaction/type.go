@@ -32,4 +32,6 @@ const (
 	TransferNft            = "TransferNft"
 	IaoDepositAT           = "IaoDepositAT"
 	SideChainTransfer      = "SideChainTransfer"
+	DistributionAT         = "DistributionAT"
+	ReturnST               = "ReturnST"
 )

@@ -19,21 +19,16 @@
 
 package iao
 
-type Status string
+import "github.com/pkg/errors"
 
-const (
-	New          Status = "New"
-	Open                = "Open"
-	Distributing        = "Distributing"
-	Done                = "Done"
-	Canceling           = "Canceling"
-	Canceled            = "Canceled"
-)
+type FinishIao struct {
+	InvestorBookId []string `json:"investorBookId"`
+}
 
-func (s Status) IsValidate() bool {
-	switch s {
-	case New, Open, Distributing, Done, Canceling, Canceled:
-		return true
+func (f FinishIao) IsValid() error {
+	if f.InvestorBookId == nil || len(f.InvestorBookId) <= 0 {
+		return errors.New("list investor book is invalid")
 	}
-	return false
+
+	return nil
 }

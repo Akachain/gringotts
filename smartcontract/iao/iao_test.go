@@ -63,7 +63,7 @@ func setupMock() (*mock.MockStubExtend, error) {
 	stub := mock.NewMockStubExtend(shimtest.NewMockStub(chaincodeName, chaincode), chaincode, ".")
 
 	// Create a new database, Drop old database
-	db, err := mock.NewCouchDBHandler(true, chaincodeName)
+	db, err := mock.NewCouchDBHandler(false, chaincodeName)
 	if err != nil {
 		return nil, err
 	}
@@ -161,7 +161,7 @@ func (suite *IaoSCTestSuite) TestIAO_BuyIAO() {
 	suite.createIao()
 
 	lstReq := make([]iao.BuyAsset, 0)
-	i := 3000
+	i := 1
 	for i > 0 {
 		buyIao := iao.BuyAsset{
 			ReqId:    "123321",
@@ -186,6 +186,18 @@ func (suite *IaoSCTestSuite) TestIAO_BuyIAO() {
 	suite.T().Log(buyIaoRespSecond)
 	assert.NotEmpty(suite.T(), buyIaoResp, "Buy Asset return empty")
 	assert.Equal(suite.T(), buyIaoResp, buyIaoRespSecond, "Multiple invoke not same resp")
+}
+
+func (suite *IaoSCTestSuite) TestIAO_FinishIAO() {
+	ids := "_InvestorBook_d50c2d90564a5320f31e3a491037ce5c77caae06_ab9fdce9-2040-403d-96c8-2eec1797295a_"
+	finishDto := iao.FinishIao{InvestorBookId: []string{ids}}
+	paramByte, _ := json.Marshal(finishDto)
+	//suite.T().Log(string(paramByte))
+	buyIaoResp := mock.MockInvokeTransaction(suite.T(), suite.stub, [][]byte{[]byte("FinalizeIao"), paramByte})
+	suite.T().Log(buyIaoResp)
+	assert.Empty(suite.T(), buyIaoResp, "Buy asset return error")
+
+	suite.accountingBalance()
 }
 
 func (suite *IaoSCTestSuite) createIao() {

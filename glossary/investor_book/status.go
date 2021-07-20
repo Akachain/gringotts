@@ -17,23 +17,12 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package iao
+package investor_book
 
 type Status string
 
 const (
-	New          Status = "New"
-	Open                = "Open"
-	Distributing        = "Distributing"
-	Done                = "Done"
-	Canceling           = "Canceling"
-	Canceled            = "Canceled"
+	NotDistributed Status = "NotDistributed"
+	Distributed           = "Distributed"
+	Canceled              = "Canceled"
 )
-
-func (s Status) IsValidate() bool {
-	switch s {
-	case New, Open, Distributing, Done, Canceling, Canceled:
-		return true
-	}
-	return false
-}

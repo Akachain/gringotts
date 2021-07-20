@@ -20,7 +20,7 @@
 package glossary
 
 // default select pagination size for query using
-var PaginationSize = int32(10)
+var PaginationSize = int32(50)
 
 // default wallet of system using for mint or burn token
 var SystemWallet = "0000000000000000000000000000000000000000"
