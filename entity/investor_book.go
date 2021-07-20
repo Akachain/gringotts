@@ -37,7 +37,7 @@ type InvestorBuyIao struct {
 type InvestorBook struct {
 	IaoId    string
 	Investor string
-	Status   investor_book.InvestorBookStatus
+	Status   investor_book.Status
 	Base     `mapstructure:",squash"`
 }
 
