@@ -35,6 +35,7 @@ type BuyAsset struct {
 type ResultHandle struct {
 	Status         transaction.Status `json:"status"`
 	NumberATFilled string             `json:"numberATFilled"`
+	NumberST       string             `json:"numberST"`
 	ReqId          string             `json:"reqId"`
 }
 

@@ -205,6 +205,7 @@ func (i *iaoService) BuyBatchAsset(ctx contractapi.TransactionContextInterface, 
 
 		res.Status = transaction.Confirmed
 		res.NumberATFilled = numberATBuy
+		res.NumberST = stableToken
 		resultHandle = append(resultHandle, res)
 	}
 
