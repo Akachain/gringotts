@@ -106,6 +106,7 @@ func (a *accountingService) CalculateBalance(ctx contractapi.TransactionContextI
 		}
 		txUpdate, err := handler.AccountingTx(ctx, tx, mapCurrentBalance)
 		if err != nil {
+			txUpdate.Reason = err.Error()
 			glogger.GetInstance().Errorf(ctx, "CalculateBalance - Handle transaction (%s) failed with error (%s)", id, err.Error())
 		}
 		lstTx = append(lstTx, txUpdate)
