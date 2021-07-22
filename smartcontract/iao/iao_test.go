@@ -63,7 +63,7 @@ func setupMock() (*mock.MockStubExtend, error) {
 	stub := mock.NewMockStubExtend(shimtest.NewMockStub(chaincodeName, chaincode), chaincode, ".")
 
 	// Create a new database, Drop old database
-	db, err := mock.NewCouchDBHandler(false, chaincodeName)
+	db, err := mock.NewCouchDBHandler(true, chaincodeName)
 	if err != nil {
 		return nil, err
 	}

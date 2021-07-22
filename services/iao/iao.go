@@ -213,8 +213,13 @@ func (i *iaoService) BuyBatchAsset(ctx contractapi.TransactionContextInterface, 
 	glogger.GetInstance().Info(ctx, "Start Create Read/Write")
 	resultJson, _ := json.Marshal(resultHandle)
 
-	// update iao
+	// update balance
 	if err := i.UpdateBalance(ctx, balanceMap); err != nil {
+		return "", err
+	}
+
+	// update iao
+	if err := i.updateIao(ctx, iaoMap); err != nil {
 		return "", err
 	}
 
