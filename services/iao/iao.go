@@ -169,7 +169,7 @@ func (i *iaoService) BuyBatchAsset(ctx contractapi.TransactionContextInterface, 
 		}
 
 		var numberATBuy string
-		if iaoEntity.RemainingAssetToken >= req.NumberAT {
+		if helper.CompareStringBalance(iaoEntity.RemainingAssetToken, req.NumberAT) > 0 {
 			numberATBuy = req.NumberAT
 		} else {
 			numberATBuy = iaoEntity.RemainingAssetToken
