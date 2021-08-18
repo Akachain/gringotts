@@ -20,7 +20,7 @@
 package services
 
 import (
-	"github.com/Akachain/gringotts/glossary/sidechain"
+	"github.com/Akachain/gringotts/dto/token"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
 
@@ -28,26 +28,20 @@ type Token interface {
 	// Transfer to transfer token between wallet.
 	// But state balance of wallet not update at the time.
 	// It will be update when accounting job start
-	Transfer(ctx contractapi.TransactionContextInterface, fromWalletId, toWalletId, tokenId, amount string) (string, error)
-
-	// TransferWithNote same with Transfer function but add note in the transaction
-	TransferWithNote(ctx contractapi.TransactionContextInterface, fromWalletId, toWalletId, tokenId, amount, note string) (string, error)
-
-	// TransferSideChain to transfer token from main chain to side chain of wallet
-	TransferSideChain(ctx contractapi.TransactionContextInterface, walletId, tokenId string, fromChain, toChain sidechain.SideName, amount string) error
+	Transfer(ctx contractapi.TransactionContextInterface, utxoInputKeys []string, utxoOutputs []token.UTXODto, metadata string) error
 
 	// Mint to init token in the system
-	Mint(ctx contractapi.TransactionContextInterface, walletId, tokenId, amount string) error
+	Mint(ctx contractapi.TransactionContextInterface, walletId, tokenId, amount, metadata string) error
 
 	// Burn to delete token in the system
-	Burn(ctx contractapi.TransactionContextInterface, walletId, tokenId, amount string) error
+	Burn(ctx contractapi.TransactionContextInterface, utxoInputKeys []string, utxoOutputs []token.UTXODto, metadata string) error
 
 	// CreateType to create new token type in the system.
 	CreateType(ctx contractapi.TransactionContextInterface, name, tickerToken, maxSupply string) (string, error)
 
 	// Exchange to swap between token type.
-	Exchange(ctx contractapi.TransactionContextInterface, fromWalletId, toWalletId, fromTokenId, toTokenId, fromTokenAmount, toTokenAmount string) error
+	Exchange(ctx contractapi.TransactionContextInterface, pairs []token.ItemPair, metadata string) error
 
 	// Issue to issue new token type from stable token.
-	Issue(ctx contractapi.TransactionContextInterface, walletId, fromTokenId, toTokenId, fromTokenAmount, toTokenAmount string) error
+	Issue(ctx contractapi.TransactionContextInterface, utxoInputKeys []string, utxoOutputs []token.UTXODto, metadata string) error
 }

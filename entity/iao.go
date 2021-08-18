@@ -27,16 +27,15 @@ import (
 )
 
 type Iao struct {
-	AssetId             string
-	AssetTokenId        string
-	AssetTokenAmount    string
-	StableTokenAmount   string
-	StartDate           string
-	EndDate             string
-	RemainingAssetToken string
-	Status              iao.Status
-	Rate                int64
-	Base                `mapstructure:",squash"`
+	AssetId          string
+	AssetTokenId     string
+	AssetTokenAmount string
+	MainWallet       string
+	HolderWallet     string
+	StartDate        string
+	EndDate          string
+	Status           iao.Status
+	Base             `mapstructure:",squash"`
 }
 
 func NewIao(ctx ...contractapi.TransactionContextInterface) *Iao {

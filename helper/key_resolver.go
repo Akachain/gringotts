@@ -49,15 +49,6 @@ func NFTKey(nftId string) []string {
 	return []string{nftId}
 }
 
-// BalanceKey return list key of balance docs will be compose in couch db key
-func BalanceKey(keys ...string) []string {
-	var balanceKeys []string
-	for _, item := range keys {
-		balanceKeys = append(balanceKeys, item)
-	}
-	return balanceKeys
-}
-
 // AssetKey return list key of Asset will be compose in couch db key
 func AssetKey(assetId string) []string {
 	return []string{assetId}
@@ -68,12 +59,12 @@ func IaoKey(iaoId string) []string {
 	return []string{iaoId}
 }
 
-// InvestorBookKey return list key of Investor Book will be compose in couch db key
-func InvestorBookKey(iaoId string, txId string) []string {
-	return []string{iaoId, txId}
-}
-
 // ResultCacheKey return list key of cache will be compose in couch db key
 func ResultCacheKey(cacheId string) []string {
 	return []string{cacheId}
+}
+
+// UxtoKey return list key of uxto will be compose in couch db key
+func UxtoKey(walletId, tokenId, txId string) []string {
+	return []string{walletId, tokenId, txId}
 }

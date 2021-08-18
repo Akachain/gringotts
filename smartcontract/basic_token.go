@@ -33,17 +33,8 @@ type BasicToken interface {
 	// UpdateWallet to update status of wallet. Active or InActive
 	UpdateWallet(ctx contractapi.TransactionContextInterface, updateWallet token.UpdateWallet) error
 
-	// GetBalance return balance of wallet
-	GetBalance(ctx contractapi.TransactionContextInterface, balance token.Balance) (string, error)
-
 	// Mint to init base token in the system
 	Mint(ctx contractapi.TransactionContextInterface, mintDto token.MintToken) error
-
-	// Burn to delete token in the system
-	Burn(ctx contractapi.TransactionContextInterface, burnDto token.BurnToken) error
-
-	// Transfer amount of tokens from address FromWalletId to address ToWalletId
-	Transfer(ctx contractapi.TransactionContextInterface, transferDto token.TransferToken) error
 
 	// CreateTokenType to create new token type in the system
 	CreateTokenType(ctx contractapi.TransactionContextInterface, createTokenTypeDto token.CreateTokenType) (string, error)
@@ -51,21 +42,9 @@ type BasicToken interface {
 	// CreateHealthCheck check system ready to use
 	CreateHealthCheck(ctx contractapi.TransactionContextInterface, arg string) (string, error)
 
-	// GetAccountingTx return list id transaction that have status pending
-	GetAccountingTx(ctx contractapi.TransactionContextInterface) ([]string, error)
-
-	// CalculateBalance update balance of wallet. Accounting job will call this
-	CalculateBalance(ctx contractapi.TransactionContextInterface, accountingDto token.AccountingBalance) error
-
 	// Exchange to swap between token type. Example from Stable token to X token
 	Exchange(ctx contractapi.TransactionContextInterface, exchangeToken token.ExchangeToken) error
 
-	// Issue to issue new token from stable token
-	Issue(ctx contractapi.TransactionContextInterface, issueDto token.IssueToken) error
-
 	// EnrollToken to register wallet policy use to issue new token
 	EnrollToken(ctx contractapi.TransactionContextInterface, enrollmentDto token.Enrollment) error
-
-	// TransferSideChain to transfer token from main chain to side chain
-	TransferSideChain(ctx contractapi.TransactionContextInterface, transferChain token.TransferSideChain) error
 }

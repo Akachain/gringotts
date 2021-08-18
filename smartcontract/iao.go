@@ -33,13 +33,4 @@ type Iao interface {
 
 	// UpdateStatusIao to update status of IAO
 	UpdateStatusIao(ctx contractapi.TransactionContextInterface, updateIao iao.UpdateIao) error
-
-	// BuyAssetToken investor call to buy asset token
-	BuyAssetToken(ctx contractapi.TransactionContextInterface, asset iao.BuyBatchAsset) (string, error)
-
-	// FinalizeIao to finish iao and distribute AT to investor
-	FinalizeIao(ctx contractapi.TransactionContextInterface, finishIao iao.FinishIao) error
-
-	// CancelIao to cancel iao and return ST to investor
-	CancelIao(ctx contractapi.TransactionContextInterface, finishIao iao.FinishIao) error
 }

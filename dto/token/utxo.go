@@ -17,24 +17,10 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package transfer
+package token
 
-import (
-	"github.com/Akachain/gringotts/entity"
-	"github.com/Akachain/gringotts/pkg/tx/base"
-	"github.com/hyperledger/fabric-contract-api-go/contractapi"
-)
-
-type txTransfer struct {
-	*base.TxBase
-}
-
-func NewTxTransfer() *txTransfer {
-	return &txTransfer{
-		base.NewTxBase(),
-	}
-}
-
-func (t *txTransfer) AccountingTx(ctx contractapi.TransactionContextInterface, tx *entity.Transaction, mapBalanceToken map[string]*entity.BalanceCache) (*entity.Transaction, error) {
-	return t.TxHandlerTransfer(ctx, mapBalanceToken, tx)
+type UTXODto struct {
+	WalletId string `json:"walletId"`
+	TokenId  string `json:"tokenId"`
+	Amount   string `json:"amount"`
 }

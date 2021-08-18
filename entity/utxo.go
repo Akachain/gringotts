@@ -17,35 +17,50 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package iao
+package entity
 
 import (
-	"github.com/Akachain/gringotts/entity"
+	"encoding/json"
 	"github.com/Akachain/gringotts/glossary/doc"
-	"github.com/Akachain/gringotts/glossary/transaction"
-	"github.com/Akachain/gringotts/helper/glogger"
-	"github.com/Akachain/gringotts/pkg/tx/base"
+	"github.com/Akachain/gringotts/helper"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
-	"github.com/pkg/errors"
 )
 
-type txReturn struct {
-	*base.TxBase
+type UTXO struct {
+	// WalletId is wallet Id of owner
+	WalletId string
+	// TokenId is token Id of wallet
+	TokenId string
+	// Amount number token of UTXO
+	Amount string
+	// Status is a status of UTXO: 0 - Unspent, 1 - Spent
+	Status int
+	// Base of entity
+	Base `mapstructure:",squash"`
 }
 
-func NewTxReturn() *txReturn {
-	return &txReturn{
-		base.NewTxBase(),
+// NewUTXO return new entity UTXO with default status is Unspent
+func NewUTXO(ctx ...contractapi.TransactionContextInterface) *UTXO {
+	if len(ctx) <= 0 {
+		return &UTXO{}
+	}
+	txTime, _ := ctx[0].GetStub().GetTxTimestamp()
+	return &UTXO{
+		Base: Base{
+			Id:           helper.GenerateID(doc.Utxo, ctx[0].GetStub().GetTxID()),
+			CreatedAt:    helper.TimestampISO(txTime.Seconds),
+			UpdatedAt:    helper.TimestampISO(txTime.Seconds),
+			BlockChainId: ctx[0].GetStub().GetTxID(),
+		},
+		Status: 0,
 	}
 }
 
-func (t *txReturn) AccountingTx(ctx contractapi.TransactionContextInterface, tx *entity.Transaction, mapBalanceToken map[string]*entity.BalanceCache) (*entity.Transaction, error) {
-	if err := t.AddAmount(ctx, mapBalanceToken, doc.SpotBalances, tx.ToWallet, tx.ToTokenId, tx.ToTokenAmount); err != nil {
-		glogger.GetInstance().Errorf(ctx, "TxReturn - Transaction (%s): Unable to add temp amount of To wallet", tx.Id)
-		tx.Status = transaction.Rejected
-		return tx, errors.WithMessage(err, "Add balance of to wallet failed")
+// ToJsonString return json string UTXO struct
+func (u *UTXO) ToJsonString() (string, error) {
+	data, err := json.Marshal(u)
+	if err != nil {
+		return "", err
 	}
-	tx.Status = transaction.Confirmed
-
-	return tx, nil
+	return string(data), nil
 }

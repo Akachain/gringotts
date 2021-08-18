@@ -21,28 +21,12 @@ package token
 
 import (
 	"errors"
-	"github.com/Akachain/gringotts/entity"
 	"github.com/Akachain/gringotts/glossary"
-	"github.com/Akachain/gringotts/glossary/doc"
-	"github.com/Akachain/gringotts/helper"
-	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
 
 type CreateWallet struct {
 	TokenId string          `json:"tokenId"`
 	Status  glossary.Status `json:"status"`
-}
-
-func (c CreateWallet) ToEntity(ctx contractapi.TransactionContextInterface) *entity.Wallet {
-	txTime, _ := ctx.GetStub().GetTxTimestamp()
-	walletEntity := new(entity.Wallet)
-	walletEntity.Id = helper.GenerateID(doc.Wallets, ctx.GetStub().GetTxID())
-
-	walletEntity.Status = c.Status
-	walletEntity.CreatedAt = helper.TimestampISO(txTime.Seconds)
-	walletEntity.UpdatedAt = helper.TimestampISO(txTime.Seconds)
-	walletEntity.BlockChainId = ctx.GetStub().GetTxID()
-	return walletEntity
 }
 
 func (c CreateWallet) IsValid() error {

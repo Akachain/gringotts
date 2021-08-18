@@ -26,7 +26,6 @@ type AssetIao struct {
 	AssetTokenAmount string `json:"assetTokenAmount"`
 	StartDate        string `json:"startDate"`
 	EndDate          string `json:"endDate"`
-	Rate             int64  `json:"rate"`
 }
 
 func (a AssetIao) IsValid() error {
@@ -35,10 +34,6 @@ func (a AssetIao) IsValid() error {
 	}
 	if a.StartDate == "" || a.EndDate == "" {
 		return errors.New("StartDate/EndDate id is empty")
-	}
-
-	if a.Rate <= 0 {
-		return errors.New("Rate of asset token must be greater than zero")
 	}
 
 	return nil

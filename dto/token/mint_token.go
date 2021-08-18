@@ -20,22 +20,19 @@
 package token
 
 import (
-	"errors"
+	"github.com/pkg/errors"
 )
 
 type MintToken struct {
 	WalletId string `json:"walletId"`
 	TokenId  string `json:"tokenId"`
 	Amount   string `json:"amount"`
+	Metadata string `json:"metadata"`
 }
 
 func (m MintToken) IsValid() error {
 	if m.WalletId == "" || m.TokenId == "" {
-		return errors.New("wallet/token id is empty")
-	}
-
-	if m.Amount == "" {
-		return errors.New("the transfer amount is empty")
+		return errors.New("WalletId/TokenId is empty")
 	}
 
 	return nil

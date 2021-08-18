@@ -17,13 +17,33 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package tx
+package entity
 
 import (
-	"github.com/Akachain/gringotts/entity"
+	"github.com/Akachain/gringotts/glossary/doc"
+	"github.com/Akachain/gringotts/glossary/transaction"
+	"github.com/Akachain/gringotts/helper"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
 
-type Handler interface {
-	AccountingTx(ctx contractapi.TransactionContextInterface, transaction *entity.Transaction, mapBalanceToken map[string]*entity.BalanceCache) (*entity.Transaction, error)
+type TxCache struct {
+	Hash         string
+	Status       transaction.Status
+	ErrorMessage string
+	Base         `mapstructure:",squash"`
+}
+
+func NewTxCache(ctx ...contractapi.TransactionContextInterface) *TxCache {
+	if len(ctx) <= 0 {
+		return &TxCache{}
+	}
+	txTime, _ := ctx[0].GetStub().GetTxTimestamp()
+	return &TxCache{
+		Base: Base{
+			Id:           helper.GenerateID(doc.TxCache, ctx[0].GetStub().GetTxID()),
+			CreatedAt:    helper.TimestampISO(txTime.Seconds),
+			UpdatedAt:    helper.TimestampISO(txTime.Seconds),
+			BlockChainId: ctx[0].GetStub().GetTxID(),
+		},
+	}
 }

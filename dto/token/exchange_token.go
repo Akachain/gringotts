@@ -23,22 +23,31 @@ import (
 	"github.com/pkg/errors"
 )
 
-type ExchangeToken struct {
-	FromWalletId    string `json:"fromWalletId"`
-	ToWalletId      string `json:"toWalletId"`
-	FromTokenId     string `json:"fromTokenId"`
-	ToTokenId       string `json:"toTokenId"`
-	FromTokenAmount string `json:"fromTokenAmount"`
-	ToTokenAmount   string `json:"toTokenAmount"`
+type ItemPair struct {
+	TokenId string    `json:"tokenId"`
+	Inputs  []string  `json:"inputs"`
+	Outputs []UTXODto `json:"outputs"`
 }
 
-func (s ExchangeToken) IsValid() error {
-	if s.FromWalletId == "" || s.ToWalletId == "" {
-		return errors.New("From/To wallet id is empty")
+type ExchangeToken struct {
+	Pairs    []ItemPair `json:"pairs"`
+	Metadata string     `json:"metadata"`
+}
+
+func (ex ExchangeToken) IsValid() error {
+	if ex.Pairs == nil || len(ex.Pairs) <= 0 {
+		errors.New("List pair exchange empty")
 	}
 
-	if s.FromTokenAmount == "" || s.ToTokenAmount == "" {
-		return errors.New("the exchange amount is empty")
+	for _, pair := range ex.Pairs {
+		if pair.Inputs == nil || len(pair.Inputs) <= 0 {
+			return errors.New("Inputs UTXO is nil or empty")
+		}
+
+		if pair.Outputs == nil || len(pair.Outputs) <= 0 {
+			return errors.New("Outputs UTXO is nil or empty")
+		}
 	}
+
 	return nil
 }

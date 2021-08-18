@@ -23,11 +23,8 @@ import (
 	"github.com/Akachain/gringotts/entity"
 	"github.com/Akachain/gringotts/errorcode"
 	"github.com/Akachain/gringotts/glossary/doc"
-	"github.com/Akachain/gringotts/glossary/sidechain"
-	"github.com/Akachain/gringotts/glossary/transaction"
 	"github.com/Akachain/gringotts/helper"
 	"github.com/Akachain/gringotts/helper/glogger"
-	"github.com/Akachain/gringotts/pkg/unit"
 	"github.com/Akachain/gringotts/services"
 	"github.com/Akachain/gringotts/services/base"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
@@ -63,14 +60,14 @@ func (n *nftService) Mint(ctx contractapi.TransactionContextInterface, gs1Number
 	}
 
 	// create balance
-	balanceEntity := entity.NewBalance(sidechain.Spot, ctx)
-	balanceEntity.WalletId = ownerWalletId
-	balanceEntity.TokenId = nftEntity.Id
-	balanceEntity.Balances = "1"
-	if err := n.Repo.Create(ctx, balanceEntity, doc.SpotBalances, helper.BalanceKey(ownerWalletId, doc.NftToken, nftEntity.Id)); err != nil {
-		glogger.GetInstance().Errorf(ctx, "Create - Init balance of stable token failed with error (%v)", err)
-		return "", helper.RespError(errorcode.BizUnableCreateBalance)
-	}
+	//balanceEntity := entity.NewBalance(sidechain.Spot, ctx)
+	//balanceEntity.WalletId = ownerWalletId
+	//balanceEntity.TokenId = nftEntity.Id
+	//balanceEntity.Balances = "1"
+	//if err := n.Repo.Create(ctx, balanceEntity, doc.SpotBalances, helper.BalanceKey(ownerWalletId, doc.NftToken, nftEntity.Id)); err != nil {
+	//	glogger.GetInstance().Errorf(ctx, "Create - Init balance of stable token failed with error (%v)", err)
+	//	return "", helper.RespError(errorcode.BizUnableCreateBalance)
+	//}
 
 	glogger.GetInstance().Infof(ctx, "-----------NftToken Service - Transfer succeed (%s)-----------", nftEntity.Id)
 
@@ -117,18 +114,18 @@ func (n *nftService) TransferFrom(ctx contractapi.TransactionContextInterface, f
 	}
 
 	// convert price to akc base
-	amountUnit := unit.NewBalanceUnitFromFloat(price)
+	//amountUnit := unit.NewBalanceUnitFromFloat(price)
 
 	// create new swap transaction
 	txEntity := entity.NewTransaction(ctx)
-	txEntity.SpenderWallet = fromWalletId
-	txEntity.FromWallet = fromWalletId
-	txEntity.ToWallet = toWalletId
-	txEntity.FromTokenId = fromTokenId
-	txEntity.ToTokenId = nftTokenId
-	txEntity.TxType = transaction.TransferNft
-	txEntity.FromTokenAmount = amountUnit.String()
-	txEntity.ToTokenAmount = amountUnit.String()
+	//txEntity.SpenderWallet = fromWalletId
+	//txEntity.FromWallet = fromWalletId
+	//txEntity.ToWallet = toWalletId
+	//txEntity.FromTokenId = fromTokenId
+	//txEntity.ToTokenId = nftTokenId
+	//txEntity.TxType = transaction.TransferNft
+	//txEntity.FromTokenAmount = amountUnit.String()
+	//txEntity.ToTokenAmount = amountUnit.String()
 
 	if err := n.Repo.Create(ctx, txEntity, doc.Transactions, helper.TransactionKey(txEntity.Id)); err != nil {
 		glogger.GetInstance().Errorf(ctx, "TransferFrom - Create transfer nft transaction failed with error (%v)", err)

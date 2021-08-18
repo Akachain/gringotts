@@ -20,19 +20,19 @@
 package base
 
 import (
+	"fmt"
+	"github.com/Akachain/gringotts/dto/token"
 	"github.com/Akachain/gringotts/entity"
 	"github.com/Akachain/gringotts/errorcode"
 	"github.com/Akachain/gringotts/glossary"
 	"github.com/Akachain/gringotts/glossary/doc"
-	"github.com/Akachain/gringotts/glossary/sidechain"
-	"github.com/Akachain/gringotts/glossary/transaction"
 	"github.com/Akachain/gringotts/helper"
 	"github.com/Akachain/gringotts/helper/glogger"
 	"github.com/Akachain/gringotts/repository"
 	"github.com/Akachain/gringotts/repository/base"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 	"github.com/mitchellh/mapstructure"
-	"github.com/pkg/errors"
+	"strings"
 )
 
 type Base struct {
@@ -44,34 +44,40 @@ func NewBase() *Base {
 		Repo: base.NewRepository(),
 	}
 }
-func (b *Base) GetInvestorBook(ctx contractapi.TransactionContextInterface, iaoId, txId string) (*entity.InvestorBook, error) {
-	investorBookData, err := b.Repo.Get(ctx, doc.InvestorBook, helper.InvestorBookKey(iaoId, txId))
-	if err != nil {
-		glogger.GetInstance().Errorf(ctx, "Base - Get Investor Book (%s) failed with error (%s)", iaoId+"_"+txId, err.Error())
-		return nil, helper.RespError(errorcode.BizUnableGetInvestorBook)
-	}
 
-	investorBookEntity := entity.NewInvestorBook()
-	if err = mapstructure.Decode(investorBookData, &investorBookEntity); err != nil {
-		glogger.GetInstance().Errorf(ctx, "Base - Decode Investor Book failed with error  (%s)", err.Error())
-		return nil, helper.RespError(errorcode.BizUnableMapDecode)
-	}
-	return investorBookEntity, nil
+func (b *Base) GetUTXOFullKey(ctx contractapi.TransactionContextInterface, fullKey string) (*entity.UTXO, error) {
+	compositeKeyPath := strings.Split(fullKey, "_")
+	return b.GetUTXO(ctx, compositeKeyPath[2], compositeKeyPath[3], compositeKeyPath[4])
 }
 
-func (b *Base) GetBuyIaoCache(ctx contractapi.TransactionContextInterface, buyIaoId string) (*entity.BuyIaoCache, bool, error) {
-	isExisted, buyIaoData, err := b.Repo.GetAndCheckExist(ctx, doc.BuyIaoCache, helper.ResultCacheKey(buyIaoId))
+func (b *Base) GetUTXO(ctx contractapi.TransactionContextInterface, walletId, tokenId, txId string) (*entity.UTXO, error) {
+	utxoData, err := b.Repo.Get(ctx, doc.Utxo, helper.UxtoKey(walletId, tokenId, txId))
 	if err != nil {
-		glogger.GetInstance().Errorf(ctx, "Base - Get Buy Cache IAO (%s) failed with error (%s)", buyIaoId, err.Error())
-		return nil, isExisted, helper.RespError(errorcode.BizUnableGetBuyCache)
+		glogger.GetInstance().Errorf(ctx, "Base - Get UTXO (%s) failed with error (%s)", walletId+"_"+tokenId+"_"+txId, err.Error())
+		return nil, helper.RespError(errorcode.BizUnableGetUTXO)
 	}
 
-	buyIaoEntity := entity.NewIaoCache()
-	if err = mapstructure.Decode(buyIaoData, &buyIaoEntity); err != nil {
+	utxoEntity := entity.NewUTXO()
+	if err = mapstructure.Decode(utxoData, &utxoEntity); err != nil {
+		glogger.GetInstance().Errorf(ctx, "Base - Decode UTXO failed with error  (%s)", err.Error())
+		return nil, helper.RespError(errorcode.BizUnableMapDecode)
+	}
+	return utxoEntity, nil
+}
+
+func (b *Base) GetTxCache(ctx contractapi.TransactionContextInterface, txCacheId string) (*entity.TxCache, bool, error) {
+	isExisted, txCacheData, err := b.Repo.GetAndCheckExist(ctx, doc.TxCache, helper.ResultCacheKey(txCacheId))
+	if err != nil {
+		glogger.GetInstance().Errorf(ctx, "Base - Get transaction cache (%s) failed with error (%s)", txCacheId, err.Error())
+		return nil, isExisted, helper.RespError(errorcode.BizUnableGetTxCache)
+	}
+
+	txCacheEntity := entity.NewTxCache()
+	if err = mapstructure.Decode(txCacheData, &txCacheEntity); err != nil {
 		glogger.GetInstance().Errorf(ctx, "Base - Decode IAO failed with error  (%s)", err.Error())
 		return nil, isExisted, helper.RespError(errorcode.BizUnableMapDecode)
 	}
-	return buyIaoEntity, isExisted, nil
+	return txCacheEntity, isExisted, nil
 }
 
 func (b *Base) GetIao(ctx contractapi.TransactionContextInterface, iaoId string) (*entity.Iao, error) {
@@ -126,12 +132,12 @@ func (b *Base) GetTokenType(ctx contractapi.TransactionContextInterface, tokenId
 		return nil, helper.RespError(errorcode.BizUnableGetTokenType)
 	}
 
-	token := new(entity.Token)
-	if err = mapstructure.Decode(tokenData, &token); err != nil {
+	tokenEntity := new(entity.Token)
+	if err = mapstructure.Decode(tokenData, &tokenEntity); err != nil {
 		glogger.GetInstance().Errorf(ctx, "Base - Decode token type failed with error  (%s)", err.Error())
 		return nil, helper.RespError(errorcode.BizUnableMapDecode)
 	}
-	return token, nil
+	return tokenEntity, nil
 }
 
 func (b *Base) GetWallet(ctx contractapi.TransactionContextInterface, walletId string) (*entity.Wallet, error) {
@@ -211,41 +217,6 @@ func (b *Base) GetNFT(ctx contractapi.TransactionContextInterface, nftTokenId st
 	return nftToken, nil
 }
 
-func (b *Base) GetBalanceOfToken(ctx contractapi.TransactionContextInterface, domain, walletId string, tokenId string) (*entity.Balance, error) {
-	balanceData, err := b.Repo.Get(ctx, domain, helper.BalanceKey(walletId, tokenId))
-	if err != nil {
-		glogger.GetInstance().Errorf(ctx, "Base - Get balance of token failed with error (%s)", err.Error())
-		return nil, helper.RespError(errorcode.BizUnableGetBalance)
-	}
-
-	balance := new(entity.Balance)
-	if err = mapstructure.Decode(balanceData, &balance); err != nil {
-		glogger.GetInstance().Errorf(ctx, "Base - Decode balance of token failed with error (%s)", err.Error())
-		return nil, helper.RespError(errorcode.BizUnableMapDecode)
-	}
-	return balance, nil
-}
-
-func (b *Base) GetAndCheckBalanceOfToken(ctx contractapi.TransactionContextInterface, domain, walletId string, tokenId string) (*entity.Balance, bool, error) {
-	isExisted, balanceData, err := b.Repo.GetAndCheckExist(ctx, domain, helper.BalanceKey(walletId, tokenId))
-	if err != nil {
-		glogger.GetInstance().Errorf(ctx, "Base - Get balance of token failed with error (%s)", err.Error())
-		return nil, false, helper.RespError(errorcode.BizUnableGetBalance)
-	}
-
-	if !isExisted {
-		glogger.GetInstance().Info(ctx, "Base - Balance of token do not exist in the system")
-		return nil, isExisted, nil
-	}
-
-	balance := new(entity.Balance)
-	if err = mapstructure.Decode(balanceData, &balance); err != nil {
-		glogger.GetInstance().Errorf(ctx, "Base - Decode balance of token failed with error (%s)", err.Error())
-		return nil, isExisted, helper.RespError(errorcode.BizUnableMapDecode)
-	}
-	return balance, isExisted, nil
-}
-
 func (b *Base) ValidatePairWallet(ctx contractapi.TransactionContextInterface, fromWalletId,
 	toWalletId string) (walletFrom, walletTo *entity.Wallet, err error) {
 	// validate to wallet exist
@@ -264,126 +235,83 @@ func (b *Base) ValidatePairWallet(ctx contractapi.TransactionContextInterface, f
 	return walletFrom, walletTo, err
 }
 
-// AddAmount to add amount of balance token
-func (b *Base) AddAmount(ctx contractapi.TransactionContextInterface,
-	mapCurrentBalance map[string]*entity.BalanceCache, domain, walletId string, tokenId string, amount string) error {
-	key := domain + "_" + walletId + "_" + tokenId
-	// Load current balance of wallet into memory
-	if _, ok := mapCurrentBalance[key]; !ok {
-		balanceToken, isExisted, err := b.GetAndCheckBalanceOfToken(ctx, domain, walletId, tokenId)
+// ValidateAndSummarizeInputs to validate and summarize utxo inputs
+func (b *Base) ValidateAndSummarizeInputs(ctx contractapi.TransactionContextInterface, utxoInputKeys []string) ([]*entity.UTXO, string, error) {
+	utxoInputs := make(map[string]*entity.UTXO)
+	totalInputAmount := "0"
+	for _, utxoInputKey := range utxoInputKeys {
+		if utxoInputs[utxoInputKey] != nil {
+			glogger.GetInstance().Error(ctx, "The same utxo input can not be spend twice")
+			return nil, "", helper.RespError(errorcode.DuplicateUtxo)
+		}
+
+		utxoEntity, err := b.GetUTXOFullKey(ctx, utxoInputKey)
 		if err != nil {
-			return err
+			glogger.GetInstance().Errorf(ctx, "Get UTXO failed with err (%s)", err.Error())
+			return nil, "", err
 		}
-		balanceCache := new(entity.BalanceCache)
-		balanceCache.Domain = domain
-		if isExisted {
-			balanceCache.IsNew = false
-			balanceCache.BalanceEntity = balanceToken
-			mapCurrentBalance[key] = balanceCache
-		} else {
-			balanceEntity := entity.NewBalance(sidechain.Spot, ctx)
-			balanceEntity.WalletId = walletId
-			balanceEntity.TokenId = tokenId
-			balanceEntity.Balances = "0"
+		if utxoEntity.Status != 0 {
+			glogger.GetInstance().Errorf(ctx, "UTXO (%s) have status spent", utxoEntity.Id)
+			return nil, "", helper.RespError(errorcode.InvalidateStatusUtxo)
+		}
 
-			balanceCache.IsNew = true
-			balanceCache.BalanceEntity = balanceEntity
-			mapCurrentBalance[key] = balanceCache
-		}
+		tempAmount, _ := helper.AddBalance(totalInputAmount, utxoEntity.Amount)
+		totalInputAmount = tempAmount
+		utxoInputs[utxoInputKey] = utxoEntity
 	}
 
-	// update current balance
-	updateCurrentBalance, err := helper.AddBalance(mapCurrentBalance[key].BalanceEntity.Balances, amount)
-	if err != nil {
-		return err
+	lstUtxo := make([]*entity.UTXO, 0, len(utxoInputs))
+	for _, utxo := range utxoInputs {
+		lstUtxo = append(lstUtxo, utxo)
 	}
-	mapCurrentBalance[key].BalanceEntity.Balances = updateCurrentBalance
-
-	return nil
+	return lstUtxo, totalInputAmount, nil
 }
 
-// SubAmount to sub amount of balance token
-func (b *Base) SubAmount(ctx contractapi.TransactionContextInterface,
-	mapCurrentBalance map[string]*entity.BalanceCache, domain, walletId string, tokenId string, amount string) error {
-	key := domain + "_" + walletId + "_" + tokenId
-	// Load current balance of wallet into memory
-	if _, ok := mapCurrentBalance[key]; !ok {
-		balanceToken, err := b.GetBalanceOfToken(ctx, domain, walletId, tokenId)
-		if err != nil {
-			return err
+// ValidateAndSummarizeOutputs to validate and summarize utxo outputs
+func (b *Base) ValidateAndSummarizeOutputs(ctx contractapi.TransactionContextInterface, utxoOutputs []token.UTXODto) ([]*entity.UTXO, string, error) {
+	totalOutputAmount := "0"
+	txID := ctx.GetStub().GetTxID()
+	lstUtxoOutput := make([]*entity.UTXO, 0, len(utxoOutputs))
+	for i, utxoOutput := range utxoOutputs {
+		if helper.CompareStringBalance(utxoOutput.Amount, "0") <= 0 {
+			glogger.GetInstance().Errorf(ctx, "UTXO (%s) outputs have amount negative", utxoOutput.WalletId+"_"+utxoOutput.TokenId)
+			return nil, "", helper.RespError(errorcode.InvalidateAmountUtxo)
 		}
 
-		balanceCache := new(entity.BalanceCache)
-		balanceCache.IsNew = false
-		balanceCache.Domain = domain
-		balanceCache.BalanceEntity = balanceToken
-		mapCurrentBalance[key] = balanceCache
-	}
-
-	// checking current balance with amount
-	if helper.CompareStringBalance(mapCurrentBalance[key].BalanceEntity.Balances, amount) < 0 {
-		return errors.Errorf("Wallet (%s) do not have enough balance", key)
-	}
-
-	// update current balance
-	updateCurrentBalance, err := helper.SubBalance(mapCurrentBalance[key].BalanceEntity.Balances, amount)
-	if err != nil {
-		return err
-	}
-	mapCurrentBalance[key].BalanceEntity.Balances = updateCurrentBalance
-
-	return nil
-}
-
-// RollbackTxHandler to rollback balance of wallet that was updated
-func (b *Base) RollbackTxHandler(ctx contractapi.TransactionContextInterface, tx *entity.Transaction,
-	mapCurrentBalance map[string]*entity.BalanceCache, step transaction.Step) error {
-	// currently only rollback in case transfer or swap
-	if step == transaction.SubFromWallet {
-		if err := b.AddAmount(ctx, mapCurrentBalance, doc.SpotBalances, tx.FromWallet, tx.FromTokenId, tx.FromTokenAmount); err != nil {
-			glogger.GetInstance().Errorf(ctx, "RollbackTxHandler - Add balance of wallet (%s) with transaction (%s) failed", tx.FromWallet, tx.Id)
-			return err
+		tempAmount, _ := helper.AddBalance(totalOutputAmount, utxoOutput.Amount)
+		totalOutputAmount = tempAmount
+		id := fmt.Sprintf("%s.%d", txID, i)
+		utxoOutputEntity := entity.NewUTXO(ctx)
+		utxoOutputEntity.Id = id
+		utxoOutputEntity.WalletId = utxoOutput.WalletId
+		utxoOutputEntity.TokenId = utxoOutput.TokenId
+		utxoOutputEntity.Amount = utxoOutput.Amount
+		if utxoOutput.WalletId == glossary.SystemWallet {
+			utxoOutputEntity.Status = 1
 		}
+		lstUtxoOutput = append(lstUtxoOutput, utxoOutputEntity)
 	}
-	return nil
+	return lstUtxoOutput, totalOutputAmount, nil
 }
 
-// UpdateBalance to update balance of wallet after handle transaction
-func (b *Base) UpdateBalance(ctx contractapi.TransactionContextInterface, mapCurrentBalance map[string]*entity.BalanceCache) error {
+func (b *Base) UpdateSpentUTXO(ctx contractapi.TransactionContextInterface, lstUtxo []*entity.UTXO) error {
 	txTime, _ := ctx.GetStub().GetTxTimestamp()
-	for key, balanceItem := range mapCurrentBalance {
-		if balanceItem.IsNew {
-			if err := b.Repo.Create(ctx, balanceItem.BalanceEntity, balanceItem.Domain, helper.BalanceKey(balanceItem.BalanceEntity.WalletId, balanceItem.BalanceEntity.TokenId)); err != nil {
-				glogger.GetInstance().Errorf(ctx, "Base - Create new balance of wallet (%s) failed with err (%s)", key, err.Error())
-				return helper.RespError(errorcode.BizUnableCreateBalance)
-			}
-		} else {
-			balanceItem.BalanceEntity.UpdatedAt = helper.TimestampISO(txTime.Seconds)
-			if err := b.Repo.Update(ctx, balanceItem.BalanceEntity, balanceItem.Domain, helper.BalanceKey(balanceItem.BalanceEntity.WalletId, balanceItem.BalanceEntity.TokenId)); err != nil {
-				glogger.GetInstance().Errorf(ctx, "Base - Update balance of wallet (%s) failed with err (%s)", key, err.Error())
-				return helper.RespError(errorcode.BizUnableUpdateBalance)
-			}
+	for _, utxo := range lstUtxo {
+		utxo.UpdatedAt = helper.TimestampISO(txTime.Seconds)
+		utxo.Status = 1
+		if err := b.Repo.Update(ctx, utxo, doc.Utxo, helper.UxtoKey(utxo.WalletId, utxo.TokenId, utxo.Id)); err != nil {
+			glogger.GetInstance().Errorf(ctx, "Base - Update UTXO (%s) failed with err (%s)", utxo.Id, err.Error())
+			return helper.RespError(errorcode.BizUnableCreateUTXO)
 		}
-		//glogger.GetInstance().Infof(ctx, "WalletId (%s) - Balances update succeed", key)
 	}
 	return nil
 }
 
-// AsyncUpdateBalance to update balance of wallet after handle transaction using worker
-func (b *Base) AsyncUpdateBalance(ctx contractapi.TransactionContextInterface, input interface{}) error {
-	balanceItem := input.(*entity.BalanceCache)
-	txTime, _ := ctx.GetStub().GetTxTimestamp()
-	key := balanceItem.BalanceEntity.WalletId + "_" + balanceItem.BalanceEntity.TokenId
-	if balanceItem.IsNew {
-		if err := b.Repo.Create(ctx, balanceItem.BalanceEntity, balanceItem.Domain, helper.BalanceKey(balanceItem.BalanceEntity.WalletId, balanceItem.BalanceEntity.TokenId)); err != nil {
-			glogger.GetInstance().Errorf(ctx, "Base - Create new balance of wallet (%s) failed with err (%s)", key, err.Error())
-			return helper.RespError(errorcode.BizUnableCreateBalance)
-		}
-	} else {
-		balanceItem.BalanceEntity.UpdatedAt = helper.TimestampISO(txTime.Seconds)
-		if err := b.Repo.Update(ctx, balanceItem.BalanceEntity, balanceItem.Domain, helper.BalanceKey(balanceItem.BalanceEntity.WalletId, balanceItem.BalanceEntity.TokenId)); err != nil {
-			glogger.GetInstance().Errorf(ctx, "Base - Update balance of wallet (%s) failed with err (%s)", key, err.Error())
-			return helper.RespError(errorcode.BizUnableUpdateBalance)
+func (b *Base) CreateUTXO(ctx contractapi.TransactionContextInterface, lstUtxo []*entity.UTXO) error {
+	for _, utxo := range lstUtxo {
+		if err := b.Repo.Update(ctx, utxo, doc.Utxo, helper.UxtoKey(utxo.WalletId, utxo.TokenId, utxo.Id)); err != nil {
+			glogger.GetInstance().Errorf(ctx, "Base - Create UTXO (%s) failed with err (%s)", utxo.Id, err.Error())
+			return helper.RespError(errorcode.BizUnableCreateUTXO)
 		}
 	}
 	return nil

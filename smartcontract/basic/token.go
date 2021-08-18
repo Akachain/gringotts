@@ -32,7 +32,6 @@ type baseToken struct {
 	tokenHandler       *handler.TokenHandler
 	walletHandler      *handler.WalletHandler
 	healthCheckHandler handler.HealthCheckHandler
-	accountingHandler  handler.AccountingHandler
 }
 
 func NewBaseToken() smartcontract.BasicToken {
@@ -40,7 +39,6 @@ func NewBaseToken() smartcontract.BasicToken {
 		tokenHandler:       handler.NewTokenHandler(),
 		walletHandler:      handler.NewWalletHandler(),
 		healthCheckHandler: handler.NewHealthCheckHandler(),
-		accountingHandler:  handler.NewAccountingHandler(),
 	}
 }
 
@@ -58,29 +56,12 @@ func (b *baseToken) UpdateWallet(ctx contractapi.TransactionContextInterface, up
 	return b.walletHandler.UpdateWallet(ctx, updateWallet)
 }
 
-func (b *baseToken) GetBalance(ctx contractapi.TransactionContextInterface, balance token.Balance) (string, error) {
-	return b.walletHandler.BalanceOf(ctx, balance)
-}
-
 // Token feature
 func (b *baseToken) Mint(ctx contractapi.TransactionContextInterface, mintDto token.MintToken) error {
 	return b.tokenHandler.Mint(ctx, mintDto)
 }
-
-func (b *baseToken) Burn(ctx contractapi.TransactionContextInterface, burnDto token.BurnToken) error {
-	return b.tokenHandler.Burn(ctx, burnDto)
-}
-
-func (b *baseToken) Transfer(ctx contractapi.TransactionContextInterface, transferDto token.TransferToken) error {
-	return b.tokenHandler.Transfer(ctx, transferDto)
-}
-
 func (b *baseToken) CreateTokenType(ctx contractapi.TransactionContextInterface, createTokenTypeDto token.CreateTokenType) (string, error) {
 	return b.tokenHandler.CreateTokenType(ctx, createTokenTypeDto)
-}
-
-func (b *baseToken) TransferSideChain(ctx contractapi.TransactionContextInterface, transferChain token.TransferSideChain) error {
-	return b.tokenHandler.TransferSideChain(ctx, transferChain)
 }
 
 // API healthcheck
@@ -88,21 +69,8 @@ func (b *baseToken) CreateHealthCheck(ctx contractapi.TransactionContextInterfac
 	return b.healthCheckHandler.CreateHealthCheck(ctx)
 }
 
-// Accounting feature
-func (b *baseToken) GetAccountingTx(ctx contractapi.TransactionContextInterface) ([]string, error) {
-	return b.accountingHandler.GetAccountingTx(ctx)
-}
-
-func (b *baseToken) CalculateBalance(ctx contractapi.TransactionContextInterface, accountingDto token.AccountingBalance) error {
-	return b.accountingHandler.CalculateBalance(ctx, accountingDto)
-}
-
 func (b *baseToken) Exchange(ctx contractapi.TransactionContextInterface, exchangeToken token.ExchangeToken) error {
 	return b.tokenHandler.Exchange(ctx, exchangeToken)
-}
-
-func (b *baseToken) Issue(ctx contractapi.TransactionContextInterface, issueDto token.IssueToken) error {
-	return b.tokenHandler.Issue(ctx, issueDto)
 }
 
 func (b *baseToken) EnrollToken(ctx contractapi.TransactionContextInterface, enrollmentDto token.Enrollment) error {

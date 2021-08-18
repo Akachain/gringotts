@@ -23,18 +23,14 @@
 package doc
 
 const (
-	Transactions     = "Transactions"
-	Wallets          = "Wallets"
-	Tokens           = "Tokens"
-	HealthCheck      = "HealthCheck"
-	Enrollments      = "Enrollments"
-	NftToken         = "NftToken"
-	Exchange         = "Exchange"
-	SpotBalances     = "SpotBalances"
-	IaoBalances      = "IaoBalances"
-	ExchangeBalances = "ExchangeBalances"
-	Iao              = "Iao"
-	InvestorBook     = "InvestorBook"
-	Asset            = "Asset"
-	BuyIaoCache      = "BuyIaoCache"
+	Transactions = "Transactions"
+	Wallets      = "Wallets"
+	Tokens       = "Tokens"
+	HealthCheck  = "HealthCheck"
+	Enrollments  = "Enrollments"
+	NftToken     = "NftToken"
+	Iao          = "Iao"
+	Asset        = "Asset"
+	TxCache      = "TxCache"
+	Utxo         = "Utxo"
 )

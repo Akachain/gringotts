@@ -48,7 +48,7 @@ func (w *WalletHandler) CreateWallet(ctx contractapi.TransactionContextInterface
 		glogger.GetInstance().Errorf(ctx, "Wallet Handler - Create Wallet Input invalidate %v", err)
 		return "", helper.RespError(errorcode.InvalidParam)
 	}
-	return w.walletService.Create(ctx, createWalletDto.TokenId, createWalletDto.Status)
+	return w.walletService.Create(ctx, createWalletDto.Status)
 }
 
 // UpdateWallet to update status of wallet
@@ -61,18 +61,6 @@ func (w *WalletHandler) UpdateWallet(ctx contractapi.TransactionContextInterface
 		return helper.RespError(errorcode.InvalidParam)
 	}
 	return w.walletService.Update(ctx, updateWalletDto.WalletId, updateWalletDto.Status)
-}
-
-// BalanceOf to return balance of wallet
-func (w *WalletHandler) BalanceOf(ctx contractapi.TransactionContextInterface, balanceDto token.Balance) (string, error) {
-	glogger.GetInstance().Info(ctx, "-----------Wallet Handler - BalanceOf-----------")
-
-	// checking dto validate
-	if err := balanceDto.IsValid(); err != nil {
-		glogger.GetInstance().Errorf(ctx, "Wallet Handler - Balance Input invalidate %v", err)
-		return "-1", helper.RespError(errorcode.InvalidParam)
-	}
-	return w.walletService.BalanceOf(ctx, balanceDto.WalletId, balanceDto.TokenId)
 }
 
 // EnrollToken to create or update enrollment policy for token

@@ -26,15 +26,15 @@ import (
 
 type Wallet interface {
 	// Create to create new wallet. Each wallet belong to token type
-	Create(ctx contractapi.TransactionContextInterface, tokenId string, status glossary.Status) (string, error)
+	Create(ctx contractapi.TransactionContextInterface, status glossary.Status) (string, error)
 
 	// Update to update status of wallet. Active or InActive
 	Update(ctx contractapi.TransactionContextInterface, walletId string, status glossary.Status) error
 
-	// BalanceOf get balance of wallet
-	BalanceOf(ctx contractapi.TransactionContextInterface, walletId string, tokenId string) (string, error)
-
 	// EnrollToken to register wallet id that will be issue/mint token into.
 	// Currently support add list from wallet id and to wallet id
 	EnrollToken(ctx contractapi.TransactionContextInterface, tokenId string, fromWalletId []string, toWalletId []string) error
+
+	// CreateMultipleWallet to create multiple wallet with one call
+	CreateMultipleWallet(ctx contractapi.TransactionContextInterface, status glossary.Status, numberWallet int) ([]string, error)
 }

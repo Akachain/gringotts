@@ -59,19 +59,7 @@ func (i IaoHandler) CreateIao(ctx contractapi.TransactionContextInterface, asset
 		return "", helper.RespError(errorcode.InvalidParam)
 	}
 
-	return i.iaoService.CreateIao(ctx, assetIao.AssetId, assetIao.AssetTokenAmount, assetIao.StartDate, assetIao.EndDate, assetIao.Rate)
-}
-
-func (i IaoHandler) BuyBatchAsset(ctx contractapi.TransactionContextInterface, batchAsset iaoDto.BuyBatchAsset) (string, error) {
-	glogger.GetInstance().Info(ctx, "-----------Iao Handler - BuyBatchAsset-----------")
-
-	// checking dto validate
-	if err := batchAsset.IsValid(); err != nil {
-		glogger.GetInstance().Errorf(ctx, "IaoHandler - BuyBatchAsset Input invalidate %v", err)
-		return "", helper.RespError(errorcode.InvalidParam)
-	}
-
-	return i.iaoService.BuyBatchAsset(ctx, batchAsset.Requests)
+	return i.iaoService.CreateIao(ctx, assetIao.AssetId, assetIao.AssetTokenAmount, assetIao.StartDate, assetIao.EndDate)
 }
 
 func (i IaoHandler) UpdateStatusIao(ctx contractapi.TransactionContextInterface, updateIao iaoDto.UpdateIao) error {
@@ -84,28 +72,4 @@ func (i IaoHandler) UpdateStatusIao(ctx contractapi.TransactionContextInterface,
 	}
 
 	return i.iaoService.UpdateStatusIao(ctx, updateIao.IaoId, updateIao.Status)
-}
-
-func (i IaoHandler) FinalizeIao(ctx contractapi.TransactionContextInterface, finishIao iaoDto.FinishIao) error {
-	glogger.GetInstance().Info(ctx, "-----------Iao Handler - FinalizeIao-----------")
-
-	// checking dto validate
-	if err := finishIao.IsValid(); err != nil {
-		glogger.GetInstance().Errorf(ctx, "IaoHandler - FinalizeIao Input invalidate %v", err)
-		return helper.RespError(errorcode.InvalidParam)
-	}
-
-	return i.iaoService.FinalizeIao(ctx, finishIao.InvestorBookId)
-}
-
-func (i IaoHandler) CancelIao(ctx contractapi.TransactionContextInterface, finishIao iaoDto.FinishIao) error {
-	glogger.GetInstance().Info(ctx, "-----------Iao Handler - CancelIao-----------")
-
-	// checking dto validate
-	if err := finishIao.IsValid(); err != nil {
-		glogger.GetInstance().Errorf(ctx, "IaoHandler - CancelIao Input invalidate %v", err)
-		return helper.RespError(errorcode.InvalidParam)
-	}
-
-	return i.iaoService.CancelIao(ctx, finishIao.InvestorBookId)
 }

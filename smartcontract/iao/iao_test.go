@@ -28,7 +28,6 @@ import (
 	"github.com/Akachain/gringotts/entity"
 	"github.com/Akachain/gringotts/glossary"
 	"github.com/Akachain/gringotts/glossary/doc"
-	"github.com/Akachain/gringotts/glossary/sidechain"
 	"github.com/Akachain/gringotts/helper"
 	"github.com/Akachain/gringotts/smartcontract"
 	"github.com/Akachain/gringotts/smartcontract/basic"
@@ -36,7 +35,6 @@ import (
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	"strings"
 	"testing"
 	"time"
 )
@@ -105,6 +103,17 @@ func (suite *IaoSCTestSuite) SetupTest() {
 	suite.T().Log(suite.STToken)
 	assert.NotEmpty(suite.T(), suite.STToken, "Create Token Type return empty")
 
+	// create AT token type
+	atToken := token.CreateTokenType{
+		Name:        "Asset Token",
+		TickerToken: "AT",
+		MaxSupply:   "78900",
+	}
+	paramByte, _ = json.Marshal(atToken)
+	suite.ATToken = mock.MockInvokeTransaction(suite.T(), suite.stub, [][]byte{[]byte("CreateTokenType"), paramByte})
+	suite.T().Log(suite.ATToken)
+	assert.NotEmpty(suite.T(), suite.ATToken, "Create Token Type return empty")
+
 	// create wallet
 	wallet := token.CreateWallet{
 		TokenId: suite.STToken,
@@ -119,20 +128,17 @@ func (suite *IaoSCTestSuite) SetupTest() {
 	assert.NotEmpty(suite.T(), suite.walletToId, "Create to wallet return empty")
 
 	// mint balance for From wallet
-	mintDto := token.MintToken{
-		WalletId: suite.walletFromId,
-		TokenId:  suite.STToken,
-		Amount:   "678900",
-	}
+	mintDto := new(token.MintToken)
+	mintDto.WalletId = suite.walletFromId
+	mintDto.TokenId = suite.STToken
+	mintDto.Amount = "678900"
+	mintDto.Metadata = "Req11"
 	mintByte, _ := json.Marshal(mintDto)
 	mintRes := mock.MockInvokeTransaction(suite.T(), suite.stub, [][]byte{[]byte("Mint"), mintByte})
 	assert.Empty(suite.T(), mintRes, "Mint invoke return err")
-
-	// accounting balance
-	suite.accountingBalance()
 }
 
-func (suite *IaoSCTestSuite) TestIAOSC_CreateAsset() {
+func (suite *IaoSCTestSuite) TestIAO_CreateAsset() {
 	suite.createNewAsset()
 }
 
@@ -140,120 +146,21 @@ func (suite *IaoSCTestSuite) TestIAO_CreateIAO() {
 	suite.createIao()
 }
 
-func (suite *IaoSCTestSuite) TestIAO_BuyIAO() {
-	// transfer side chain
-	transferDto := token.TransferSideChain{
-		WalletId:  suite.walletFromId,
-		TokenId:   suite.STToken,
-		FromChain: sidechain.Spot,
-		ToChain:   sidechain.Iao,
-		Amount:    "78900",
-	}
-	paramByte, _ := json.Marshal(transferDto)
-	transferRes := mock.MockInvokeTransaction(suite.T(), suite.stub, [][]byte{[]byte("TransferSideChain"), paramByte})
-	suite.T().Log(transferRes)
-	assert.Emptyf(suite.T(), transferRes, "Create wallet return error", transferRes)
-
-	// accounting balance
-	suite.accountingBalance()
-
-	// creat IAO
-	suite.createIao()
-
-	lstReq := make([]iao.BuyAsset, 0)
-	i := 1
-	for i > 0 {
-		buyIao := iao.BuyAsset{
-			ReqId:    "123321",
-			IaoId:    suite.IaoId,
-			WalletId: suite.walletFromId,
-			TokenId:  suite.STToken,
-			NumberAT: "1",
-		}
-		lstReq = append(lstReq, buyIao)
-		i--
-	}
-
-	batchBuyIao := iao.BuyBatchAsset{Requests: lstReq}
-	paramByte, _ = json.Marshal(batchBuyIao)
-	//suite.T().Log(string(paramByte))
-	buyIaoResp := mock.MockInvokeTransaction(suite.T(), suite.stub, [][]byte{[]byte("BuyAssetToken"), paramByte})
-	suite.T().Log(buyIaoResp)
-	assert.NotEmpty(suite.T(), buyIaoResp, "Buy asset return empty")
-
-	// multiple invoke
-	buyIaoRespSecond := mock.MockInvokeTransaction(suite.T(), suite.stub, [][]byte{[]byte("BuyAssetToken"), paramByte})
-	suite.T().Log(buyIaoRespSecond)
-	assert.NotEmpty(suite.T(), buyIaoResp, "Buy Asset return empty")
-	assert.Equal(suite.T(), buyIaoResp, buyIaoRespSecond, "Multiple invoke not same resp")
-}
-
-func (suite *IaoSCTestSuite) TestIAO_FinishIAO() {
-	ids := "_InvestorBook_d50c2d90564a5320f31e3a491037ce5c77caae06_ab9fdce9-2040-403d-96c8-2eec1797295a_"
-	finishDto := iao.FinishIao{InvestorBookId: []string{ids}}
-	paramByte, _ := json.Marshal(finishDto)
-	//suite.T().Log(string(paramByte))
-	buyIaoResp := mock.MockInvokeTransaction(suite.T(), suite.stub, [][]byte{[]byte("FinalizeIao"), paramByte})
-	suite.T().Log(buyIaoResp)
-	assert.Empty(suite.T(), buyIaoResp, "Finish asset return error")
-
-	suite.accountingBalance()
-}
-
-func (suite *IaoSCTestSuite) TestIAO_CancelIAO() {
-	ids := "_InvestorBook_9d2cab0a55f2760c6f063f4a5090692ed6b2b192_da0ae6b9-c61a-4d82-bd1d-15a7f1bf8e87_"
-	finishDto := iao.FinishIao{InvestorBookId: []string{ids}}
-	paramByte, _ := json.Marshal(finishDto)
-	//suite.T().Log(string(paramByte))
-	buyIaoResp := mock.MockInvokeTransaction(suite.T(), suite.stub, [][]byte{[]byte("CancelIao"), paramByte})
-	suite.T().Log(buyIaoResp)
-	assert.Empty(suite.T(), buyIaoResp, "Cancel asset return error")
-
-	suite.accountingBalance()
-}
-
 func (suite *IaoSCTestSuite) createIao() {
 	// create new asset
 	suite.createNewAsset()
-
-	// issue AT
-	issueDto := token.IssueToken{
-		WalletId:        suite.walletFromId,
-		FromTokenId:     suite.STToken,
-		ToTokenId:       suite.ATToken,
-		FromTokenAmount: "78900",
-		ToTokenAmount:   "78900",
-	}
-
-	paramByte, _ := json.Marshal(issueDto)
-	issueRes := mock.MockInvokeTransaction(suite.T(), suite.stub, [][]byte{[]byte("Issue"), paramByte})
-	suite.T().Log(issueRes)
-	assert.Emptyf(suite.T(), issueRes, "Issue AT token return error", issueRes)
-
-	// accounting balance
-	suite.accountingBalance()
 
 	assetIaoDto := iao.AssetIao{
 		AssetId:          suite.AssetId,
 		AssetTokenAmount: "8900",
 		StartDate:        fmt.Sprint(time.Now().Unix()),
 		EndDate:          fmt.Sprint(time.Now().Unix()),
-		Rate:             1,
 	}
-	paramByte, _ = json.Marshal(assetIaoDto)
+	paramByte, _ := json.Marshal(assetIaoDto)
 	iaoRes := mock.MockInvokeTransaction(suite.T(), suite.stub, [][]byte{[]byte("CreateIao"), paramByte})
 	suite.T().Log(iaoRes)
 	assert.NotEmptyf(suite.T(), iaoRes, "Create wallet return error", iaoRes)
 	suite.IaoId = iaoRes
-
-	// accounting balance
-	suite.accountingBalance()
-
-	// get check balance
-	balanceOfFromWallet := suite.getBalance(suite.walletFromId, suite.ATToken)
-	suite.T().Log(balanceOfFromWallet)
-	assert.NotEmptyf(suite.T(), balanceOfFromWallet, "Get balance of From wallet return empty", balanceOfFromWallet)
-	assert.Equal(suite.T(), "70000", balanceOfFromWallet, "Sub balance of From wallet failed")
 }
 
 func (suite *IaoSCTestSuite) createNewAsset() {
@@ -293,33 +200,4 @@ func (suite *IaoSCTestSuite) createNewAsset() {
 
 func TestBaseSCTestSuite(t *testing.T) {
 	suite.Run(t, new(IaoSCTestSuite))
-}
-
-func (suite *IaoSCTestSuite) accountingBalance() {
-	lstTx := mock.MockInvokeTransaction(suite.T(), suite.stub, [][]byte{[]byte("GetAccountingTx")})
-	suite.T().Log(lstTx)
-
-	lstTx = strings.ReplaceAll(lstTx, "[", "")
-	lstTx = strings.ReplaceAll(lstTx, "]", "")
-	lstTx = strings.ReplaceAll(lstTx, "\"", "")
-	suite.T().Log(lstTx)
-	// accounting
-	accountingDto := token.AccountingBalance{
-		TxId: strings.Split(lstTx, ","),
-	}
-	paramByte, _ := json.Marshal(accountingDto)
-	accountingRes := mock.MockInvokeTransaction(suite.T(), suite.stub, [][]byte{[]byte("CalculateBalance"), paramByte})
-	assert.Empty(suite.T(), accountingRes, "CalculateBalance invoke return err")
-}
-
-func (suite *IaoSCTestSuite) getBalance(walletId, tokenId string) string {
-	balanceDto := token.Balance{
-		WalletId: walletId,
-		TokenId:  tokenId,
-	}
-	paramByte, _ := json.Marshal(balanceDto)
-	balanceOf := mock.MockInvokeTransaction(suite.T(), suite.stub, [][]byte{[]byte("GetBalance"), paramByte})
-	suite.T().Log(balanceOf)
-
-	return balanceOf
 }
