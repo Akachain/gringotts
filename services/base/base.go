@@ -46,7 +46,7 @@ func NewBase() *Base {
 }
 
 func (b *Base) GetUTXOFullKey(ctx contractapi.TransactionContextInterface, fullKey string) (*entity.UTXO, error) {
-	compositeKeyPath := strings.Split(fullKey, "_")
+	compositeKeyPath := strings.Split(fullKey, glossary.SplitKey)
 	return b.GetUTXO(ctx, compositeKeyPath[2], compositeKeyPath[3], compositeKeyPath[4])
 }
 
