@@ -47,6 +47,10 @@ func NewBase() *Base {
 
 func (b *Base) GetUTXOFullKey(ctx contractapi.TransactionContextInterface, fullKey string) (*entity.UTXO, error) {
 	compositeKeyPath := strings.Split(fullKey, glossary.SplitKey)
+	if len(compositeKeyPath) < 5 {
+		glogger.GetInstance().Errorf(ctx, "GetUTXOFullKey - Invalid key of input UTXO (%s)", fullKey)
+		return nil, helper.RespError(errorcode.InvalidParam)
+	}
 	return b.GetUTXO(ctx, compositeKeyPath[2], compositeKeyPath[3], compositeKeyPath[4])
 }
 

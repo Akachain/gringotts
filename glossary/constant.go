@@ -45,4 +45,4 @@ const StringUnitBase = 10
 const NftExchange = "NftExchange"
 
 // SplitKey use to decode composite key
-const SplitKey = "-"
+const SplitKey = "_"
