@@ -241,6 +241,7 @@ func (b *Base) ValidatePairWallet(ctx contractapi.TransactionContextInterface, f
 
 // ValidateAndSummarizeInputs to validate and summarize utxo inputs
 func (b *Base) ValidateAndSummarizeInputs(ctx contractapi.TransactionContextInterface, utxoInputKeys []string) ([]*entity.UTXO, string, error) {
+	lstUtxo := make([]*entity.UTXO, 0, len(utxoInputKeys))
 	utxoInputs := make(map[string]*entity.UTXO)
 	totalInputAmount := "0"
 	for _, utxoInputKey := range utxoInputKeys {
@@ -262,12 +263,9 @@ func (b *Base) ValidateAndSummarizeInputs(ctx contractapi.TransactionContextInte
 		tempAmount, _ := helper.AddBalance(totalInputAmount, utxoEntity.Amount)
 		totalInputAmount = tempAmount
 		utxoInputs[utxoInputKey] = utxoEntity
+		lstUtxo = append(lstUtxo, utxoEntity)
 	}
 
-	lstUtxo := make([]*entity.UTXO, 0, len(utxoInputs))
-	for _, utxo := range utxoInputs {
-		lstUtxo = append(lstUtxo, utxo)
-	}
 	return lstUtxo, totalInputAmount, nil
 }
 
