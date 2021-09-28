@@ -260,7 +260,11 @@ func (b *Base) ValidateAndSummarizeInputs(ctx contractapi.TransactionContextInte
 			return nil, "", helper.RespError(errorcode.InvalidateStatusUtxo)
 		}
 
-		tempAmount, _ := helper.AddBalance(totalInputAmount, utxoEntity.Amount)
+		tempAmount, err := helper.AddBalance(totalInputAmount, utxoEntity.Amount)
+		if err != nil {
+			glogger.GetInstance().Errorf(ctx, "Add balance of UTXO (%s) failed %s", utxoEntity.Id, err.Error())
+			return nil, "", helper.RespError(errorcode.BizAddBalanceFail)
+		}
 		totalInputAmount = tempAmount
 		utxoInputs[utxoInputKey] = utxoEntity
 		lstUtxo = append(lstUtxo, utxoEntity)
@@ -280,7 +284,11 @@ func (b *Base) ValidateAndSummarizeOutputs(ctx contractapi.TransactionContextInt
 			return nil, "", helper.RespError(errorcode.InvalidateAmountUtxo)
 		}
 
-		tempAmount, _ := helper.AddBalance(totalOutputAmount, utxoOutput.Amount)
+		tempAmount, err := helper.AddBalance(totalOutputAmount, utxoOutput.Amount)
+		if err != nil {
+			glogger.GetInstance().Errorf(ctx, "Add balance of UTXO (%s) failed %s", utxoOutput.WalletId+"_"+utxoOutput.TokenId, err.Error())
+			return nil, "", helper.RespError(errorcode.BizAddBalanceFail)
+		}
 		totalOutputAmount = tempAmount
 		id := fmt.Sprintf("%s.%d", txID, i)
 		utxoOutputEntity := entity.NewUTXO(ctx)

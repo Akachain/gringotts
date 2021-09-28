@@ -88,6 +88,7 @@ const (
 	BizUnableUpdateUTXO        ErrorCode = "343"
 	BizUnableGetUTXO           ErrorCode = "344"
 	BizAmountNotEqual          ErrorCode = "345"
+	BizAddBalanceFail          ErrorCode = "346"
 )
 
 var mapErrorCode = map[ErrorCode]string{
@@ -144,6 +145,7 @@ var mapErrorCode = map[ErrorCode]string{
 	InvalidateStatusUtxo:       "UTXO using to input have status is spent",
 	InvalidateAmountUtxo:       "UTXO outputs have amount negative",
 	BizAmountNotEqual:          "Total UTXO input amount does not equal total UTXO output amount",
+	BizAddBalanceFail:          "Calculate amount of UTXO fail on the blockchain",
 }
 
 func (e ErrorCode) Message() string {
