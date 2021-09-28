@@ -24,6 +24,7 @@ package helper
 import (
 	"github.com/Akachain/gringotts/pkg/unit"
 	"github.com/pkg/errors"
+	"math/big"
 )
 
 // AddBalance add amount into current balance
@@ -34,9 +35,12 @@ func AddBalance(currentBalance string, amount string) (string, error) {
 
 	// convert balance to akc unit
 	curBalanceUnit := unit.NewBalanceUnitFromString(currentBalance)
+	if curBalanceUnit.Cmp(big.NewInt(0)) < 0 {
+		return "", errors.New("Current balance less than zero")
+	}
 	// convert amount to akc unit
 	amountUnit := unit.NewBalanceUnitFromString(amount)
-	if amountUnit.Int64() < 0 {
+	if amountUnit.Cmp(big.NewInt(0)) < 0 {
 		return "", errors.New("Unable to add negative amount number")
 	}
 
@@ -54,9 +58,12 @@ func SubBalance(currentBalance string, amount string) (string, error) {
 
 	// convert balance to akc unit
 	curBalanceUnit := unit.NewBalanceUnitFromString(currentBalance)
+	if curBalanceUnit.Cmp(big.NewInt(0)) < 0 {
+		return "", errors.New("Current balance less than zero")
+	}
 	// convert amount to akc unit
 	amountUnit := unit.NewBalanceUnitFromString(amount)
-	if amountUnit.Int64() < 0 {
+	if amountUnit.Cmp(big.NewInt(0)) < 0 {
 		return "", errors.New("Unable to sub negative amount number")
 	}
 
